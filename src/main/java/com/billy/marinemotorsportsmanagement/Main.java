@@ -1,4 +1,5 @@
 package com.billy.marinemotorsportsmanagement;
+import java.util.ArrayList;
 
 /**
  * This Main Class operates the Marine Motorsports Management Program
@@ -11,6 +12,7 @@ public class Main {
 
     public static void main(String[] args) {
         System.out.println("Hello World");
+        Tool test = new Tool();
     }
     
 }

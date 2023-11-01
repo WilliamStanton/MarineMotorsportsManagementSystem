@@ -1,4 +1,5 @@
 package com.billy.marinemotorsportsmanagement;
+import java.sql.*;
 
 /**
  * The Management Class handles Admin Login/Session Verification
@@ -8,8 +9,10 @@ package com.billy.marinemotorsportsmanagement;
  * @version 1.0
  * @date 11/1/23
  */
+
 public class Management {
     // Declare variables
+    public static String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
     private boolean activeSession;
     private String username;
     private String password;
