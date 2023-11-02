@@ -135,20 +135,20 @@ public class Student extends Management {
     }
 
     /**
-     * The studentList method returns an arraylist of inactive or active
-     * students
+     * The studentNameList method returns an arraylist of inactive or active
+     * students names
      *
      * @param status true if active, false if inactive
-     * @return list of students with specified status
+     * @return list of students with specified status names
      */
-    public ArrayList<String> studentList(boolean status) {
+    public ArrayList<String> studentNameList(boolean status) {
         // declare variables
         ArrayList<String> students = new ArrayList<>();
 
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Student.[Student Name] FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Student.[Student Name], Student FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
 
             // check if any results found
             while (result.next()) {
@@ -166,14 +166,14 @@ public class Student extends Management {
     }
 
     /**
-     * The studentList method returns an arraylist of inactive or active
-     * students
+     * The studentNameList method returns an arraylist of inactive or active, and am/pm
+     * students names
      *
      * @param status true if active, false if inactive
      * @param session specifies AM or PM session
-     * @return list of students with specified status
+     * @return list of students with specified status names
      */
-    public ArrayList<String> studentList(boolean status, String session) {
+    public ArrayList<String> studentNameList(boolean status, String session) {
         // declare variables
         ArrayList<String> students = new ArrayList<>();
 
@@ -185,6 +185,73 @@ public class Student extends Management {
             // check if any results found
             while (result.next()) {
                 students.add(result.getString("Student Name"));
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+        
+        // return existence
+        return students;
+    }
+    
+    // !! WARNING !!
+    // NOT TESTED METHODS  
+    
+    /**
+     * The studentIDList method returns an arraylist of inactive or active, and
+     * am/pm students ids
+     *
+     * @param status true if active, false if inactive
+     * @param session specifies AM or PM session
+     * @return list of students with specified status ids
+     */
+    public ArrayList<Integer> studentIDList(boolean status) {
+        // declare variables
+        ArrayList<Integer> students = new ArrayList<>();
+
+        // Attempt to connect to db
+        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Student.[ID] FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
+
+            // check if any results found
+            while (result.next()) {
+                students.add(result.getInt("ID"));
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return existence
+        return students;
+    }
+    
+    /**
+     * The studentIDList method returns an arraylist of inactive or active, and
+     * am/pm students ids
+     *
+     * @param status true if active, false if inactive
+     * @param session specifies AM or PM session
+     * @return list of students with specified status ids
+     */
+    public ArrayList<Integer> studentIDList(boolean status, String session) {
+        // declare variables
+        ArrayList<Integer> students = new ArrayList<>();
+
+        // Attempt to connect to db
+        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Student.[ID] FROM Student WHERE (((Student.Status)=" + status + ") AND ((Student.Session)=\"" + session + "\"));"); // Get results for SQL Statement
+
+            // check if any results found
+            while (result.next()) {
+                students.add(result.getInt("ID"));
             }
 
             connection.close(); // Close DB connection
