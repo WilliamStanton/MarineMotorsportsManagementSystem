@@ -27,7 +27,7 @@ public class Student extends Management {
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.ID FROM Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] WHERE (((Student.ID)=" + studentID + "));"); // Get results for SQL Statement
-            
+
             // check if any results found
             if (result.next()) {
                 found = true;
@@ -63,7 +63,7 @@ public class Student extends Management {
             if (result.next()) {
                 found = true;
             }
-            
+
             connection.close(); // Close DB connection
         } catch (SQLException ex) {
             // IF cannot connect to DB, print exception
@@ -75,7 +75,7 @@ public class Student extends Management {
     }
 
     /**
-     * The studentStatus method checks if a student is inactive or inactive
+     * The studentStatus method checks if a student is inactive or active
      *
      * @param studentID the student ID to check
      * @return true if active, false if inactive/not found
@@ -104,12 +104,15 @@ public class Student extends Management {
                 ex.printStackTrace();
             }
             return true; // succesful attempt
-        } else 
+        } else {
             return false; // unsuccesful attempt
+        }
     }
-    
+
     /**
-     * The removeStudent method removes a student by marking it as inactive (admin only)
+     * The removeStudent method removes a student by marking it as inactive
+     * (admin only)
+     *
      * @param studentID the student id
      * @return true if successfully deleted, else false
      */
@@ -126,12 +129,15 @@ public class Student extends Management {
                 ex.printStackTrace();
             }
             return true; // succesful attempt
-        } else
+        } else {
             return false; // unsuccesful attempt
+        }
     }
-    
+
     /**
-     * The studentList method returns an arraylist of inactive or active students
+     * The studentList method returns an arraylist of inactive or active
+     * students
+     *
      * @param status true if active, false if inactive
      * @return list of students with specified status
      */
@@ -158,9 +164,11 @@ public class Student extends Management {
         // return existence
         return students;
     }
-    
+
     /**
-     * The studentList method returns an arraylist of inactive or active students
+     * The studentList method returns an arraylist of inactive or active
+     * students
+     *
      * @param status true if active, false if inactive
      * @param session specifies AM or PM session
      * @return list of students with specified status
