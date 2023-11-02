@@ -136,9 +136,15 @@ public class Main {
                         
                     case 1:
                         // Remove student
-//                        String []
-//                        JOptionPane.showInputDialog(null, "", "Remove Student", JOptionPane.INFORMATION_MESSAGE, null, loginField, studentSelection)
-//                        break;
+                        // Get all students names and their id
+//                        ArrayList<String> studentNames = api.studentNameList(true);
+//                        String[] studentNamesArray = studentNames.toArray(new String[studentNames.size()]);
+//                        
+//                        String studentToRemove = (String) JOptionPane.showInputDialog(null, "", "Remove Student", JOptionPane.QUESTION_MESSAGE, null, studentNamesArray, studentNamesArray[0]);
+//                        api.removeStudent(api.getStudentID(studentToRemove));
+                        
+                        // Remove the student
+                        break;
                         
                     case 2:
                         // Back to admin panel

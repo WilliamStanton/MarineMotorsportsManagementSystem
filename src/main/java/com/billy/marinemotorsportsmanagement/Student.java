@@ -73,6 +73,33 @@ public class Student extends Management {
         // return existence
         return found;
     }
+    
+    /**
+     * The getStudentID method returns the id of a student from their name, otherwise returns 0 if not found
+     * 
+     * @param name the name of the student to get the id for 
+     * @return the id of the student, otherwise 0 if not found
+     */
+    public int getStudentID(String name) {
+        int studentID = 0;
+        // Attempt to connect to db
+        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Student.ID FROM Student WHERE (((Student.[Student Name])=" + name + "));"); // Get results for SQL Statement
+            // get the student id
+            if (result.next()) {
+                studentID = result.getInt("ID");
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+        
+        // return the student id otherwise 0 if not found
+        return studentID;
+    }
 
     /**
      * The studentStatus method checks if a student is inactive or active
@@ -148,7 +175,7 @@ public class Student extends Management {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Student.[Student Name], Student FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Student.[Student Name] FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
 
             // check if any results found
             while (result.next()) {
