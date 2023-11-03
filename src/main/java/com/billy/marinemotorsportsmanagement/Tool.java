@@ -9,7 +9,7 @@ import java.util.ArrayList;
  *
  * @author Billy Stanton
  * @version 1.0
- * @date 11/1/23
+ * @since 11/1/23
  */
 public class Tool extends Student {
 
@@ -242,10 +242,10 @@ public class Tool extends Student {
     }
 
     /**
-     * The removeTool method removes a tool
+     * The removeTool method marks a tool as inactive
      *
-     * @param toolID the tool ID to remove
-     * @return true if successfully removed, else false
+     * @param toolID the tool ID to mark inactive
+     * @return true if successfully marked inactive, else false
      */
     public boolean removeTool(int toolID) {
         // Attempt to connect to db
@@ -264,6 +264,31 @@ public class Tool extends Student {
         // unsuccessful removal
         return false;
     }
+    
+//    /**
+//     * The reactivateTool method reactivates a tool that is inactive
+//     * probably broken
+//     *
+//     * @param toolID the tool ID to mark active (must be already inactive)
+//     * @return true if successfully marked active, else false
+//     */
+//    public boolean reactivateTool(int toolID) {
+//        // Attempt to connect to db
+//        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+//            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] SET Tool.Status = True WHERE (((Tool.ID)=" + toolID + ") AND ((Tool.Status)=False));"); // Create SQL Statement
+//            preparedStatement.executeUpdate(); // execute statement
+//            connection.close(); // Close DB connection
+//
+//            // successful reactivation
+//            return true;
+//        } catch (SQLException ex) {
+//            // IF cannot connect to DB, print exception
+//            ex.printStackTrace();
+//        }
+//
+//        // unsuccessful reactivation
+//        return false;
+//    }
     
     /**
      * The toolNameList method returns the names of all active/inactive tools

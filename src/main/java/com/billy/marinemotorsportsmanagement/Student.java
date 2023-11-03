@@ -9,7 +9,7 @@ import java.util.ArrayList;
  *
  * @author Billy Stanton
  * @version 1.0
- * @date 11/1/23
+ * @since 11/1/23
  */
 public class Student extends Management {
 
@@ -255,15 +255,11 @@ public class Student extends Management {
         return students;
     }
     
-    // !! WARNING !!
-    // NOT TESTED METHODS  
-    
     /**
      * The studentIDList method returns an arraylist of inactive or active, and
      * am/pm students ids
      *
      * @param status true if active, false if inactive
-     * @param session specifies AM or PM session
      * @return list of students with specified status ids
      */
     public ArrayList<Integer> studentIDList(boolean status) {

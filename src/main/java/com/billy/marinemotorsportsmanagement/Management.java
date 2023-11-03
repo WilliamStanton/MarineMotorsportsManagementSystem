@@ -8,13 +8,13 @@ import java.sql.*;
  *
  * @author Billy Stanton
  * @version 1.0
- * @date 11/1/23
+ * @since 11/1/23
  */
 public class Management {
 
     // Declare variables
-//    public static String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
-    public static String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMS//MMMS.accdb"; // db dir
+    public static String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
+//    public static String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMS//MMMS.accdb"; // db dir
     private boolean activeSession;
     private String username;
     private String password;
