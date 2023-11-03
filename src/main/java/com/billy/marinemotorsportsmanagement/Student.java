@@ -75,20 +75,23 @@ public class Student extends Management {
     }
     
     /**
-     * The getStudentID method returns the id of a student from their name, otherwise returns 0 if not found
+     * The getStudentID method returns the name of a student from their id, otherwise returns null if not found
      * 
-     * @param name the name of the student to get the id for 
+     * UNTESTED
+     * @param studentID the id of the student to get the name for
+     * 
      * @return the id of the student, otherwise 0 if not found
      */
-    public int getStudentID(String name) {
-        int studentID = 0;
+    public String getStudentName(int studentID) {
+        // Initialize as null
+        String studentName = null;
         // Attempt to connect to db
         try ( Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Student.ID FROM Student WHERE (((Student.[Student Name])=" + name + "));"); // Get results for SQL Statement
-            // get the student id
+            ResultSet result = statement.executeQuery("SELECT Student.[Student Name] FROM Student WHERE (((Student.ID)=" + studentID + "));"); // Get results for SQL Statement
+            // get the student name
             if (result.next()) {
-                studentID = result.getInt("ID");
+                studentName = result.getString("Student Name");
             }
 
             connection.close(); // Close DB connection
@@ -97,8 +100,36 @@ public class Student extends Management {
             ex.printStackTrace();
         }
         
-        // return the student id otherwise 0 if not found
-        return studentID;
+        // return the student name otherwise null if not found
+        return studentName;
+    }
+    
+    /**
+     * The getStudentSession method returns the session of a student from their id, otherwise returns null if not found
+     * @param studentID the id of the student to get the session for
+     * 
+     * @return the session (AM or PM) otherwise null if not found
+     */
+    public String getStudentSession(int studentID) {
+        // Initialize as null
+        String session = null;
+        // Attempt to connect to db
+        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Student.[Session] FROM Student WHERE (((Student.ID)=" + studentID + "));"); // Get results for SQL Statement
+            // get the student session
+            if (result.next()) {
+                session = result.getString("Session");
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return the student session otherwise null if not found
+        return session;
     }
 
     /**

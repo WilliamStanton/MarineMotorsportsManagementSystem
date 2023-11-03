@@ -45,7 +45,47 @@ public class Tool extends Student {
         // return tool not found
         return null;
     }
+    
+    /**
+     * The getToolBorrowerID method returns the id of the person borrowing a tool currently
+     * 
+     * UNTESTED
+     * @param toolID the tool id to get the borrower name for
+     * @return the name of the borrower, otherwise 0 if the tool isn't being borrowed
+     */
+    public int getToolBorrowerID(int toolID) {
+        // initialize borrower
+        int borrower = 0;
+        
+        ArrayList<Boolean> avail = new ArrayList<>();
+        ArrayList<Integer> id = new ArrayList<>();
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Borrow.Returned, Borrow.[Student ID] FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + "));"); // Get results for SQL Statement
 
+            // add all results
+            while (result.next()) {
+                avail.add(result.getBoolean("Returned"));
+                id.add(result.getInt("Student ID"));
+            }
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // check last result for answer, if no results, then available
+        if (avail.size() <= 0) {
+            return 0;
+        } else {
+            borrower = id.get(avail.size() - 1);
+        }
+        
+        // return borrower, otherwise null if not found
+        return borrower;
+    }
+    
     /**
      * The toolStatus method checks if a tool is inactive or active
      *
@@ -340,7 +380,7 @@ public class Tool extends Student {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Tool.Status, Tool.ID, Tool.[Tool Name] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.Status, Tool.ID FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
 
             // get results
             while (result.next()) {

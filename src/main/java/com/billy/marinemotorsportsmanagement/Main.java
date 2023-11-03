@@ -18,89 +18,200 @@ public class Main {
         // load main menu
         mainMenu(api);
     }
-    
+
     /**
      * The mainMenu method displays the options Student, Admin, or exit.
+     *
      * @param api the api
      */
     public static void mainMenu(Tool api) {
-        String[] options = { "Tool Master", "Admin", "Exit" };
-        int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nWhat user would you like to login as?", "Main Menu", 0, 3, null, options, options[0]);
-        switch(selection) {
+        String[] options = {"Tool Master", "Admin", "Exit"};
+        int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nWhat user would you like to login as?", "Marine Motorsports Management System", 0, 3, null, options, options[0]);
+        switch (selection) {
             case 0:
                 toolMaster(api);
                 break;
-                
+
             case 1:
                 // load admin panel
                 admin(api);
                 break;
-                
+
             case 2:
                 // exit application
                 api.exit();
         }
     }
-    
+
     /**
-     * The toolMaster method controls various different functions that are utilized
-     * by the toolMaster
-     * 
+     * The toolMaster method controls various different functions that are
+     * utilized by the toolMaster
+     *
      * @param api contains methods for management
      */
     public static void toolMaster(Tool api) {
         // Display options
         String[] options = {"Borrow Tool", "Return Tool", "Tool Report", "Back to Main Menu"};
         int selection = JOptionPane.showOptionDialog(null, "What would you like to do?", "Tool Master Panel", 0, 3, null, options, options[0]);
-        switch(selection) {
+        switch (selection) {
             case 0:
                 // Borrow Tool
-                
+
                 break;
-                
+
             case 1:
                 // Return Tool
-                
+
                 break;
-                
+
             case 2:
                 // Tool Report
                 toolReport(api);
                 break;
-                
+
             case 3:
                 // Back to Main Menu
                 mainMenu(api);
                 break;
         }
     }
-    
+
     /**
      * The toolReport method provides various reports for students and tools
+     *
      * @param api contains methods for management
      */
     public static void toolReport(Tool api) {
         // Display Options
-        String[] options = {"Tools Currently Out", "Tools Returned", "Back"};
+        String[] options = {"Available Tools", "Unavailable Tools", "Back to Tool Master Panel"};
+        String[] sessionOptions = {"AM Class", "PM Class", "All Classes", "Back"};
         int selection = JOptionPane.showOptionDialog(null, "Please select an action", "Tool Master Panel - Tool Report", 0, 3, null, options, options[0]);
-        switch(selection) {
+        switch (selection) {
             case 0:
-                
+                // Available Tools
+                int availableSession = JOptionPane.showOptionDialog(null, "Please select the Class Session to view", "Tool Master Panel - Tool Report (Unavailable Tools)", 0, 3, null, sessionOptions, sessionOptions[0]);
+                switch (availableSession) {
+                    case 0:
+                        // AM Class
+
+                        
+                        
+                                                
+                       break;
+
+                    case 1:
+                        // PM Class
+                        break;
+
+                    case 2:
+                        // All Classes
+                        // Check if any available tools
+                        if (!api.toolIDList(true, true).isEmpty()) {
+                            // Get all tool ids
+                            ArrayList<Integer> allToolIDSAvailable = api.toolIDList(true, true);
+
+                            // Get all tool names
+                            ArrayList<String> allToolNamesAvailable = new ArrayList<>();
+                            for (int i = 0; i < allToolIDSAvailable.size(); i++) {
+                                allToolNamesAvailable.add(api.getToolName(allToolIDSAvailable.get(i)));
+                            }
+
+                            // Build list of available tools
+                            String allClassAvailable = "";
+                            for (int i = 0; i < allToolIDSAvailable.size(); i++) {
+                                allClassAvailable += i+1 + ") Tool Name: " + allToolNamesAvailable.get(i)
+                                        + "\n     - Tool ID: " + allToolIDSAvailable.get(i) + "\n\n";
+                            }
+
+                            // Display list of unavailable tools
+                            JOptionPane.showMessageDialog(null, "Available Tools - All Classes\n\n" + allClassAvailable, "Tool Master Panel - Tool Report (All Classes, Available Tools)", JOptionPane.INFORMATION_MESSAGE, null);
+                        } 
+                        
+                        // Else no tools available
+                        else {
+                            JOptionPane.showMessageDialog(null, "No tools are currently available in All Classes", "Tool Master Panel - Tool Report (All Classes, No Available Tools Found)", JOptionPane.ERROR_MESSAGE, null);
+                        }
+
+                        // Return to tool report
+                        toolReport(api);
+                        break;
+
+                    case 3:
+                        // Back to Tool Report
+                        toolReport(api);
+                        break;
+                }
                 break;
-                
+
             case 1:
-                
+                // Unavailable Tools                
+                int unavailableSession = JOptionPane.showOptionDialog(null, "Please select the Class Session to view", "Tool Master Panel - Tool Report (Available Tools)", 0, 3, null, sessionOptions, sessionOptions[0]);
+                switch (unavailableSession) {
+                    case 0:
+                        // AM Class
+                        break;
+
+                    case 1:
+                        break;
+
+                    case 2:
+                        // All Classes
+                        // Check if any unavailable tools
+                        if (!api.toolIDList(true, false).isEmpty()) {
+                            // Get all tool ids
+                            ArrayList<Integer> allToolIDSUnavailable = api.toolIDList(true, false);
+
+                            // Get all tool names
+                            ArrayList<String> allToolNamesUnavailable = new ArrayList<>();
+                            for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
+                                allToolNamesUnavailable.add(api.getToolName(allToolIDSUnavailable.get(i)));
+                            }
+
+                            // Get all borrower names
+                            ArrayList<String> allBorrowerNamesUnavailable = new ArrayList<>();
+                            for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
+                                allBorrowerNamesUnavailable.add(api.getStudentName(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
+                            }
+
+                            // Build list of unavailable tools
+                            String allClassUnavailable = "";
+                            for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
+                                allClassUnavailable += i+1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
+                                        + "\n     - Tool ID: " + allToolIDSUnavailable.get(i) 
+                                        + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + ""
+                                        + "\n     - Session: " + api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))) + "\n\n";
+                            }
+                            
+                            // Display list of unavailable tools
+                            JOptionPane.showMessageDialog(null, "Unavailable Tools - All Classes\n\n" + allClassUnavailable, "Tool Master Panel - Tool Report (All Classes, Unavailable Tools)", JOptionPane.INFORMATION_MESSAGE, null);
+                        } 
+                        
+                        // Else no tools available
+                        else {
+                            JOptionPane.showMessageDialog(null, "No tools are currently unavailable for the All Class", "Tool Master Panel - Tool Report (All Classes, No Unavailable Tools Found)", JOptionPane.ERROR_MESSAGE, null);
+                        }
+
+                        // Return to tool report
+                        toolReport(api);
+                        break;
+
+                    case 3:
+                        // Back to Tool Report
+                        toolReport(api);
+                        break;
+                }
                 break;
-                
+
             case 2:
                 toolMaster(api);
                 break;
         }
     }
-    
+
     /**
-     * The admin method controls authentication and various different admin functions
-     * for the admin panel
+     * The admin method controls authentication and various different admin
+     * functions for the admin panel
+     *
      * @param api contains methods for management
      */
     public static void admin(Tool api) {
@@ -111,53 +222,51 @@ public class Main {
             "Username:", username,
             "Password:", password
         };
-        
+
         // Attempt login till session status is active
-        while(!api.sessionStatus()) {
+        while (!api.sessionStatus()) {
             // Login Dialog
             int option = JOptionPane.showConfirmDialog(null, loginField, "Admin Login", JOptionPane.OK_CANCEL_OPTION);
-            
+
             // If Ok, check login
             if (option == JOptionPane.OK_OPTION && api.login(username.getText(), password.getText())) {
                 JOptionPane.showMessageDialog(null, "Welcome, Login Successful", "Admin Login", JOptionPane.INFORMATION_MESSAGE, null);
-            } 
-            
-            // If no, exit to menu
+            } // If no, exit to menu
             else if (option == JOptionPane.CANCEL_OPTION) {
                 mainMenu(api);
-                
-            // Else, login was incorrect
+
+                // Else, login was incorrect
             } else {
                 JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.ERROR_MESSAGE, null);
             }
         }
-        
+
         // Display options
         String[] options = {"Student Management", "Tool Management", "Logout to Main Menu"};
         int selection = JOptionPane.showOptionDialog(null, "What would you like to do?", "Admin Panel", 0, 3, null, options, options[0]);
-        switch(selection) {
+        switch (selection) {
             case 0:
                 // Manage Students
                 studentManagement(api);
                 break;
-                
+
             case 1:
                 // Manage Tools
                 manageTools(api);
                 break;
-                
-            case 2: 
+
+            case 2:
                 // Return to main menu and logout
                 api.logout();
                 mainMenu(api);
                 break;
         }
     }
-    
+
     /**
-     * The studentManagement method provides options for managing students
-     * and is used only in the admin class
-     * 
+     * The studentManagement method provides options for managing students and
+     * is used only in the admin class
+     *
      * @param api contains methods for management
      */
     public static void studentManagement(Tool api) {
@@ -260,7 +369,7 @@ public class Main {
                 break;
         }
     }
-    
+
     /**
      * The manageStudents method provides options for managing students and is
      * used only in the admin class
