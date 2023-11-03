@@ -14,74 +14,36 @@ import java.util.ArrayList;
 public class Tool extends Student {
 
     /**
-     * The toolList method returns a list of active/inactive tools
-     *
-     * @param status true if active, false if inactive
-     * @return the list of active/inactive tools
+     * The getToolName method returns the name of a tool by id
+     * 
+     * @param toolID the id of the tool
+     * @return the name of the tool, otherwise null if not found
      */
-    public ArrayList<String> toolList(boolean status) {
+    public String getToolName(int toolID) {
         // declare variables
-        ArrayList<String> tools = new ArrayList<>();
+        String toolName = null;
 
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Tool.[Tool Name] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.[Tool Name] FROM Tool WHERE (((Tool.ID)=" + toolID + "));"); // Get results for SQL Statement
 
-            // check if any results found
-            while (result.next()) {
-                tools.add(result.getString("Tool Name"));
+            // get result
+            if (result.next()) {
+                toolName = result.getString("Tool Name");
             }
 
             connection.close(); // Close DB connection
+            
+            // return tool name
+            return toolName;
         } catch (SQLException ex) {
             // IF cannot connect to DB, print exception
             ex.printStackTrace();
         }
 
-        // return existence
-        return tools;
-    }
-
-    /**
-     * The toolList method returns a list of active/inactive tools
-     *
-     * @param status true if active, false if inactive
-     * @param availability true if tool available, false if tool unavailable
-     * @return the list of active/inactive tools
-     */
-    public ArrayList<String> toolList(boolean status, boolean availability) {
-        // declare variables
-        ArrayList<String> tools = new ArrayList<>();
-
-        // Attempt to connect to db
-        try (Connection connection = DriverManager.getConnection(databaseURL)) {
-            Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Tool.Status, Tool.ID, Tool.[Tool Name] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
-
-            // get results
-            while (result.next()) {
-                // available tools
-                if (availability) {
-                    if (toolAvailability(result.getInt("ID"))) {
-                        tools.add(result.getString("Tool Name"));
-                    }
-                } // unavailable tools
-                else {
-                    if (!toolAvailability(result.getInt("ID"))) {
-                        tools.add(result.getString("Tool Name"));
-                    }
-                }
-            }
-
-            connection.close(); // Close DB connection
-        } catch (SQLException ex) {
-            // IF cannot connect to DB, print exception
-            ex.printStackTrace();
-        }
-
-        // return existence
-        return tools;
+        // return tool not found
+        return null;
     }
 
     /**
@@ -210,21 +172,33 @@ public class Tool extends Student {
      * The createTool method adds a tool
      *
      * @param toolName the name of the tool to add
-     * @return true if successfully added, else false
+     * @return tool id if successfully added, else 0
      */
-    public boolean createTool(String toolName) {
+    public int createTool(String toolName) {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name] ) VALUES (\"" + toolName + "\");"); // Create SQL Statement
             preparedStatement.executeUpdate(); // execute statement
+            
+            // get last tool added id
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.ID FROM Tool WHERE (((Tool.Status)=True));"); // Get results for SQL Statement
+
+            // add all results
+            int id = 0;
+            while (result.next()) {
+                id = result.getInt("ID");
+            }
+            
             connection.close(); // Close DB connection
-            return true; // succesful attempt
+            return id; // succesful attempt, return latest added tool
+            
 
         } catch (SQLException ex) {
             // IF cannot connect to DB, print exception
             ex.printStackTrace();
         }
-        return false; // unsuccessful attempt
+        return 0; // unsuccessful attempt
     }
 
     /**
@@ -236,7 +210,7 @@ public class Tool extends Student {
     public boolean removeTool(int toolID) {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
-            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.[Status] = False WHERE Tool.[ID] = " + toolID + ";"); // Create SQL Statement
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.Status = False WHERE (((Tool.ID)=" + toolID + "));"); // Create SQL Statement
             preparedStatement.executeUpdate(); // execute statement
             connection.close(); // Close DB connection
 
@@ -249,5 +223,147 @@ public class Tool extends Student {
 
         // unsuccessful removal
         return false;
+    }
+    
+    /**
+     * The toolNameList method returns the names of all active/inactive tools
+     *
+     * @param status true if active, false if inactive
+     * @return the list of active/inactive tools names
+     */
+    public ArrayList<String> toolNameList(boolean status) {
+        // declare variables
+        ArrayList<String> tools = new ArrayList<>();
+
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.[Tool Name] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
+
+            // check if any results found
+            while (result.next()) {
+                tools.add(result.getString("Tool Name"));
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return name list
+        return tools;
+    }
+
+    /**
+     * The toolNameList method returns the names of all active/inactive and available/unavailable tools
+     *
+     * @param status true if active, false if inactive
+     * @param availability true if tool available, false if tool unavailable
+     * @return list of names of active/inactive tools
+     */
+    public ArrayList<String> toolNameList(boolean status, boolean availability) {
+        // declare variables
+        ArrayList<String> tools = new ArrayList<>();
+
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.Status, Tool.ID, Tool.[Tool Name] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
+
+            // get results
+            while (result.next()) {
+                // available tools
+                if (availability) {
+                    if (toolAvailability(result.getInt("ID"))) {
+                        tools.add(result.getString("Tool Name"));
+                    }
+                } // unavailable tools
+                else {
+                    if (!toolAvailability(result.getInt("ID"))) {
+                        tools.add(result.getString("Tool Name"));
+                    }
+                }
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return name list
+        return tools;
+    }
+    
+    /**
+     * The toolIDList method returns the ids of all active/inactive tools
+     *
+     * @param status true if active, false if inactive
+     * @return list of active/inactive tools ids
+     */
+    public ArrayList<Integer> toolIDList(boolean status) {
+        // declare variables
+        ArrayList<Integer> tools = new ArrayList<>();
+
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.[ID] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
+
+            // check if any results found
+            while (result.next()) {
+                tools.add(result.getInt("ID"));
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return id list
+        return tools;
+    }
+    
+    /**
+     * The toolNameList method returns the names of all active/inactive and available/unavailable tools
+     *
+     * @param status true if active, false if inactive
+     * @param availability true if tool available, false if tool unavailable
+     * @return list of names of active/inactive tools
+     */
+    public ArrayList<Integer> toolIDList(boolean status, boolean availability) {
+        // declare variables
+        ArrayList<Integer> tools = new ArrayList<>();
+
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Tool.Status, Tool.ID, Tool.[Tool Name] FROM Tool WHERE (((Tool.Status)=" + status + "));"); // Get results for SQL Statement
+
+            // get results
+            while (result.next()) {
+                // available tools
+                if (availability) {
+                    if (toolAvailability(result.getInt("ID"))) {
+                        tools.add(result.getInt("ID"));
+                    }
+                } // unavailable tools
+                else {
+                    if (!toolAvailability(result.getInt("ID"))) {
+                        tools.add(result.getInt("ID"));
+                    }
+                }
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return name list
+        return tools;
     }
 }

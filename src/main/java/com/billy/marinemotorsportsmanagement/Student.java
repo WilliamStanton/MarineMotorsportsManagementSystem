@@ -193,7 +193,7 @@ public class Student extends Management {
     }
 
     /**
-     * The studentNameList method returns an arraylist of inactive or active, and am/pm
+     * The overloaded studentNameList method returns an arraylist of inactive or active, and am/pm
      * students names
      *
      * @param status true if active, false if inactive
@@ -260,7 +260,7 @@ public class Student extends Management {
     }
     
     /**
-     * The studentIDList method returns an arraylist of inactive or active, and
+     * The overloaded studentIDList method returns an arraylist of inactive or active, and
      * am/pm students ids
      *
      * @param status true if active, false if inactive
