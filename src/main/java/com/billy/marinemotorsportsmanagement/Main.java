@@ -29,7 +29,7 @@ public class Main {
     public static void mainMenu(Tool api) {
         // Initialize menu options
         String[] options = {"Tool Master", "Admin", "Exit"};
-        int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nWhat user would you like to login as?", "Marine Motorsports Management System", 0, 3, null, options, options[0]);
+        int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nPlease select who you are:", "Marine Motorsports Management System", 0, 3, null, options, options[0]);
         switch (selection) {
             // load tool master panel
             case 0:
@@ -90,7 +90,7 @@ public class Main {
         // Check if any tools available to return
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No tools are currently being borrowed", "Tool Master Panel - Return Tool (No Unavailable Tools Found)", JOptionPane.ERROR_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No tools are currently being borrowed", "Tool Master Panel - Return Tool", JOptionPane.ERROR_MESSAGE, null);
             toolMaster(api);
         } // else continue
         else {
@@ -106,7 +106,7 @@ public class Main {
             }
 
             // select a tool from dropdown
-            String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to return", "Tool Master Panel - Return Tool (Select Tool)", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
+            String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to return", "Tool Master Panel - Return Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
             if (toolSelected != null) {
                 toolSelected = toolSelected.replaceAll("[^0-9]+", "");
                 // borrow the tool
@@ -135,7 +135,7 @@ public class Main {
         // Check if any tools available to borrow
         if (api.toolIDList(true, true).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No tools are currently able to be borrowed", "Tool Master Panel - Borrow Tool (No Available Tools Found)", JOptionPane.ERROR_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No tools are currently able to be borrowed", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
             toolMaster(api);
         } // else continue 
         else {
@@ -149,8 +149,20 @@ public class Main {
                 String sessionSelected = "";
                 if (session == 0) {
                     sessionSelected = "AM";
+                    // Check if any am students exist
+                    if (api.studentIDList(true, "AM").isEmpty()) {
+                        // Back to tool master if no students found
+                        JOptionPane.showMessageDialog(null, "No AM Students currently exist", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                        toolMaster(api);
+                    }
                 } else {
                     sessionSelected = "PM";
+                    // check if any pm students exist
+                    if (api.studentIDList(true, "PM").isEmpty()) {
+                        // Back to tool master if no students found
+                        JOptionPane.showMessageDialog(null, "No Students currently exist", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                        toolMaster(api);
+                    }
                 }
 
                 // build student list
@@ -165,7 +177,7 @@ public class Main {
                 }
 
                 // select a student from dropdown
-                String studentSelected = (String) JOptionPane.showInputDialog(null, "Please select the student borrowing a tool", "Tool Master Panel - Borrow Tool (Select Student)", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
+                String studentSelected = (String) JOptionPane.showInputDialog(null, "Please select the student borrowing a tool", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
                 if (studentSelected != null) {
                     studentSelected = studentSelected.replaceAll("[^0-9]+", ""); // strip everything but id
 
@@ -181,7 +193,7 @@ public class Main {
                     }
 
                     // select a tool from dropdown
-                    String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to borrow", "Tool Master Panel - Borrow Tool (Select Tool)", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
+                    String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to borrow", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
                     if (toolSelected != null) {
                         toolSelected = toolSelected.replaceAll("[^0-9]+", "");
                         // borrow the tool
@@ -240,10 +252,10 @@ public class Main {
                     }
 
                     // Display list of available tools
-                    JOptionPane.showMessageDialog(null, "Available Tools \n\n" + allClassAvailable, "Tool Master Panel - Tool Report (Available Tools)", JOptionPane.INFORMATION_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "Available Tools \n\n" + allClassAvailable, "Tool Master Panel - Tool Report", JOptionPane.INFORMATION_MESSAGE, null);
                 } // Else no tools available
                 else {
-                    JOptionPane.showMessageDialog(null, "No available tools found", "Tool Master Panel - Tool Report (Available Tools)", JOptionPane.ERROR_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "No available tools found", "Tool Master Panel - Tool Report", JOptionPane.ERROR_MESSAGE, null);
                 }
 
                 // Return to tool report
@@ -275,7 +287,7 @@ public class Main {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No unavailable tools found", "Tool Master Panel - Tool Report (No Unavailable Tools Found)", JOptionPane.ERROR_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No unavailable tools found", "Tool Master Panel - Tool Report", JOptionPane.ERROR_MESSAGE, null);
             toolMaster(api);
         }
 
@@ -301,7 +313,7 @@ public class Main {
             allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
         }
 
-        int unavailableSession = JOptionPane.showOptionDialog(null, "Please select the Class Session to view", "Tool Master Panel - Tool Report (Unavailable Tools)", 0, 3, null, sessionOptions, sessionOptions[0]);
+        int unavailableSession = JOptionPane.showOptionDialog(null, "Please select the Class Session to view", "Tool Master Panel - Tool Report", 0, 3, null, sessionOptions, sessionOptions[0]);
         switch (unavailableSession) {
             // AM Class - Unavailable Tools
             case 0:
@@ -316,7 +328,7 @@ public class Main {
                     }
                 }
                 // Display list of unavailable tools
-                JOptionPane.showMessageDialog(null, "Unavailable Tools - AM Class\n\n" + amClassUnavailable, "Tool Master Panel - Tool Report (AM Class, Unavailable Tools)", JOptionPane.INFORMATION_MESSAGE, null);
+                JOptionPane.showMessageDialog(null, "Unavailable Tools - AM Class\n\n" + amClassUnavailable, "Tool Master Panel - Tool Report", JOptionPane.INFORMATION_MESSAGE, null);
 
                 // Return to unavailable tools panel
                 unavailableTools(api);
@@ -336,7 +348,7 @@ public class Main {
                 }
 
                 // Display list of unavailable tools
-                JOptionPane.showMessageDialog(null, "Unavailable Tools - PM Class\n\n" + pmClassUnavailable, "Tool Master Panel - Tool Report (PM Class, Unavailable Tools)", JOptionPane.INFORMATION_MESSAGE, null);
+                JOptionPane.showMessageDialog(null, "Unavailable Tools - PM Class\n\n" + pmClassUnavailable, "Tool Master Panel - Tool Report", JOptionPane.INFORMATION_MESSAGE, null);
 
                 // Return to unavailable tools panel
                 unavailableTools(api);
@@ -354,7 +366,7 @@ public class Main {
                 }
 
                 // Display list of unavailable tools
-                JOptionPane.showMessageDialog(null, "Unavailable Tools - All Classes\n\n" + allClassUnavailable, "Tool Master Panel - Tool Report (All Classes, Unavailable Tools)", JOptionPane.INFORMATION_MESSAGE, null);
+                JOptionPane.showMessageDialog(null, "Unavailable Tools - All Classes\n\n" + allClassUnavailable, "Tool Master Panel - Tool Report", JOptionPane.INFORMATION_MESSAGE, null);
 
                 // Return to unavailable tools panel
                 unavailableTools(api);
@@ -433,7 +445,7 @@ public class Main {
      */
     public static void studentManagementAdmin(Tool api) {
         // Select Add or Remove or Back
-        String[] studentOptions = {"Add a Student", "Disable a Student", "View Students", "Back to Admin Panel"};
+        String[] studentOptions = {"Add Student", "Disable Student", "Re-enable Student", "View Students", "Back to Admin Panel"};
         int studentSelection = JOptionPane.showOptionDialog(null, "Please select an action", "Admin Panel - Student Management", 0, JOptionPane.QUESTION_MESSAGE, null, studentOptions, studentOptions[0]);
         switch (studentSelection) {
             case 0:
@@ -484,7 +496,7 @@ public class Main {
 
             case 1:
                 // Disable student
-                // if any students are active
+                // if any students are enabled
                 if (!api.studentNameList(true).isEmpty()) {
                     // Get all students names
                     ArrayList<String> studentNames = api.studentNameList(true);
@@ -502,13 +514,13 @@ public class Main {
                     studentList = tempArray.toArray(studentList);
 
                     // Select and disable student
-                    String studentToRemove = (String) JOptionPane.showInputDialog(null, "Select a Student", "Admin Panel - Disable Student", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
+                    String studentToDisable = (String) JOptionPane.showInputDialog(null, "Select a Student", "Admin Panel - Disable Student", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
                     // If yes
-                    if (studentToRemove != null) {
+                    if (studentToDisable != null) {
                         // Strip String to only ID
-                        String studentID = studentToRemove.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
-                        if (api.removeStudent(Integer.parseInt(studentID))) {
-                            String successRemoveMessage = "Student successfully removed: " + studentToRemove;
+                        String studentID = studentToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+                        if (api.disableStudent(Integer.parseInt(studentID))) {
+                            String successRemoveMessage = "Student successfully disabled: " + studentToDisable;
                             JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Disable Student", JOptionPane.INFORMATION_MESSAGE, null);
                         } else {
                             JOptionPane.showMessageDialog(null, "Student has not been disabled. Error.", "Admin Panel - Disable Student", JOptionPane.ERROR_MESSAGE, null);
@@ -517,7 +529,7 @@ public class Main {
                     else {
                         studentManagementAdmin(api);
                     }
-                } // if no active students
+                } // if no enabled students
                 else {
                     JOptionPane.showMessageDialog(null, "There are no students to disable.", "Admin Panel - Disable Student", JOptionPane.ERROR_MESSAGE, null);
                 }
@@ -525,12 +537,56 @@ public class Main {
                 studentManagementAdmin(api);
                 break;
                 
-            // View students panel    
+            // Re-enable student    
             case 2:
+                // if any students are disabled
+                if (!api.studentNameList(false).isEmpty()) {
+                    // Get all students names
+                    ArrayList<String> studentNames = api.studentNameList(false);
+                    // Get all student ids
+                    ArrayList<Integer> studentIds = api.studentIDList(false);
+
+                    // Combine names with ids
+                    ArrayList<String> tempArray = new ArrayList<>();
+                    for (int i = 0; i < studentNames.size(); i++) {
+                        tempArray.add(studentNames.get(i) + ", ID: " + studentIds.get(i));
+                    }
+
+                    // Arraylist -> Array
+                    String[] studentList = new String[tempArray.size()];
+                    studentList = tempArray.toArray(studentList);
+
+                    // Select and re-enable student
+                    String studentToDisable = (String) JOptionPane.showInputDialog(null, "Select a Student", "Admin Panel - Re-enable Student", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
+                    
+                    // If yes
+                    if (studentToDisable != null) {
+                        // Strip String to only ID
+                        String studentID = studentToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+                        if (api.enableStudent(Integer.parseInt(studentID))) {
+                            String successRemoveMessage = "Student successfully re-enabled: " + studentToDisable;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Re-enable Student", JOptionPane.INFORMATION_MESSAGE, null);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Student has not been re-enabled. Error.", "Admin Panel - Re-enable Student", JOptionPane.ERROR_MESSAGE, null);
+                        }
+                    } // If No, return to student management panel
+                    else {
+                        studentManagementAdmin(api);
+                    }
+                } // if no disabled students
+                else {
+                    JOptionPane.showMessageDialog(null, "There are no students to re-enable.", "Admin Panel - Re-enable Student", JOptionPane.ERROR_MESSAGE, null);
+                }
+                // Return to student management panel once completed
+                studentManagementAdmin(api);
+                break;
+                
+            // View students panel    
+            case 3:
                 viewStudentsAdmin(api);
                 break;
 
-            case 3:
+            case 4:
                 // Return back to admin panel
                 admin(api);
                 break;
@@ -538,7 +594,7 @@ public class Main {
     }
     
     /**
-     * The viewStudentsAdmin method shows inactive/active, and all students
+     * The viewStudentsAdmin method shows disabled/enabled, and all students
      * used only in the admin method
      * @param api 
      */
@@ -551,95 +607,95 @@ public class Main {
         } // else continue 
         else {
             // initialize flags & arrays
-            boolean inactiveStudents = false;
-            boolean activeStudents = false;
-            String[] activeStudentList;
-            String[] inactiveStudentList;
+            boolean disabledStudents = false;
+            boolean enabledStudents = false;
+            String[] enabledStudentList;
+            String[] disabledStudentList;
             
-            // check inactive students
+            // check disabled students
             if (!api.studentNameList(false).isEmpty()) {
                 // update flag
-                inactiveStudents = true;
+                disabledStudents = true;
                 
-                // build inactive students
-                // Get inactive student list
-                ArrayList<String> inactiveStudentNameList = api.studentNameList(false);
-                ArrayList<Integer> inactiveStudentIDList = api.studentIDList(false);
+                // build disabled students
+                // Get disabled student list
+                ArrayList<String> disabledStudentNameList = api.studentNameList(false);
+                ArrayList<Integer> disabledStudentIDList = api.studentIDList(false);
 
                 // Combine names with ids
-                ArrayList<String> inactiveTempArray = new ArrayList<>();
-                for (int i = 0; i < inactiveStudentNameList.size(); i++) {
-                    inactiveTempArray.add(inactiveStudentNameList.get(i) + ", ID: " + inactiveStudentIDList.get(i) + ", Session: " + api.getStudentSession(inactiveStudentIDList.get(i)) + ", Status: Inactive");
+                ArrayList<String> disabledTempArray = new ArrayList<>();
+                for (int i = 0; i < disabledStudentNameList.size(); i++) {
+                    disabledTempArray.add(disabledStudentNameList.get(i) + ", ID: " + disabledStudentIDList.get(i) + ", Session: " + api.getStudentSession(disabledStudentIDList.get(i)) + ", Status: Disabled");
                 }
 
                 // Arraylist -> Array
-                inactiveStudentList = new String[inactiveTempArray.size()];
-                inactiveStudentList = inactiveTempArray.toArray(inactiveStudentList);
+                disabledStudentList = new String[disabledTempArray.size()];
+                disabledStudentList = disabledTempArray.toArray(disabledStudentList);
             } else {
-                inactiveStudentList = new String[0];
+                disabledStudentList = new String[0];
             }
             
-            // check active students
+            // check enabled students
             if (!api.studentNameList(true).isEmpty()) {
                 // update flag
-                activeStudents = true;
+                enabledStudents = true;
                 
-                // build active students
-                // Get active student list
-                ArrayList<String> activeStudentNameList = api.studentNameList(true);
-                ArrayList<Integer> activeStudentIDList = api.studentIDList(true);
+                // build enabled students
+                // Get enabled student list
+                ArrayList<String> enabledStudentNameList = api.studentNameList(true);
+                ArrayList<Integer> enabledStudentIDList = api.studentIDList(true);
 
                 // Combine names with ids
-                ArrayList<String> activeTempArray = new ArrayList<>();
-                for (int i = 0; i < activeStudentNameList.size(); i++) {
-                    activeTempArray.add(activeStudentNameList.get(i) + ", ID: " + activeStudentIDList.get(i) + ", Session: " + api.getStudentSession(activeStudentIDList.get(i)) + ", Status: Active");
+                ArrayList<String> enabledTempArray = new ArrayList<>();
+                for (int i = 0; i < enabledStudentNameList.size(); i++) {
+                    enabledTempArray.add(enabledStudentNameList.get(i) + ", ID: " + enabledStudentIDList.get(i) + ", Session: " + api.getStudentSession(enabledStudentIDList.get(i)) + ", Status: Enabled");
                 }
 
                 // Arraylist -> Array
-                activeStudentList = new String[activeTempArray.size()];
-                activeStudentList = activeTempArray.toArray(activeStudentList);
+                enabledStudentList = new String[enabledTempArray.size()];
+                enabledStudentList = enabledTempArray.toArray(enabledStudentList);
             } else {
-                activeStudentList = new String[0];
+                enabledStudentList = new String[0];
             }
             
             // Initialize Options
-            String[] viewStudentOptions = {"View Active Students", "View Inactive Students", "View all Students", "Back"};
+            String[] viewStudentOptions = {"View Enabled Students", "View Disabled Students", "View all Students", "Back"};
             int viewStudentSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Students", 0, 3, null, viewStudentOptions, viewStudentOptions[0]);
             switch (viewStudentSelection) {
-                // view active Students
+                // view enabled Students
                 case 0:
-                    // check if active Students found
-                    if (activeStudents) {
-                        JOptionPane.showMessageDialog(null, activeStudentList, "Admin Panel - View Active Students", JOptionPane.INFORMATION_MESSAGE, null);
-                    } // else no active Students found
+                    // check if enabled Students found
+                    if (enabledStudents) {
+                        JOptionPane.showMessageDialog(null, enabledStudentList, "Admin Panel - View Enabled Students", JOptionPane.INFORMATION_MESSAGE, null);
+                    } // else no enabled Students found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Active Tools exist", "Admin Panel - View Active Students", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Enabled Students exist", "Admin Panel - View Enabled Students", JOptionPane.ERROR_MESSAGE, null);
                     }
 
                     break;
 
-                // view inactive Students
+                // view disabled Students
                 case 1:
-                    // check if inactive Students found
-                    if (inactiveStudents) {
-                        JOptionPane.showMessageDialog(null, inactiveStudentList, "Admin Panel - View Inactive Students", JOptionPane.INFORMATION_MESSAGE, null);
-                    } // else no inactive tools found
+                    // check if disabled Students found
+                    if (disabledStudents) {
+                        JOptionPane.showMessageDialog(null, disabledStudentList, "Admin Panel - View Disabled Students", JOptionPane.INFORMATION_MESSAGE, null);
+                    } // else no disabled students found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Inactive Students exist", "Admin Panel Panel - View Inactive Students", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Disabled Students exist", "Admin Panel Panel - View Disabled Students", JOptionPane.ERROR_MESSAGE, null);
                     }
                     break;
 
                 // view all tools
                 case 2:
-                    // check if inactive or active Students found
-                    if (inactiveStudents || activeStudents) {                            
+                    // check if disabled or enabled Students found
+                    if (disabledStudents || disabledStudents) {                            
                             // combine both arrays
-                            String[] fullStudentList = Arrays.copyOf(activeStudentList, activeStudentList.length + inactiveStudentList.length);
-                            System.arraycopy(inactiveStudentList, 0, fullStudentList, activeStudentList.length, inactiveStudentList.length);
+                            String[] fullStudentList = Arrays.copyOf(enabledStudentList, enabledStudentList.length + disabledStudentList.length);
+                            System.arraycopy(disabledStudentList, 0, fullStudentList, enabledStudentList.length, disabledStudentList.length);
                             
                             // Display Studentss
                             JOptionPane.showMessageDialog(null, fullStudentList, "Admin Panel - View All Students", JOptionPane.INFORMATION_MESSAGE, null);
-                    } // else no inactive or active Students found
+                    } // else no enabled or disabled Students found
                     else {
                         JOptionPane.showMessageDialog(null, "No Students exist", "Tool Master Panel - View All Students", JOptionPane.ERROR_MESSAGE, null);
                     }
@@ -662,7 +718,7 @@ public class Main {
      */
     public static void toolManagementAdmin(Tool api) {
         // Select Add or Remove or Back
-        String[] toolOptions = {"Add a tool", "Deactivate a tool", "View Tools", "Back"};
+        String[] toolOptions = {"Add tool", "Disable tool", "Re-enable Tool", "View Tools", "Back"};
         int toolSelection = JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - Tool Management", 0, 3, null, toolOptions, toolOptions[0]);
         switch (toolSelection) {
             case 0:
@@ -689,8 +745,8 @@ public class Main {
                 break;
 
             case 1:
-                // Deactivate a tool
-                // Get active tool list
+                // Disable a tool
+                // Get enabled tool list
                 if (!api.toolNameList(true).isEmpty()) {
                     ArrayList<String> toolNameList = api.toolNameList(true);
                     ArrayList<Integer> toolIDList = api.toolIDList(true);
@@ -705,17 +761,17 @@ public class Main {
                     String[] toolList = new String[tempArray.size()];
                     toolList = tempArray.toArray(toolList);
 
-                    // Select and Deactivate tool
-                    String toolToRemove = (String) JOptionPane.showInputDialog(null, "Deactivate a Tool", "Admin Panel - Deactivate Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
+                    // Select and Disable tool
+                    String toolToDisable = (String) JOptionPane.showInputDialog(null, "Disable Tool", "Admin Panel - Disable Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
                     // If yes
-                    if (toolToRemove != null) {
+                    if (toolToDisable != null) {
                         // Strip String to only ID
-                        String toolID = toolToRemove.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
-                        if (api.removeTool(Integer.parseInt(toolID))) {
-                            String successRemoveMessage = "Tool successfully removed: " + toolToRemove;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Deactivate Tool", JOptionPane.INFORMATION_MESSAGE, null);
+                        String toolID = toolToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+                        if (api.disableTool(Integer.parseInt(toolID))) {
+                            String successRemoveMessage = "Tool successfully disabled: " + toolToDisable;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Disable Tool", JOptionPane.INFORMATION_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Tool has not been deactivated. Error.", "Admin Panel - Deactivate Tool", JOptionPane.ERROR_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Tool has not been disabled. Error.", "Admin Panel - Disable Tool", JOptionPane.ERROR_MESSAGE, null);
                         }
 
                         // Return to tool management once completed
@@ -725,30 +781,75 @@ public class Main {
                     else {
                         toolManagementAdmin(api);
                     }
-                } // if no active tools
+                } // if no enabled tools
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to deactivate.", "Admin Panel - Deactivate Tool", JOptionPane.ERROR_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no tools to disable.", "Admin Panel - Disable Tool", JOptionPane.ERROR_MESSAGE, null);
                 }
 
                 // Return to tool management panel once completed
                 toolManagementAdmin(api);
                 break;
 
-            // View tools    
+            // Re-enable tool    
             case 2:
+                // Get disabled tool list
+                if (!api.toolNameList(false).isEmpty()) {
+                    ArrayList<String> toolNameList = api.toolNameList(false);
+                    ArrayList<Integer> toolIDList = api.toolIDList(false);
+
+                    // Combine names with ids
+                    ArrayList<String> tempArray = new ArrayList<>();
+                    for (int i = 0; i < toolNameList.size(); i++) {
+                        tempArray.add(toolNameList.get(i) + ", ID: " + toolIDList.get(i));
+                    }
+
+                    // Arraylist -> Array
+                    String[] toolList = new String[tempArray.size()];
+                    toolList = tempArray.toArray(toolList);
+
+                    // Select and re-enable tool
+                    String toolToDisable = (String) JOptionPane.showInputDialog(null, "Re-enable Tool", "Admin Panel - Re-enable Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
+                    // If yes
+                    if (toolToDisable != null) {
+                        // Strip String to only ID
+                        String toolID = toolToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+                        if (api.enableTool(Integer.parseInt(toolID))) {
+                            String successRemoveMessage = "Tool successfully re-enabled: " + toolToDisable;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Re-enable Tool", JOptionPane.INFORMATION_MESSAGE, null);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Tool has not been re-enabled. Error.", "Admin Panel - Re-enable Tool", JOptionPane.ERROR_MESSAGE, null);
+                        }
+
+                        // Return to tool management once completed
+                        toolManagementAdmin(api);
+                        break;
+                    } // If no, return to tool management
+                    else {
+                        toolManagementAdmin(api);
+                    }
+                } // If no enabled tools
+                else {
+                    JOptionPane.showMessageDialog(null, "There are no tools to re-enable.", "Admin Panel - Re-enable Tool", JOptionPane.ERROR_MESSAGE, null);
+                }
+
+                // Return to tool management panel once completed
+                toolManagementAdmin(api);
+                break;
+                
+            // View tools    
+            case 3:
                 viewToolsAdmin(api);
                 break;
 
-            case 3:
+            case 4:
                 // Back to admin panel
                 admin(api);
                 break;
         }
-
     }
     
     /**
-     * The viewToolsAdmin method shows inactive/active tools, and all tools
+     * The viewToolsAdmin method shows disabled/enabled tools, and all tools
      * used only in the admin method
      * 
      * @param api used only in the admin class
@@ -762,95 +863,95 @@ public class Main {
         } // else continue 
         else {
             // initialize flags & arrays
-            boolean inactiveTools = false;
-            boolean activeTools = false;
-            String[] activeToolList;
-            String[] inactiveToolList;
+            boolean disabledTools = false;
+            boolean enabledTools = false;
+            String[] enabledToolList;
+            String[] disabledToolList;
             
-            // check inactive tools
+            // check disabled tools
             if (!api.toolNameList(false).isEmpty()) {
                 // update flag
-                inactiveTools = true;
+                disabledTools = true;
                 
-                // build inactive tools
-                // Get inactive tool list
-                ArrayList<String> inactiveToolNameList = api.toolNameList(false);
-                ArrayList<Integer> inactiveToolIDList = api.toolIDList(false);
+                // build disabled tools
+                // Get disabled tool list
+                ArrayList<String> disabledToolNameList = api.toolNameList(false);
+                ArrayList<Integer> disabledToolIDList = api.toolIDList(false);
 
                 // Combine names with ids
-                ArrayList<String> inactiveTempArray = new ArrayList<>();
-                for (int i = 0; i < inactiveToolNameList.size(); i++) {
-                    inactiveTempArray.add(inactiveToolNameList.get(i) + ", ID: " + inactiveToolIDList.get(i) + ", Status: Inactive");
+                ArrayList<String> disabledTempArray = new ArrayList<>();
+                for (int i = 0; i < disabledToolNameList.size(); i++) {
+                    disabledTempArray.add(disabledToolNameList.get(i) + ", ID: " + disabledToolIDList.get(i) + ", Status: Disabled");
                 }
 
                 // Arraylist -> Array
-                inactiveToolList = new String[inactiveTempArray.size()];
-                inactiveToolList = inactiveTempArray.toArray(inactiveToolList);
+                disabledToolList = new String[disabledTempArray.size()];
+                disabledToolList = disabledTempArray.toArray(disabledToolList);
             } else {
-                inactiveToolList = new String[0];
+                disabledToolList = new String[0];
             }
             
-            // check active tools
+            // check enabled tools
             if (!api.toolNameList(true).isEmpty()) {
                 // update flag
-                activeTools = true;
+                enabledTools = true;
                 
-                // build active tools
-                // Get active tool list
-                ArrayList<String> activeToolNameList = api.toolNameList(true);
-                ArrayList<Integer> activeToolIDList = api.toolIDList(true);
+                // build enabled tools
+                // Get enabled tool list
+                ArrayList<String> enabledToolNameList = api.toolNameList(true);
+                ArrayList<Integer> enabledToolIDList = api.toolIDList(true);
 
                 // Combine names with ids
-                ArrayList<String> activeTempArray = new ArrayList<>();
-                for (int i = 0; i < activeToolNameList.size(); i++) {
-                    activeTempArray.add(activeToolNameList.get(i) + ", ID: " + activeToolIDList.get(i) + ", Status: Active");
+                ArrayList<String> enabledTempArray = new ArrayList<>();
+                for (int i = 0; i < enabledToolNameList.size(); i++) {
+                    enabledTempArray.add(enabledToolNameList.get(i) + ", ID: " + enabledToolIDList.get(i) + ", Status: Enabled");
                 }
 
                 // Arraylist -> Array
-                activeToolList = new String[activeTempArray.size()];
-                activeToolList = activeTempArray.toArray(activeToolList);
+                enabledToolList = new String[enabledTempArray.size()];
+                enabledToolList = enabledTempArray.toArray(enabledToolList);
             } else {
-                activeToolList = new String[0];
+                enabledToolList = new String[0];
             }
             
             // Initialize Options
-            String[] viewToolOptions = {"View Active Tools", "View Inactive Tools", "View all Tools", "Back"};
+            String[] viewToolOptions = {"View Enabled Tools", "View Disabled Tools", "View all Tools", "Back"};
             int viewToolSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Tools", 0, 3, null, viewToolOptions, viewToolOptions[0]);
             switch (viewToolSelection) {
-                // view active tools
+                // view enabled tools
                 case 0:
-                    // check if active tools found
-                    if (activeTools) {
-                        JOptionPane.showMessageDialog(null, activeToolList, "Admin Panel - View Active Tools", JOptionPane.INFORMATION_MESSAGE, null);
-                    } // else no active tools found
+                    // check if enabled tools found
+                    if (enabledTools) {
+                        JOptionPane.showMessageDialog(null, enabledToolList, "Admin Panel - View Enabled Tools", JOptionPane.INFORMATION_MESSAGE, null);
+                    } // else no enabled tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Active Tools exist", "Admin Panel - View Active Tools", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Enabled Tools exist", "Admin Panel - View Enabled Tools", JOptionPane.ERROR_MESSAGE, null);
                     }
 
                     break;
 
-                // view inactive tools
+                // view disabled tools
                 case 1:
-                    // check if inactive tools found
-                    if (inactiveTools) {
-                        JOptionPane.showMessageDialog(null, inactiveToolList, "Admin Panel - View Inactive Tools", JOptionPane.INFORMATION_MESSAGE, null);
-                    } // else no inactive tools found
+                    // check if disabled tools found
+                    if (disabledTools) {
+                        JOptionPane.showMessageDialog(null, disabledToolList, "Admin Panel - View Disabled Tools", JOptionPane.INFORMATION_MESSAGE, null);
+                    } // else no disabled tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Inactive Tools exist", "Admin Panel Panel - View Inactive Tools", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Disabled Tools exist", "Admin Panel Panel - View Disabled Tools", JOptionPane.ERROR_MESSAGE, null);
                     }
                     break;
 
                 // view all tools
                 case 2:
-                    // check if inactive or active tools found
-                    if (inactiveTools || activeTools) {                            
+                    // check if disabled or enabled tools found
+                    if (disabledTools || enabledTools) {                            
                             // combine both arrays
-                            String[] fullToolList = Arrays.copyOf(activeToolList, activeToolList.length + inactiveToolList.length);
-                            System.arraycopy(inactiveToolList, 0, fullToolList, activeToolList.length, inactiveToolList.length);
+                            String[] fullToolList = Arrays.copyOf(enabledToolList, enabledToolList.length + disabledToolList.length);
+                            System.arraycopy(disabledToolList, 0, fullToolList, enabledToolList.length, disabledToolList.length);
                             
                             // Display tools
                             JOptionPane.showMessageDialog(null, fullToolList, "Admin Panel - View All Tools", JOptionPane.INFORMATION_MESSAGE, null);
-                    } // else no inactive or active tools found
+                    } // else no disabled or enabled tools found
                     else {
                         JOptionPane.showMessageDialog(null, "No Tools exist", "Tool Master Panel - View All Tools", JOptionPane.ERROR_MESSAGE, null);
                     }
