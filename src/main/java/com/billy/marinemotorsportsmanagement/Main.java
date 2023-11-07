@@ -19,6 +19,9 @@ public class Main {
 
         // load main menu
         mainMenu(api);
+        
+        // exit
+        System.exit(0);
     }
 
     /**
@@ -87,37 +90,57 @@ public class Main {
      * @param api contains methods for management
      */
     public static void returnTool(Tool api) {
-        // Check if any tools available to return
-        if (api.toolIDList(true, false).isEmpty()) {
-            // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No tools are currently being borrowed", "Tool Master Panel - Return Tool", JOptionPane.ERROR_MESSAGE, null);
-            toolMaster(api);
-        } // else continue
-        else {
-            // build unavailable tool list
-            Integer[] toolIDList = new Integer[api.toolIDList(true, false).size()];
-            toolIDList = api.toolIDList(true, false).toArray(toolIDList);
-            String[] toolList = new String[toolIDList.length];
-            toolList = api.toolNameList(true, false).toArray(toolList);
-
-            // add id to to list that already contains name
-            for (int i = 0; i < toolList.length; i++) {
-                toolList[i] += ", ID: " + toolIDList[i] + ", Borrower: " + api.getStudentName(api.getToolBorrowerID(toolIDList[i]));
-            }
-
-            // select a tool from dropdown
-            String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to return", "Tool Master Panel - Return Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
-            if (toolSelected != null) {
-                toolSelected = toolSelected.replaceAll("[^0-9]+", "");
-                // borrow the tool
-                if (api.returnTool(Integer.parseInt(toolSelected))) {
-                    JOptionPane.showMessageDialog(null, "Tool Successfully Returned:\n\nTool Name: " + api.getToolName(Integer.parseInt(toolSelected)), "Tool Master Panel - Return Tool", JOptionPane.INFORMATION_MESSAGE, null);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Tool has not been returned, unknown error.", "Tool Master Panel - Return Tool", JOptionPane.ERROR_MESSAGE, null);
-                }
-            } else {
-                // return to tool master panel
+        // init prime bool
+        boolean cont = true;
+        
+        while (cont) {
+            // re-config prime bool
+            cont = false;
+            // Check if any tools available to return
+            if (api.toolIDList(true, false).isEmpty()) {
+                // Back to tool master if no tools found
+                JOptionPane.showMessageDialog(null, "No tools are currently being borrowed", "Tool Master Panel - Return Tool", JOptionPane.ERROR_MESSAGE, null);
                 toolMaster(api);
+            } // else continue
+            else {
+//            // dropdown (legacy)
+//            // build unavailable tool list
+//            Integer[] toolIDList = new Integer[api.toolIDList(true, false).size()];
+//            toolIDList = api.toolIDList(true, false).toArray(toolIDList);
+//            String[] toolList = new String[toolIDList.length];
+//            toolList = api.toolNameList(true, false).toArray(toolList);
+//
+//            // add id to to list that already contains name
+//            for (int i = 0; i < toolList.length; i++) {
+//                toolList[i] += ", ID: " + toolIDList[i] + ", Borrower: " + api.getStudentName(api.getToolBorrowerID(toolIDList[i]));
+//            }
+
+//            // select a tool from dropdown
+//            String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to return", "Tool Master Panel - Return Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
+                // barcode scanner (new)
+                String toolSelected;
+                toolSelected = JOptionPane.showInputDialog(null, "Please scan the tool to return", "Tool Master Panel - Return Tool", JOptionPane.QUESTION_MESSAGE);
+                if (toolSelected != null) {
+                    toolSelected = toolSelected.replaceAll("[^0-9]+", "");
+                    // borrow the tool
+                    if (!api.toolAvailability(Integer.parseInt(toolSelected)) && api.returnTool(Integer.parseInt(toolSelected))) {
+                        var choice = JOptionPane.showConfirmDialog(null, "Tool Successfully Returned:\nTool Name: " + api.getToolName(Integer.parseInt(toolSelected)) + "\n\nWould you like to return another tool?", "Tool Master Panel - Return Tool", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null);
+                        // check if continue loop to return again, or exit loop
+                        if (choice == JOptionPane.OK_OPTION) {
+                            cont = true;
+                        }
+                    } else if (api.toolAvailability(Integer.parseInt(toolSelected))) {
+                        var choice = JOptionPane.showConfirmDialog(null, "UNSUCCESSFUL RETURN\n" + api.getToolName(Integer.parseInt(toolSelected)) + " is not currently borrowed, and cannot be returned.\n\nWould you like to scan another tool instead?", "Tool Master Panel - Return Tool", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null);
+                        if (choice == JOptionPane.OK_OPTION) {
+                            cont = true;
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "UNSUCCESSFUL RETURN\nTool: " + api.getToolName(Integer.parseInt(toolSelected)) + " was not successfully returned, unknown error.", "Tool Master Panel - Return Tool", JOptionPane.ERROR_MESSAGE, null);
+                    }
+                } else {
+                    // return to tool master panel
+                    toolMaster(api);
+                }
             }
         }
 
@@ -132,75 +155,96 @@ public class Main {
      * @param api contains methods for management
      */
     public static void borrowTool(Tool api) {
-        // Check if any tools available to borrow
-        if (api.toolIDList(true, true).isEmpty()) {
-            // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No tools are currently able to be borrowed", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
-            toolMaster(api);
-        } // else continue 
-        else {
-            // Choose session            
-            String[] sessionOptions = {"AM", "PM", "Back"};
-            int session = JOptionPane.showOptionDialog(null, "Please select the current session", "Tool Master Panel - Borrow Tool", 0, 3, null, sessionOptions, sessionOptions[0]);
+        // init prime bool
+        boolean cont = true;
+        while (cont) {
+            // re-config prime bool
+            cont = false;
+            // Check if any tools available to borrow
+            if (api.toolIDList(true, true).isEmpty()) {
+                // Back to tool master if no tools found
+                JOptionPane.showMessageDialog(null, "No tools are currently able to be borrowed", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                toolMaster(api);
+            } // else continue 
+            else {
+                // Choose session            
+                String[] sessionOptions = {"AM", "PM", "Back"};
+                int session = JOptionPane.showOptionDialog(null, "Please select the current session", "Tool Master Panel - Borrow Tool", 0, 3, null, sessionOptions, sessionOptions[0]);
 
-            // if 0 then AM, if 1 then PM
-            if (session == 0 || session == 1) {
-                // set AM or PM
-                String sessionSelected = "";
-                if (session == 0) {
-                    sessionSelected = "AM";
-                    // Check if any am students exist
-                    if (api.studentIDList(true, "AM").isEmpty()) {
-                        // Back to tool master if no students found
-                        JOptionPane.showMessageDialog(null, "No AM Students currently exist", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
-                        toolMaster(api);
-                    }
-                } else {
-                    sessionSelected = "PM";
-                    // check if any pm students exist
-                    if (api.studentIDList(true, "PM").isEmpty()) {
-                        // Back to tool master if no students found
-                        JOptionPane.showMessageDialog(null, "No Students currently exist", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
-                        toolMaster(api);
-                    }
-                }
-
-                // build student list
-                String[] studentList = new String[api.studentNameList(true, sessionSelected).size()];
-                studentList = api.studentNameList(true, sessionSelected).toArray(studentList);
-                Integer[] studentIDList = new Integer[studentList.length];
-                studentIDList = api.studentIDList(true, sessionSelected).toArray(studentIDList);
-
-                // add id to student list that already contains name
-                for (int i = 0; i < studentList.length; i++) {
-                    studentList[i] += ", ID: " + studentIDList[i];
-                }
-
-                // select a student from dropdown
-                String studentSelected = (String) JOptionPane.showInputDialog(null, "Please select the student borrowing a tool", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
-                if (studentSelected != null) {
-                    studentSelected = studentSelected.replaceAll("[^0-9]+", ""); // strip everything but id
-
-                    // build available tool list
-                    Integer[] toolIDList = new Integer[api.toolIDList(true, true).size()];
-                    toolIDList = api.toolIDList(true, true).toArray(toolIDList);
-                    String[] toolList = new String[toolIDList.length];
-                    toolList = api.toolNameList(true, true).toArray(toolList);
-
-                    // add id to to list that already contains name
-                    for (int i = 0; i < toolList.length; i++) {
-                        toolList[i] += ", ID: " + toolIDList[i];
+                // if 0 then AM, if 1 then PM
+                if (session == 0 || session == 1) {
+                    // set AM or PM
+                    String sessionSelected = "";
+                    if (session == 0) {
+                        sessionSelected = "AM";
+                        // Check if any am students exist
+                        if (api.studentIDList(true, "AM").isEmpty()) {
+                            // Back to tool master if no students found
+                            JOptionPane.showMessageDialog(null, "No AM Students currently exist", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                            toolMaster(api);
+                        }
+                    } else {
+                        sessionSelected = "PM";
+                        // check if any pm students exist
+                        if (api.studentIDList(true, "PM").isEmpty()) {
+                            // Back to tool master if no students found
+                            JOptionPane.showMessageDialog(null, "No Students currently exist", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                            toolMaster(api);
+                        }
                     }
 
-                    // select a tool from dropdown
-                    String toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to borrow", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
-                    if (toolSelected != null) {
-                        toolSelected = toolSelected.replaceAll("[^0-9]+", "");
-                        // borrow the tool
-                        if (api.borrowTool(Integer.parseInt(studentSelected), Integer.parseInt(toolSelected))) {
-                            JOptionPane.showMessageDialog(null, "Tool Successfully Borrowed:\n\nTool Name: " + api.getToolName(Integer.parseInt(toolSelected)) + "\nStudent: " + api.getStudentName(Integer.parseInt(studentSelected)), "Tool Master Panel - Borrow Tool", JOptionPane.INFORMATION_MESSAGE, null);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Tool has not been added, unknown error.", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                    // build student list
+                    String[] studentList = new String[api.studentNameList(true, sessionSelected).size()];
+                    studentList = api.studentNameList(true, sessionSelected).toArray(studentList);
+                    Integer[] studentIDList = new Integer[studentList.length];
+                    studentIDList = api.studentIDList(true, sessionSelected).toArray(studentIDList);
+
+                    // add id to student list that already contains name
+                    for (int i = 0; i < studentList.length; i++) {
+                        studentList[i] += ", ID: " + studentIDList[i];
+                    }
+
+                    // select a student from dropdown
+                    String studentSelected = (String) JOptionPane.showInputDialog(null, "Please select the student borrowing a tool", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
+                    if (studentSelected != null) {
+                        studentSelected = studentSelected.replaceAll("[^0-9]+", ""); // strip everything but id
+
+//                    // dropdown (legacy)
+//                    // build available tool list
+//                    Integer[] toolIDList = new Integer[api.toolIDList(true, true).size()];
+//                    toolIDList = api.toolIDList(true, true).toArray(toolIDList);
+//                    String[] toolList = new String[toolIDList.length];
+//                    toolList = api.toolNameList(true, true).toArray(toolList);
+//
+//                    // add id to to list that already contains name
+//                    for (int i = 0; i < toolList.length; i++) {
+//                        toolList[i] += ", ID: " + toolIDList[i];
+//                    }
+//                    toolSelected = (String) JOptionPane.showInputDialog(null, "Please select a tool to borrow", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE, null, toolList, toolList[0]);
+                        // barcode scanner (new)
+                        String toolSelected;
+                        toolSelected = JOptionPane.showInputDialog(null, "Please scan the tool to borrow", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE);
+                        if (toolSelected != null) {
+                            toolSelected = toolSelected.replaceAll("[^0-9]+", "");
+                            // borrow the tool
+                            if (api.toolAvailability(Integer.parseInt(toolSelected)) && api.borrowTool(Integer.parseInt(studentSelected), Integer.parseInt(toolSelected))) {
+                                var choice = JOptionPane.showConfirmDialog(null, "Tool Successfully Borrowed:\nTool Name: " + api.getToolName(Integer.parseInt(toolSelected)) + "\n\nWould you like to borrow another tool?", "Tool Master Panel - Borrow Tool", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null);
+                                // check if continue loop to borrow again, or exit loop
+                                if (choice == JOptionPane.OK_OPTION) {
+                                    cont = true;
+                                }
+                            } else if (!api.toolAvailability(Integer.parseInt(toolSelected))) {
+                                var choice = JOptionPane.showConfirmDialog(null, "UNSUCCESSFUL BORROW\n" + api.getToolName(Integer.parseInt(toolSelected)) + " is still being borrowed by " + api.getStudentName(api.getToolBorrowerID(Integer.parseInt(toolSelected))) + "\n\nWould you like to scan another tool instead?", "Tool Master Panel - Borrow Tool", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null);
+                                // check if continue loop to borrow again, or exit loop
+                                if (choice == JOptionPane.OK_OPTION) {
+                                    cont = true;
+                                }
+                            } else {
+                                JOptionPane.showMessageDialog(null, "UNSUCCESSFUL BORROW\nTool: " + api.getToolName(Integer.parseInt(toolSelected)) + " was not successfully borrowed, unknown error.", "Tool Master Panel - Borrow Tool", JOptionPane.ERROR_MESSAGE, null);
+                            }
+                        } // else return to tool master panel
+                        else {
+                            toolMaster(api);
                         }
                     } // else return to tool master panel
                     else {
@@ -210,21 +254,16 @@ public class Main {
                 else {
                     toolMaster(api);
                 }
-            } // else return to tool master panel
-            else {
-                toolMaster(api);
             }
         }
-
-        // return back to tool master panel once all completed
-        toolMaster(api);
-    }
-
-    /**
-     * The toolReport method provides various reports for students and tools
-     *
-     * @param api contains methods for management
-     */
+            // return back to tool master panel once all completed
+            toolMaster(api);
+        }
+        /**
+         * The toolReport method provides various reports for students and tools
+         *
+         * @param api contains methods for management
+         */
     public static void toolReport(Tool api) {
         // Initialize options
         String[] options = {"Available Tools", "Unavailable Tools", "Back to Tool Master Panel"};
@@ -438,8 +477,8 @@ public class Main {
     }
 
     /**
-     * The studentManagementAdmin method provides options for managing students and
-     * is used only in the admin class
+     * The studentManagementAdmin method provides options for managing students
+     * and is used only in the admin class
      *
      * @param api contains methods for management
      */
@@ -536,7 +575,7 @@ public class Main {
                 // Return to student management panel once completed
                 studentManagementAdmin(api);
                 break;
-                
+
             // Re-enable student    
             case 2:
                 // if any students are disabled
@@ -558,7 +597,7 @@ public class Main {
 
                     // Select and re-enable student
                     String studentToDisable = (String) JOptionPane.showInputDialog(null, "Select a Student", "Admin Panel - Re-enable Student", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
-                    
+
                     // If yes
                     if (studentToDisable != null) {
                         // Strip String to only ID
@@ -580,7 +619,7 @@ public class Main {
                 // Return to student management panel once completed
                 studentManagementAdmin(api);
                 break;
-                
+
             // View students panel    
             case 3:
                 viewStudentsAdmin(api);
@@ -592,11 +631,12 @@ public class Main {
                 break;
         }
     }
-    
+
     /**
      * The viewStudentsAdmin method shows disabled/enabled, and all students
      * used only in the admin method
-     * @param api 
+     *
+     * @param api
      */
     public static void viewStudentsAdmin(Tool api) {
         // Check if any student available to borrow
@@ -611,12 +651,12 @@ public class Main {
             boolean enabledStudents = false;
             String[] enabledStudentList;
             String[] disabledStudentList;
-            
+
             // check disabled students
             if (!api.studentNameList(false).isEmpty()) {
                 // update flag
                 disabledStudents = true;
-                
+
                 // build disabled students
                 // Get disabled student list
                 ArrayList<String> disabledStudentNameList = api.studentNameList(false);
@@ -634,12 +674,12 @@ public class Main {
             } else {
                 disabledStudentList = new String[0];
             }
-            
+
             // check enabled students
             if (!api.studentNameList(true).isEmpty()) {
                 // update flag
                 enabledStudents = true;
-                
+
                 // build enabled students
                 // Get enabled student list
                 ArrayList<String> enabledStudentNameList = api.studentNameList(true);
@@ -657,7 +697,7 @@ public class Main {
             } else {
                 enabledStudentList = new String[0];
             }
-            
+
             // Initialize Options
             String[] viewStudentOptions = {"View Enabled Students", "View Disabled Students", "View all Students", "Back"};
             int viewStudentSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Students", 0, 3, null, viewStudentOptions, viewStudentOptions[0]);
@@ -688,13 +728,13 @@ public class Main {
                 // view all tools
                 case 2:
                     // check if disabled or enabled Students found
-                    if (disabledStudents || disabledStudents) {                            
-                            // combine both arrays
-                            String[] fullStudentList = Arrays.copyOf(enabledStudentList, enabledStudentList.length + disabledStudentList.length);
-                            System.arraycopy(disabledStudentList, 0, fullStudentList, enabledStudentList.length, disabledStudentList.length);
-                            
-                            // Display Studentss
-                            JOptionPane.showMessageDialog(null, fullStudentList, "Admin Panel - View All Students", JOptionPane.INFORMATION_MESSAGE, null);
+                    if (disabledStudents || disabledStudents) {
+                        // combine both arrays
+                        String[] fullStudentList = Arrays.copyOf(enabledStudentList, enabledStudentList.length + disabledStudentList.length);
+                        System.arraycopy(disabledStudentList, 0, fullStudentList, enabledStudentList.length, disabledStudentList.length);
+
+                        // Display Studentss
+                        JOptionPane.showMessageDialog(null, fullStudentList, "Admin Panel - View All Students", JOptionPane.INFORMATION_MESSAGE, null);
                     } // else no enabled or disabled Students found
                     else {
                         JOptionPane.showMessageDialog(null, "No Students exist", "Tool Master Panel - View All Students", JOptionPane.ERROR_MESSAGE, null);
@@ -711,8 +751,8 @@ public class Main {
     }
 
     /**
-     * The toolManagementAdmin method provides options for managing students and is
-     * used only in the admin method
+     * The toolManagementAdmin method provides options for managing students and
+     * is used only in the admin method
      *
      * @param api contains methods for management
      */
@@ -835,7 +875,7 @@ public class Main {
                 // Return to tool management panel once completed
                 toolManagementAdmin(api);
                 break;
-                
+
             // View tools    
             case 3:
                 viewToolsAdmin(api);
@@ -847,11 +887,11 @@ public class Main {
                 break;
         }
     }
-    
+
     /**
      * The viewToolsAdmin method shows disabled/enabled tools, and all tools
      * used only in the admin method
-     * 
+     *
      * @param api used only in the admin class
      */
     public static void viewToolsAdmin(Tool api) {
@@ -867,12 +907,12 @@ public class Main {
             boolean enabledTools = false;
             String[] enabledToolList;
             String[] disabledToolList;
-            
+
             // check disabled tools
             if (!api.toolNameList(false).isEmpty()) {
                 // update flag
                 disabledTools = true;
-                
+
                 // build disabled tools
                 // Get disabled tool list
                 ArrayList<String> disabledToolNameList = api.toolNameList(false);
@@ -890,12 +930,12 @@ public class Main {
             } else {
                 disabledToolList = new String[0];
             }
-            
+
             // check enabled tools
             if (!api.toolNameList(true).isEmpty()) {
                 // update flag
                 enabledTools = true;
-                
+
                 // build enabled tools
                 // Get enabled tool list
                 ArrayList<String> enabledToolNameList = api.toolNameList(true);
@@ -913,7 +953,7 @@ public class Main {
             } else {
                 enabledToolList = new String[0];
             }
-            
+
             // Initialize Options
             String[] viewToolOptions = {"View Enabled Tools", "View Disabled Tools", "View all Tools", "Back"};
             int viewToolSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Tools", 0, 3, null, viewToolOptions, viewToolOptions[0]);
@@ -944,13 +984,13 @@ public class Main {
                 // view all tools
                 case 2:
                     // check if disabled or enabled tools found
-                    if (disabledTools || enabledTools) {                            
-                            // combine both arrays
-                            String[] fullToolList = Arrays.copyOf(enabledToolList, enabledToolList.length + disabledToolList.length);
-                            System.arraycopy(disabledToolList, 0, fullToolList, enabledToolList.length, disabledToolList.length);
-                            
-                            // Display tools
-                            JOptionPane.showMessageDialog(null, fullToolList, "Admin Panel - View All Tools", JOptionPane.INFORMATION_MESSAGE, null);
+                    if (disabledTools || enabledTools) {
+                        // combine both arrays
+                        String[] fullToolList = Arrays.copyOf(enabledToolList, enabledToolList.length + disabledToolList.length);
+                        System.arraycopy(disabledToolList, 0, fullToolList, enabledToolList.length, disabledToolList.length);
+
+                        // Display tools
+                        JOptionPane.showMessageDialog(null, fullToolList, "Admin Panel - View All Tools", JOptionPane.INFORMATION_MESSAGE, null);
                     } // else no disabled or enabled tools found
                     else {
                         JOptionPane.showMessageDialog(null, "No Tools exist", "Tool Master Panel - View All Tools", JOptionPane.ERROR_MESSAGE, null);

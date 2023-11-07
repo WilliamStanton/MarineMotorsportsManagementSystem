@@ -87,10 +87,10 @@ public class Tool extends Student {
     }
     
     /**
-     * The toolStatus method checks if a tool is inactive or active
+     * The toolStatus method checks if a tool is enabled or disabled
      *
      * @param toolID the tool id to check
-     * @return true if active, false if inactive/not found
+     * @return true if enabled, false if disabled/not found
      */
     public boolean toolStatus(int toolID) {
         // declare variables
@@ -242,53 +242,55 @@ public class Tool extends Student {
     }
 
     /**
-     * The removeTool method marks a tool as inactive
+     * The disableTool method disables a tool by marking it as inactive
      *
-     * @param toolID the tool ID to mark inactive
-     * @return true if successfully marked inactive, else false
+     * @param toolID the tool ID to disable
+     * @return true if successfully disabled, else false
      */
-    public boolean removeTool(int toolID) {
-        // Attempt to connect to db
-        try (Connection connection = DriverManager.getConnection(databaseURL)) {
-            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.Status = False WHERE (((Tool.ID)=" + toolID + "));"); // Create SQL Statement
-            preparedStatement.executeUpdate(); // execute statement
-            connection.close(); // Close DB connection
+    public boolean disableTool(int toolID) {
+        if (toolStatus(toolID)) {
+            // Attempt to connect to db
+            try (Connection connection = DriverManager.getConnection(databaseURL)) {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.Status = False WHERE (((Tool.ID)=" + toolID + "));"); // Create SQL Statement
+                preparedStatement.executeUpdate(); // execute statement
+                connection.close(); // Close DB connection
 
-            // successful removal
-            return true;
-        } catch (SQLException ex) {
-            // IF cannot connect to DB, print exception
-            ex.printStackTrace();
+            } catch (SQLException ex) {
+                // IF cannot connect to DB, print exception
+                ex.printStackTrace();
+            }
+            return true; // succesful attempt
+        } else {
+            return false; // unsuccesful attempt
         }
-
-        // unsuccessful removal
-        return false;
     }
     
-//    /**
-//     * The reactivateTool method reactivates a tool that is inactive
-//     * probably broken
-//     *
-//     * @param toolID the tool ID to mark active (must be already inactive)
-//     * @return true if successfully marked active, else false
-//     */
-//    public boolean reactivateTool(int toolID) {
-//        // Attempt to connect to db
-//        try (Connection connection = DriverManager.getConnection(databaseURL)) {
-//            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] SET Tool.Status = True WHERE (((Tool.ID)=" + toolID + ") AND ((Tool.Status)=False));"); // Create SQL Statement
-//            preparedStatement.executeUpdate(); // execute statement
-//            connection.close(); // Close DB connection
-//
-//            // successful reactivation
-//            return true;
-//        } catch (SQLException ex) {
-//            // IF cannot connect to DB, print exception
-//            ex.printStackTrace();
-//        }
-//
-//        // unsuccessful reactivation
-//        return false;
-//    }
+    /**
+     * The enableTool method re-enables a tool that is currently disabled
+     *
+     * @param toolID the tool ID to re-enable
+     * @return true if successfully re-enabled, else 
+     */
+    public boolean enableTool(int toolID) {
+        // ensure that the tool is disabled
+        if (!toolStatus(toolID)) {
+            // Attempt to connect to db
+            try (Connection connection = DriverManager.getConnection(databaseURL)) {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.Status = True WHERE (((Tool.ID)=" + toolID + "));"); // Create SQL Statement
+                preparedStatement.executeUpdate(); // execute statement
+                connection.close(); // Close DB connection
+
+                // successful reactivation
+                return true;
+            } catch (SQLException ex) {
+                // IF cannot connect to DB, print exception
+                ex.printStackTrace();
+            }
+        }
+        
+        // unsuccessful reactivation
+        return false;
+    }
     
     /**
      * The toolNameList method returns the names of all active/inactive tools

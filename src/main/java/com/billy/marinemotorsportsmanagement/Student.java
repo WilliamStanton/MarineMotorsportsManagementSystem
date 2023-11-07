@@ -168,14 +168,13 @@ public class Student extends Management {
     }
 
     /**
-     * The removeStudent method removes a student by marking it as inactive
-     * (admin only)
+     * The disableStudent method disables a student by marking it as inactive
      *
-     * @param studentID the student id
-     * @return true if successfully deleted, else false
+     * @param studentID the student ID to disable
+     * @return true if successfully disabled, else false
      */
-    public boolean removeStudent(int studentID) {
-        if (isStudent(studentID, true) && sessionStatus()) {
+    public boolean disableStudent(int studentID) {
+        if (isStudent(studentID, true)) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
                 PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Student SET Student.Status = False WHERE (((Student.ID)=" + studentID + "));"); // Create SQL Statement
@@ -190,6 +189,33 @@ public class Student extends Management {
         } else {
             return false; // unsuccesful attempt
         }
+    }
+    
+    /**
+     * The enableStudent method re-enables a student that is currently disabled
+     *
+     * @param studentID the student ID to re-enable
+     * @return true if successfully re-enabled, else 
+     */
+    public boolean enableStudent(int studentID) {
+        // ensure that the tool is disabled
+        if (!studentStatus(studentID)) {
+            // Attempt to connect to db
+            try (Connection connection = DriverManager.getConnection(databaseURL)) {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Student SET Student.Status = True WHERE (((Student.ID)=" + studentID + "));"); // Create SQL Statement
+                preparedStatement.executeUpdate(); // execute statement
+                connection.close(); // Close DB connection
+
+                // successful reactivation
+                return true;
+            } catch (SQLException ex) {
+                // IF cannot connect to DB, print exception
+                ex.printStackTrace();
+            }
+        }
+        
+        // unsuccessful reactivation
+        return false;
     }
 
     /**
