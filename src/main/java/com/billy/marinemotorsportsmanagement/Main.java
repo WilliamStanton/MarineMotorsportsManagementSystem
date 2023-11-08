@@ -1,8 +1,10 @@
 package com.billy.marinemotorsportsmanagement;
 
+import java.awt.Font;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 /**
  * This Main Class operates the Marine Motorsports Management Program
@@ -16,6 +18,12 @@ public class Main {
     public static void main(String[] args) {
         // initiate api
         Tool api = new Tool();
+        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.PLAIN, 18));
+        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 16));
+        UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 16));
+        UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 16));
+        UIManager.put("OptionPane.comboBoxFont", new Font("Segoe UI", Font.PLAIN, 16));
+        UIManager.put("OptionPane.border", new EmptyBorder(50, 50, 50, 50));
 
         // load main menu
         mainMenu(api);
@@ -109,15 +117,15 @@ public class Main {
         while (cont) {
             // Scan tool
             boolean validTool = false;
-            String toolSelected = "";
+            String toolSelected = null;
 
             while (!validTool) {
                 // scan tool
                 toolSelected = JOptionPane.showInputDialog(null, "Please scan a tool", "Tool Master Panel - Quick Scan", JOptionPane.QUESTION_MESSAGE);
 
                 // check if tool was scanned
-                if (toolSelected != null) {
-                    toolSelected = toolSelected = toolSelected.replaceAll("[^0-9]+", "");
+                if (toolSelected != null && toolSelected.contains("MMMS")) {
+                    toolSelected = toolSelected.replaceAll("[^0-9]+", "");
                 } // else return to tool master
                 else {
                     toolMaster(api);
@@ -232,7 +240,7 @@ public class Main {
                 // barcode scanner (new)
                 String toolSelected;
                 toolSelected = JOptionPane.showInputDialog(null, "Please scan the tool to return", "Tool Master Panel - Return Tool", JOptionPane.QUESTION_MESSAGE);
-                if (toolSelected != null) {
+                if (toolSelected != null && toolSelected.contains("MMMS")) {
                     toolSelected = toolSelected.replaceAll("[^0-9]+", "");
                     // borrow the tool
                     if (!api.toolAvailability(Integer.parseInt(toolSelected)) && api.returnTool(Integer.parseInt(toolSelected))) {
@@ -336,7 +344,7 @@ public class Main {
                         // barcode scanner (new)
                         String toolSelected;
                         toolSelected = JOptionPane.showInputDialog(null, "Please scan the tool to borrow", "Tool Master Panel - Borrow Tool", JOptionPane.QUESTION_MESSAGE);
-                        if (toolSelected != null) {
+                        if (toolSelected != null && toolSelected.contains("MMMS")) {
                             toolSelected = toolSelected.replaceAll("[^0-9]+", "");
                             // borrow the tool
                             if (api.toolAvailability(Integer.parseInt(toolSelected)) && api.borrowTool(Integer.parseInt(studentSelected), Integer.parseInt(toolSelected))) {
@@ -467,7 +475,7 @@ public class Main {
 
         int unavailableSession = JOptionPane.showOptionDialog(null, "Please select the Class Session to view", "Tool Master Panel - Tool Report", 0, 3, null, sessionOptions, sessionOptions[0]);
         switch (unavailableSession) {
-            
+
             // AM Class - Unavailable Tools
             case 0 -> {
                 // Build list of AM Class unavailable tools
@@ -486,7 +494,7 @@ public class Main {
                 // Return to unavailable tools panel
                 unavailableTools(api);
             }
-            
+
             // PM Class - Unavailable Tools
             case 1 -> {
                 // Build list of PM Class unavailable tools
@@ -506,7 +514,7 @@ public class Main {
                 // Return to unavailable tools panel
                 unavailableTools(api);
             }
-            
+
             // All Classes - Unavailable Tools
             case 2 -> {
                 // Build list of all unavailable tools
@@ -524,7 +532,7 @@ public class Main {
                 // Return to unavailable tools panel
                 unavailableTools(api);
             }
-            
+
             // Back to Tool Report Panel
             case 3 ->
                 toolReport(api);
@@ -560,8 +568,7 @@ public class Main {
             } // If no, exit to menu
             else if (option == JOptionPane.CANCEL_OPTION) {
                 mainMenu(api);
-            }
-            // Else, login was incorrect
+            } // Else, login was incorrect
             else {
                 JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.ERROR_MESSAGE, null);
             }
@@ -927,7 +934,7 @@ public class Main {
                 // Return to tool management panel once completed
                 toolManagementAdmin(api);
             }
-            
+
             // Re-enable tools
             case 2 -> {
                 // Get disabled tool list
@@ -973,7 +980,7 @@ public class Main {
                 // Return to tool management panel once completed
                 toolManagementAdmin(api);
             }
-            
+
             // View tools
             case 3 ->
                 viewToolsAdmin(api);
