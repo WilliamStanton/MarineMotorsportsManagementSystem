@@ -13,8 +13,9 @@ import java.sql.*;
 public class Management {
 
     // Declare variables
-    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
+//    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
 //    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMS//MMMS.accdb"; // db dir
+    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMSDemo.accdb"; // db dir
     private boolean activeSession;
     private final String username;
     private final String password;

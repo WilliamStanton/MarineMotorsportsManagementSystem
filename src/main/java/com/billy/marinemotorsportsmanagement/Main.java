@@ -149,10 +149,12 @@ public class Main {
             while (!validTool) {
                 // scan tool
                 toolSelected = JOptionPane.showInputDialog(null, "Please scan a tool", "Tool Master Panel - Quick Scan", JOptionPane.QUESTION_MESSAGE);
-
+                System.out.println(toolSelected);
+                
                 // check if tool was scanned
                 if (toolSelected != null && toolSelected.contains("MMS")) {
                     toolSelected = toolSelected.replaceAll("[^0-9]+", "");
+                    System.out.println(toolSelected);
                 } // else return to tool master
                 else {
                     toolMaster(api, session);

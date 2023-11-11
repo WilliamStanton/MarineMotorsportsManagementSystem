@@ -153,7 +153,7 @@ public class Student extends Management {
         if (session.toUpperCase().contains("AM") || session.toUpperCase().contains("PM") && sessionStatus()) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Student ( [Student Name], [Session], [Status] ) VALUES (\"" + name + "\", \"" + session + "\",\"True\");"); // Create SQL Statement
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Student ( [Student Name], [Session], [Status] ) VALUES (\"" + name + "\", \"" + session.toUpperCase() + "\",\"True\");"); // Create SQL Statement
                 preparedStatement.executeUpdate(); // execute statement
                 connection.close(); // Close DB connection
 
