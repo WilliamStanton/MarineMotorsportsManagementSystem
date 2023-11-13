@@ -17,10 +17,11 @@ public class Student extends Management {
      * The isStudent method checks if a student exists by ID
      *
      * @param studentID the student ID to check
+     * 
      * @return true if the student was found, otherwise false
      */
     public boolean isStudent(int studentID) {
-        // declare variables
+        // Initialize Variables
         boolean found = false;
 
         // Attempt to connect to db
@@ -28,7 +29,7 @@ public class Student extends Management {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.ID FROM Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] WHERE (((Student.ID)=" + studentID + "));"); // Get results for SQL Statement
 
-            // check if any results found
+            // Check if student exists
             if (result.next()) {
                 found = true;
             }
@@ -39,7 +40,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
 
-        // return existence
+        // Return true if student was found, otherwise false
         return found;
     }
 
@@ -49,17 +50,18 @@ public class Student extends Management {
      *
      * @param studentID the student ID to check
      * @param status true for active students, false for inactive students
+     * 
      * @return true if the student was found, otherwise false
      */
     public boolean isStudent(int studentID, boolean status) {
-        // declare variables
+        // Initialize Variables
         boolean found = false;
 
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.ID, Student.Status FROM Student WHERE (((Student.ID)=" + studentID + ") AND ((Student.Status)=" + status + "));"); // Get results for SQL Statement
-            // check if any results found
+            // Check if student exists and has specified status
             if (result.next()) {
                 found = true;
             }
@@ -70,26 +72,26 @@ public class Student extends Management {
             ex.printStackTrace();
         }
 
-        // return existence
+        // return true if the student was found, otherwise false
         return found;
     }
     
     /**
      * The getStudentID method returns the name of a student from their id, otherwise returns null if not found
      * 
-     * UNTESTED
      * @param studentID the id of the student to get the name for
      * 
      * @return the id of the student, otherwise 0 if not found
      */
     public String getStudentName(int studentID) {
-        // Initialize as null
+        // Initialize Variables
         String studentName = null;
+        
         // Attempt to connect to db
         try ( Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.[Student Name] FROM Student WHERE (((Student.ID)=" + studentID + "));"); // Get results for SQL Statement
-            // get the student name
+            // If student exists, get student name
             if (result.next()) {
                 studentName = result.getString("Student Name");
             }
@@ -100,7 +102,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
         
-        // return the student name otherwise null if not found
+        // Return Student Name, otherwise null
         return studentName;
     }
     
@@ -111,13 +113,14 @@ public class Student extends Management {
      * @return the session (AM or PM) otherwise null if not found
      */
     public String getStudentSession(int studentID) {
-        // Initialize as null
+        // Initialize Variables
         String session = null;
+        
         // Attempt to connect to db
         try ( Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.[Session] FROM Student WHERE (((Student.ID)=" + studentID + "));"); // Get results for SQL Statement
-            // get the student session
+            // If student found, get session (AM/PM)
             if (result.next()) {
                 session = result.getString("Session");
             }
@@ -128,7 +131,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
 
-        // return the student session otherwise null if not found
+        // Return Student Session, otherwise null
         return session;
     }
 
@@ -136,6 +139,7 @@ public class Student extends Management {
      * The studentStatus method checks if a student is inactive or active
      *
      * @param studentID the student ID to check
+     * 
      * @return true if active, false if inactive/not found
      */
     public boolean studentStatus(int studentID) {
@@ -161,9 +165,9 @@ public class Student extends Management {
                 // IF cannot connect to DB, print exception
                 ex.printStackTrace();
             }
-            return true; // succesful attempt
+            return true; // Student Successfully added
         } else {
-            return false; // unsuccesful attempt
+            return false; // Student Unsuccessfully added
         }
     }
 
@@ -171,6 +175,7 @@ public class Student extends Management {
      * The disableStudent method disables a student by marking it as inactive
      *
      * @param studentID the student ID to disable
+     * 
      * @return true if successfully disabled, else false
      */
     public boolean disableStudent(int studentID) {
@@ -185,9 +190,9 @@ public class Student extends Management {
                 // IF cannot connect to DB, print exception
                 ex.printStackTrace();
             }
-            return true; // succesful attempt
+            return true; // Student Successfully disabled
         } else {
-            return false; // unsuccesful attempt
+            return false; // Student Unsuccessfully disabled
         }
     }
     
@@ -195,10 +200,11 @@ public class Student extends Management {
      * The enableStudent method re-enables a student that is currently disabled
      *
      * @param studentID the student ID to re-enable
+     * 
      * @return true if successfully re-enabled, else 
      */
     public boolean enableStudent(int studentID) {
-        // ensure that the tool is disabled
+        // Ensure that the tool is disabled
         if (!studentStatus(studentID)) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
@@ -206,7 +212,7 @@ public class Student extends Management {
                 preparedStatement.executeUpdate(); // execute statement
                 connection.close(); // Close DB connection
 
-                // successful reactivation
+                // Student Successfully re-enabled
                 return true;
             } catch (SQLException ex) {
                 // IF cannot connect to DB, print exception
@@ -214,7 +220,7 @@ public class Student extends Management {
             }
         }
         
-        // unsuccessful reactivation
+        // Student Unsuccessfully re-enabled
         return false;
     }
 
@@ -223,10 +229,11 @@ public class Student extends Management {
      * students names
      *
      * @param status true if active, false if inactive
+     * 
      * @return list of students with specified status names
      */
     public ArrayList<String> studentNameList(boolean status) {
-        // declare variables
+        // Initialize Variables
         ArrayList<String> students = new ArrayList<>();
 
         // Attempt to connect to db
@@ -234,7 +241,7 @@ public class Student extends Management {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.[Student Name] FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
 
-            // check if any results found
+            // Check if any students found with specified status, add the names to an arraylist
             while (result.next()) {
                 students.add(result.getString("Student Name"));
             }
@@ -245,7 +252,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
 
-        // return existence
+        // Return Student Name List with specified status
         return students;
     }
 
@@ -255,10 +262,11 @@ public class Student extends Management {
      *
      * @param status true if active, false if inactive
      * @param session specifies AM or PM session
+     * 
      * @return list of students with specified status names
      */
     public ArrayList<String> studentNameList(boolean status, String session) {
-        // declare variables
+        // Initialize Variables
         ArrayList<String> students = new ArrayList<>();
 
         // Attempt to connect to db
@@ -266,7 +274,7 @@ public class Student extends Management {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.[Student Name] FROM Student WHERE (((Student.Status)=" + status + ") AND ((Student.Session)=\"" + session + "\"));"); // Get results for SQL Statement
 
-            // check if any results found
+            // Check if any students found with specified status/session, add the names to an arraylist
             while (result.next()) {
                 students.add(result.getString("Student Name"));
             }
@@ -277,7 +285,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
         
-        // return existence
+        // Return Student Name List with specified status/session
         return students;
     }
     
@@ -286,18 +294,19 @@ public class Student extends Management {
      * am/pm students ids
      *
      * @param status true if active, false if inactive
+     * 
      * @return list of students with specified status ids
      */
     public ArrayList<Integer> studentIDList(boolean status) {
-        // declare variables
+        // Initialize Variables
         ArrayList<Integer> students = new ArrayList<>();
 
         // Attempt to connect to db
-        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.[ID] FROM Student WHERE (((Student.Status)=" + status + "));"); // Get results for SQL Statement
 
-            // check if any results found
+            // Check if any students found with specified status, add the ids to an arraylist
             while (result.next()) {
                 students.add(result.getInt("ID"));
             }
@@ -308,7 +317,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
 
-        // return existence
+        // Return Student ID List with specified status
         return students;
     }
     
@@ -318,18 +327,19 @@ public class Student extends Management {
      *
      * @param status true if active, false if inactive
      * @param session specifies AM or PM session
+     * 
      * @return list of students with specified status ids
      */
     public ArrayList<Integer> studentIDList(boolean status, String session) {
-        // declare variables
+        // Initialize Variables
         ArrayList<Integer> students = new ArrayList<>();
 
         // Attempt to connect to db
-        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Student.[ID] FROM Student WHERE (((Student.Status)=" + status + ") AND ((Student.Session)=\"" + session + "\"));"); // Get results for SQL Statement
 
-            // check if any results found
+            // Check if any students found with specified status/session, add the ids to an arraylist
             while (result.next()) {
                 students.add(result.getInt("ID"));
             }
@@ -340,7 +350,7 @@ public class Student extends Management {
             ex.printStackTrace();
         }
 
-        // return existence
+        // Return Student ID List with specified status/session
         return students;
     }
 }

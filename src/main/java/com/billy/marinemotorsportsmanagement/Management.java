@@ -13,9 +13,12 @@ import java.sql.*;
 public class Management {
 
     // Declare variables
-    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
-//    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMS//MMMS.accdb"; // db dir
-//    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMSDemo.accdb"; // db dir
+
+    /**
+     * SQL Database URL
+     */
+    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Hello//Documents//MMMS//MMMS.accdb"; // db dir
+//    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Moofie//Documents//MMMS.accdb"; // db dir
     private boolean activeSession;
     private final String username;
     private final String password;
@@ -27,21 +30,44 @@ public class Management {
         username = "admin";
         password = "password";
     }
+    
+    /**
+     * The databaseConnection method verifies that the database
+     * is accessible
+     * 
+     * @return true if accessible, otherwise false
+     */
+    public boolean databaseConnection() {
+        // Initialize boolean
+        boolean status = false;
+        
+        // Test Database connection
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            status = true;
+            connection.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        
+        // Return the Database Connection Status
+        return status;
+    }
 
     /**
-     * The login method validates admin user login attempts
+     * The login method validates admin user login
      *
      * @param username the username entered
      * @param password the password entered
+     * 
      * @return true if successful, false if unsuccessful attempt
      */
     public boolean login(String username, String password) {
-        // validate login attempt
+        // Validate login attempt
         if (this.username.equals(username) && this.password.equals(password)) {
             activeSession = true;
-            return true; // successful attempt
+            return true; // successful login attempt
         } else {
-            return false; // unsuccessful attempt
+            return false; // unsuccessful login attempt
         }
     }
 
@@ -54,9 +80,9 @@ public class Management {
         // check if session is active
         if (activeSession) {
             activeSession = false;
-            return true; // successful attempt
+            return true; // successful logout attempt
         } else {
-            return false; // unsuccessful attempt
+            return false; // unsuccessful logout attempt
         }
     }
 

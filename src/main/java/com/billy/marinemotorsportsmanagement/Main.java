@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
@@ -21,6 +20,12 @@ public class Main {
         // Initiate api
         Tool api = new Tool();
 
+        // Ensure Database Connection before continuing
+        if (!api.databaseConnection()) {
+            JOptionPane.showMessageDialog(null, "Database Error\nNot Connected, please contact support");
+            api.exit();
+        }
+        
         // Configure UI
         uiConfig();
 
@@ -38,7 +43,7 @@ public class Main {
         // JOptionPane
         // Fonts
         UIManager.put("OptionPane.messageForeground", Color.white);
-        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.BOLD, 30));
+        UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.BOLD, 32));
         UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 28));
         UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 20));
         UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 20));
