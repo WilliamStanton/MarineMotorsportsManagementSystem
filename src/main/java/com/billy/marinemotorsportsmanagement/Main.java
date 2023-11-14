@@ -25,7 +25,7 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Database Error\nNot Connected, please contact support");
             api.exit();
         }
-        
+
         // Configure UI
         uiConfig();
 
@@ -45,12 +45,12 @@ public class Main {
         UIManager.put("OptionPane.messageForeground", Color.white);
         UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.BOLD, 32));
         UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 28));
-        UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 20));
-        UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 20));
-        UIManager.put("OptionPane.comboBoxFont", new Font("Segoe UI", Font.PLAIN, 20));
+        UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 28));
+        UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 28));
+        UIManager.put("OptionPane.comboBoxFont", new Font("Segoe UI", Font.PLAIN, 28));
 
         // JOptionPane Size
-        UIManager.put("OptionPane.border", new EmptyBorder(50, 50, 50, 50));
+        UIManager.put("OptionPane.border", new EmptyBorder(100, 100, 100, 100));
         UIManager.put("OptionPane.background", new Color(66, 66, 100));
         UIManager.put("Panel.background", new Color(66, 66, 100));
 
@@ -137,31 +137,38 @@ public class Main {
      * @param session current session (AM/PM)
      */
     public static void quickScan(Tool api, String session) {
-        // Get students names
-        String[] studentNameList = new String[api.studentNameList(true, session).size()];
-        ArrayList<String> temp = new ArrayList<>();
-        temp.add("Exit Tool Scan");
-        temp.addAll(api.studentNameList(true, session));
-        studentNameList = temp.toArray(studentNameList);
-        
-        // Get students ids
-        Integer[] studentIDList = new Integer[api.studentIDList(true, session).size()];
-        studentIDList = api.studentIDList(true, session).toArray(studentIDList);     
-        
+        // get borrower
+        // build student list
+        String[] studentList = new String[api.studentNameList(true, session).size()];
+        studentList = api.studentNameList(true, session).toArray(studentList);
+        Integer[] studentIDList = new Integer[studentList.length];
+        studentIDList = api.studentIDList(true, session).toArray(studentIDList);
+
+        // add id to student list that already contains name
+        for (int i = 0; i < studentList.length; i++) {
+            studentList[i] += ", ID: " + studentIDList[i];
+        }
+
+        // select a student from dropdown
         // Run quick scan till exit
         while (true) {
-            // Get chosen student or exit quick scan
-            int student = JOptionPane.showOptionDialog(null, "Scan Tools - Select Student", "Tool Scan", 0, JOptionPane.PLAIN_MESSAGE, null, studentNameList, studentNameList[0]);
+            // init var
             int studentID = 0;
-            if (student <= 0) {
-                // exit quick scan
-                toolMaster(api, session);
-            } else {
-                // get student id
-                studentID = studentIDList[student - 1];
-            }
+            // Get chosen student or exit quick scan
+            String studentSelected = (String) JOptionPane.showInputDialog(null, "Please select the student borrowing a tool", "Tool Master Panel - Quick Scan", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
             
+            // ensure student chosen, otherwise return
+            if (studentSelected != null) {
+                // get student id
+                studentSelected = studentSelected.replaceAll("[^0-9]+", ""); // strip everything but id
+                studentID = Integer.parseInt(studentSelected);
+            } else {
+                // exit quick scan
+                toolMaster(api, session); 
+            }
+
             // run specific student till exit 
+            int errors = 0;
             boolean studentSession = true;
             ArrayList<String> resultList = new ArrayList<>();
             while (studentSession) {
@@ -170,44 +177,55 @@ public class Main {
                 for (int i = 0; i < resultList.size(); i++) {
                     results += resultList.get(i) + "\n";
                 }
-                String toolSelected = JOptionPane.showInputDialog(null, "Scanning tools for: " + api.getStudentName(studentID) + "\n" + results, "Tool Scan: " + api.getStudentName(studentID), JOptionPane.PLAIN_MESSAGE);
+                String toolSelected = JOptionPane.showInputDialog(null, "Scanning tools for: " + api.getStudentName(studentID) + "\n\n\n" + results, "Tool Scan: " + api.getStudentName(studentID), JOptionPane.PLAIN_MESSAGE);
 
                 // check if a tool was actually scanned
-                if (toolSelected != null && toolSelected.contains("MMS")) {
-                    toolSelected = toolSelected.replaceAll("[^0-9]+", ""); // clean input
-                    int toolID = Integer.parseInt(toolSelected); // string -> int
-                    
-                    // borrow or return tool
-                    // tool active, continue
-                    if (api.toolStatus(toolID)) {
-                        // check if can borrow
-                        if(api.toolAvailability(toolID)) {
-                            // borrow tool
-                            if (api.borrowTool(studentID, toolID)) {
-                                resultList.add("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID);
-                            } else {
-                                JOptionPane.showMessageDialog(null, "Scan Tools\nUnknown error, try again or scan another tool", "Tool Scan", 0);
+                if (toolSelected != null) {
+                    if (toolSelected.toUpperCase().contains("MMS")) {
+                        toolSelected = toolSelected.replaceAll("[^0-9]+", ""); // clean input
+                        int toolID = Integer.parseInt(toolSelected); // string -> int
+
+                        // borrow or return tool
+                        // tool active, continue
+                        if (api.toolStatus(toolID)) {
+                            // check if can borrow
+                            if (api.toolAvailability(toolID)) {
+                                // borrow tool
+                                if (api.borrowTool(studentID, toolID)) {
+                                    resultList.add("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID);
+                                } else {
+                                    resultList.add("Borrow Error, ID:" + toolID);
+                                    errors++;
+                                }
+                            } // else, check if can return
+                            else if (!api.toolAvailability(toolID)) {
+                                // return tool
+                                if (api.returnTool(toolID)) {
+                                    resultList.add("Returned: " + api.getToolName(toolID) + ", ID: " + toolID);
+                                } else {
+                                    resultList.add("Return Error, ID: " + toolID);
+                                    errors++;
+                                }
+                            } // else, unknown error
+                            else {
+                                resultList.add("Unknown Error - ID: " + toolID);
+                                errors++;
                             }
-                        }
-                        // else, check if can return
-                        else if (!api.toolAvailability(toolID)) {
-                            // return tool
-                            if (api.returnTool(toolID)) {
-                                resultList.add("Returned: " + api.getToolName(toolID) + ", ID: " + toolID);
-                            }
-                        } 
-                        // else, unknown error
+                        } // error, tool inactive, must scan another tool
                         else {
-                            JOptionPane.showMessageDialog(null, "Scan Tools\nUnknown error, try again or scan another tool", "Tool Scan", 0);
+                            resultList.add("Error: " + api.getToolName(toolID) + " is inactive, Tool ID: " + toolID);
+                            errors++;
                         }
-                    } 
-                    // error, tool inactive, must scan another tool
+                    } // Input does not contain MMS 
                     else {
-                        JOptionPane.showMessageDialog(null, "Scan Tools\nTool Inactive, try again or scan another tool", "Tool Scan", 0);
+                        resultList.add("Error: Invalid Input");
+                        errors++;
                     }
-                } 
-                // exit quick scan
+                } // exit quick scan
                 else {
+                    if (errors > 0) {
+                        JOptionPane.showMessageDialog(null, "There were " + errors + " errors scanning tools for: " + api.getStudentName(studentID) + ".\nPlease ensure all tools were properly scanned: \n\n" + results);
+                    }
                     studentSession = false;
                 }
             }
@@ -784,7 +802,7 @@ public class Main {
             boolean enabledTools = false;
             String enabledToolsString = "";
             String disabledToolsString = "";
-            
+
             // check disabled tools
             if (!api.toolNameList(false).isEmpty()) {
                 // update flag
@@ -814,7 +832,7 @@ public class Main {
                 // Combine names with ids
                 for (int i = 0; i < enabledToolNameList.size(); i++) {
                     enabledToolsString += (enabledToolNameList.get(i) + ", ID: " + enabledToolIDList.get(i) + ", Status: Enabled" + "\n");
-                }   
+                }
             }
 
             // Initialize Options
@@ -859,7 +877,7 @@ public class Main {
                     if (disabledTools || enabledTools) {
                         // combine both disabled + enabled
                         String allTools = enabledToolsString + disabledToolsString;
-                        
+
                         JTextArea textArea = new JTextArea(allTools);
                         JScrollPane scrollPane = new JScrollPane(textArea);
                         textArea.setLineWrap(true);
