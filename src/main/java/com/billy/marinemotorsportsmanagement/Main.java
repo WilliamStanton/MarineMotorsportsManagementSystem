@@ -44,13 +44,13 @@ public class Main {
         // Fonts
         UIManager.put("OptionPane.messageForeground", Color.white);
         UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.BOLD, 32));
-        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 28));
+        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 32));
         UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 28));
         UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 28));
-        UIManager.put("OptionPane.comboBoxFont", new Font("Segoe UI", Font.PLAIN, 28));
+        UIManager.put("ComboBox.font", new Font("Segoe UI", Font.BOLD, 28));
 
         // JOptionPane Size
-        UIManager.put("OptionPane.border", new EmptyBorder(100, 100, 100, 100));
+        UIManager.put("OptionPane.border", new EmptyBorder(120, 120, 120, 120));
         UIManager.put("OptionPane.background", new Color(66, 66, 100));
         UIManager.put("Panel.background", new Color(66, 66, 100));
 
@@ -63,8 +63,8 @@ public class Main {
 
         // Text Field
         // Fonts
-        UIManager.put("TextField.font", new Font("Segoe UI", Font.PLAIN, 16));
-        UIManager.put("PasswordField.font", new Font("Segoe UI", Font.PLAIN, 16));
+        UIManager.put("TextField.font", new Font("Segoe UI", Font.PLAIN, 28));
+        UIManager.put("PasswordField.font", new Font("Segoe UI", Font.PLAIN, 28));
     }
 
     /**
@@ -74,7 +74,7 @@ public class Main {
      */
     public static void mainMenu(Tool api) {
         // Initialize menu options
-        String[] options = {"Tool Master", "Teacher", "Exit"};
+        String[] options = {"Tool Master", "Teacher"};
         int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nPlease select who you are:", "Marine Motorsports Management System", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             // load tool master panel
@@ -89,7 +89,34 @@ public class Main {
 
             // exit application
             default:
-                api.exit();
+                // Login Field
+                JLabel exitMessage = new JLabel("Please enter the admininistrator login to exit the application.");
+                exitMessage.setFont(new Font("Segoe UI", Font.PLAIN, 28));
+                exitMessage.setForeground(Color.white);
+                JTextField username = new JTextField();
+                JPasswordField password = new JPasswordField();
+                Object[] loginField = {
+                    exitMessage,
+                    "Username", username,
+                    "Password", password
+                };
+
+                // Attempt login till session status is active
+                while (!api.sessionStatus()) {
+                    // Login Dialog
+                    int option = JOptionPane.showConfirmDialog(null, loginField, "Exit Application", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                    // If Ok, check login
+                    if (option == JOptionPane.OK_OPTION && api.login(username.getText(), password.getText())) {
+                        api.exit();
+                    } // If no, exit to menu
+                    else if (option == JOptionPane.CANCEL_OPTION) {
+                        mainMenu(api);
+                    } // Else, login was incorrect
+                    else {
+                        JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.ERROR_MESSAGE, null);
+                    }
+                }
         }
     }
 
@@ -155,8 +182,8 @@ public class Main {
             // init var
             int studentID = 0;
             // Get chosen student or exit quick scan
-            String studentSelected = (String) JOptionPane.showInputDialog(null, "Please select the student borrowing a tool", "Tool Master Panel - Quick Scan", JOptionPane.QUESTION_MESSAGE, null, studentList, studentList[0]);
-            
+            String studentSelected = (String) JOptionPane.showInputDialog(null, "Select a Student", "Tool Master Panel - Quick Scan", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
+
             // ensure student chosen, otherwise return
             if (studentSelected != null) {
                 // get student id
@@ -164,7 +191,7 @@ public class Main {
                 studentID = Integer.parseInt(studentSelected);
             } else {
                 // exit quick scan
-                toolMaster(api, session); 
+                toolMaster(api, session);
             }
 
             // run specific student till exit 
@@ -340,9 +367,13 @@ public class Main {
      */
     public static void admin(Tool api) {
         // Login Field
+        JLabel loginMessage = new JLabel("Please enter your credentials");
+        loginMessage.setFont(new Font("Segoe UI", Font.PLAIN, 28));
+        loginMessage.setForeground(Color.white);
         JTextField username = new JTextField();
         JPasswordField password = new JPasswordField();
         Object[] loginField = {
+            loginMessage,
             "Username", username,
             "Password", password
         };
@@ -350,7 +381,7 @@ public class Main {
         // Attempt login till session status is active
         while (!api.sessionStatus()) {
             // Login Dialog
-            int option = JOptionPane.showConfirmDialog(null, loginField, "Admin Login", JOptionPane.OK_CANCEL_OPTION);
+            int option = JOptionPane.showConfirmDialog(null, loginField, "Admin Login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
             // If Ok, check login
             if (option == JOptionPane.OK_OPTION && api.login(username.getText(), password.getText())) {
