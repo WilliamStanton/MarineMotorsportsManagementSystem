@@ -4,10 +4,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
@@ -21,8 +24,10 @@ import javax.swing.border.EmptyBorder;
 
 public class Main {
     
-    public static int in = 0;
-    public static int out = 0;
+    // Init vars for Tool Scan
+    public static int in = 0, out = 0, studentID = 0;
+    public static boolean error = false;
+    
 
     public static void main(String[] args) {
         // Initiate api
@@ -55,7 +60,7 @@ public class Main {
         UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 32));
         UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 28));
         UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 28));
-        UIManager.put("ComboBox.font", new Font("Segoe UI", Font.BOLD, 28));
+        UIManager.put("ComboBox.font", new Font("Segoe UI", Font.BOLD, 32));
 
         // JOptionPane Size
         UIManager.put("OptionPane.border", new EmptyBorder(120, 120, 120, 120));
@@ -187,8 +192,11 @@ public class Main {
         // select a student from dropdown
         // Run quick scan till exit
         while (true) {
-            // init var
-            int studentID = 0;
+            // update vars
+            studentID = 0;
+            in = 0;
+            out = 0;
+            error = false;
             // Get chosen student or exit quick scan
             String studentSelected = (String) JOptionPane.showInputDialog(null, "Select a Student", "Tool Master Panel - Quick Scan", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
 
@@ -202,14 +210,10 @@ public class Main {
                 toolMaster(api, session);
             }
 
-            // run specific student till exit 
-            int errors = 0;
-            boolean studentSession = true;
-
             // init gui
             JLabel scanTitle = new JLabel("Scanning tools for: " + api.getStudentName(studentID));
             JLabel scanStats = new JLabel("Tools Borrowed: 0 | Tools Returned: 0");
-            scanTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            scanTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
             scanTitle.setForeground(Color.white);
             scanStats.setFont(new Font("Segoe UI", Font.PLAIN, 24));
             scanStats.setForeground(Color.white);
@@ -220,11 +224,17 @@ public class Main {
             toolsScanned.setWrapStyleWord(true);
             toolsScanned.setEditable(false);
             scroll.setPreferredSize(new Dimension(200, 350));
-            JTextField tool = new JTextField();
-                     
-            // input listener
+            JTextField tool = new JTextField() {
+                // focus text field
+                public void addNotify() {
+                    super.addNotify();
+                    requestFocus();
+                }
+            };
+            
+            // handle tool scanning
             tool.addKeyListener(new KeyAdapter() {
-                public void keyPressed(KeyEvent e, int studentID) {
+                public void keyPressed(KeyEvent e) {
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         // if blank
                         if (tool.getText().isBlank()) {
@@ -237,32 +247,47 @@ public class Main {
                             scannedTool = scannedTool.replaceAll("[^0-9]+", "");
                             int toolID = Integer.parseInt(scannedTool);
                             
-                            // if tool unavailable, attempt return
-                            if (!api.toolAvailability(toolID)) {
-                                if (api.returnTool(toolID)) {
-                                    toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                    in++;
-                                } else {
-                                    toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                            // ensure tool status active
+                            if (api.toolStatus(toolID)) {
+                                // if tool isnt available, return
+                                if (!api.toolAvailability(toolID)) {
+                                    // return success
+                                    if (api.returnTool(toolID)) {
+                                        toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                        in++;
+                                    } 
+                                    // return error
+                                    else {
+                                        toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                        error = true;
+                                    }
+                                } // else if tool is available, borrow
+                                else if (api.toolAvailability(toolID)) {
+                                    // borrow success
+                                    if (api.borrowTool(studentID, toolID)) {
+                                        toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                        out++;
+                                    }
+                                    // borrow error
+                                    else {
+                                        toolsScanned.append("Borrow Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                        error = true;
+                                    }
                                 }
-                            }
-                            
-                            // else if tool available, attempt borrow
-                            else if (api.toolAvailability(toolID)) {
-                                if (api.borrowTool(studentID, toolID)) {
-                                    toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                    out++;
-                                } else {
-                                    toolsScanned.append("Borrow Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                }
+                            } 
+                            // else tool status inactive
+                            else {
+                                toolsScanned.append("Inactive Tool Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                error = true;
                             }
                         } 
                         // else invalid tool entered
                         else {
                             toolsScanned.append("Invalid Tool Error\n");
+                            error = true;
                         }
                         
-                        // clear input
+                        // clear input, update stats
                         tool.setText("");
                         scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
                     }
@@ -271,8 +296,25 @@ public class Main {
 
             JButton finish = new JButton("Finish Scan");
             finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
-            finish.addActionListener((ActionEvent ae)
-                    -> JOptionPane.getRootFrame().dispose());
+            // create action listener for finish scan
+            ActionListener test = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    // check if any errors occured
+                    if (error) {
+                        // ask user if they want to continue scanning or exit
+                        int cont = JOptionPane.showConfirmDialog(null, "One or more errors occured scanning tools for " + api.getStudentName(studentID) + "\nPlease continue if all the tools were scanned, otherwise go back to scanning", "Tool Scan Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                        if (cont == JOptionPane.OK_OPTION) {
+                            JOptionPane.getRootFrame().dispose();
+                        }
+                    } 
+                    // else successfully end tool scan for student
+                    else {
+                        JOptionPane.getRootFrame().dispose();
+                    }
+                }
+            };
+            finish.addActionListener(test);
 
             Object[] display = {
                 scanTitle,
@@ -324,57 +366,38 @@ public class Main {
             allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
         }
 
+        // init unavailable tool vars
+        String unavailableTools = "";
+        int toolsOut = 0;
         switch (session) {
             // AM Class - Unavailable Tools
             case "AM" -> {
                 // Build list of AM Class unavailable tools
-                String amClassUnavailable = "";
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
                     if (allBorrowerSessionsUnavailable.get(i).equals("AM")) {
-                        amClassUnavailable += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
+                        unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + ""
-                                + "\n     - Session: " + api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))) + "\n\n";
+                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
+                        
+                        // increment tool out counter
+                        toolsOut++;
                     }
                 }
-
-                // Display list of unavailable tools
-                JTextArea textArea = new JTextArea("Unavailable Tools - AM Class\n\n" + amClassUnavailable);
-                JScrollPane scrollPane = new JScrollPane(textArea);
-                textArea.setLineWrap(true);
-                textArea.setWrapStyleWord(true);
-                textArea.setEditable(false);
-                scrollPane.setPreferredSize(new Dimension(500, 500));
-                JOptionPane.showMessageDialog(null, scrollPane, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
-
-                // Return to tool master panel
-                toolMaster(api, session);
             }
 
             // PM Class - Unavailable Tools
             case "PM" -> {
                 // Build list of PM Class unavailable tools
-                String pmClassUnavailable = "";
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
                     if (allBorrowerSessionsUnavailable.get(i).equals("PM")) {
-                        pmClassUnavailable += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
+                        unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + ""
-                                + "\n     - Session: " + api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))) + "\n\n";
+                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
+                        
+                        // increment tool out counter
+                        toolsOut++;
                     }
                 }
-
-                // Display list of unavailable tools
-                JTextArea textArea = new JTextArea("Unavailable Tools - PM Class\n\n" + pmClassUnavailable);
-                JScrollPane scrollPane = new JScrollPane(textArea);
-                textArea.setLineWrap(true);
-                textArea.setWrapStyleWord(true);
-                textArea.setEditable(false);
-                scrollPane.setPreferredSize(new Dimension(500, 500));
-                JOptionPane.showMessageDialog(null, scrollPane, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
-
-                // Return to tool master panel
-                toolMaster(api, session);
             }
 
             // Back to Tool Master Panel
@@ -382,6 +405,30 @@ public class Main {
                 toolMaster(api, session);
         }
 
+        // Display results
+        JLabel unavailableTitle = new JLabel("(" + toolsOut + ")" + " Unavailable Tools - " + session + " Session\n\n");
+        unavailableTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        unavailableTitle.setForeground(Color.white);
+        
+        JTextArea textArea = new JTextArea(unavailableTools);
+        // check if no unavailable tools, and display to user if so
+        if (unavailableTools.isEmpty()) {
+            textArea.setText("No Unavailable Tools for " + session + " Session");
+        }
+        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        scrollPane.setPreferredSize(new Dimension(500, 500));
+        
+        Object[] display = {
+            unavailableTitle,
+            scrollPane
+        };
+        
+        JOptionPane.showMessageDialog(null, display, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
+        
         // Ensure return to Tool Master Panel
         toolMaster(api, session);
     }
