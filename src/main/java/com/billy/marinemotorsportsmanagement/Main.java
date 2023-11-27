@@ -21,13 +21,11 @@ import javax.swing.border.EmptyBorder;
  * @version 1.0
  * @since 11/1/23
  */
-
 public class Main {
-    
+
     // Init vars for Tool Scan
     public static int in = 0, out = 0, studentID = 0;
     public static boolean error = false;
-    
 
     public static void main(String[] args) {
         // Initiate api
@@ -215,10 +213,10 @@ public class Main {
             JLabel scanStats = new JLabel("Tools Borrowed: 0 | Tools Returned: 0");
             scanTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
             scanTitle.setForeground(Color.white);
-            scanStats.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+            scanStats.setFont(new Font("Segoe UI", Font.PLAIN, 28));
             scanStats.setForeground(Color.white);
             JTextArea toolsScanned = new JTextArea();
-            toolsScanned.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+            toolsScanned.setFont(new Font("Segoe UI", Font.PLAIN, 26));
             JScrollPane scroll = new JScrollPane(toolsScanned);
             toolsScanned.setLineWrap(true);
             toolsScanned.setWrapStyleWord(true);
@@ -231,22 +229,21 @@ public class Main {
                     requestFocus();
                 }
             };
-            
+
             // handle tool scanning
             tool.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         // if blank
                         if (tool.getText().isBlank()) {
-                            System.out.println("Input is blank");
-                        } 
-                        // else if tool contains mms, start scan process
-                        else if (tool.getText().toUpperCase().contains("MMS")) {
+                            toolsScanned.append("Invalid Scan Error\n");
+                        } // else if tool contains mms, start scan process
+                        else if (tool.getText().toUpperCase().contains("MMS-")) {
                             // parse tool id
                             String scannedTool = tool.getText();
                             scannedTool = scannedTool.replaceAll("[^0-9]+", "");
                             int toolID = Integer.parseInt(scannedTool);
-                            
+
                             // ensure tool status active
                             if (api.toolStatus(toolID)) {
                                 // if tool isnt available, return
@@ -255,8 +252,7 @@ public class Main {
                                     if (api.returnTool(toolID)) {
                                         toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         in++;
-                                    } 
-                                    // return error
+                                    } // return error
                                     else {
                                         toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         error = true;
@@ -267,26 +263,23 @@ public class Main {
                                     if (api.borrowTool(studentID, toolID)) {
                                         toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         out++;
-                                    }
-                                    // borrow error
+                                    } // borrow error
                                     else {
                                         toolsScanned.append("Borrow Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         error = true;
                                     }
                                 }
-                            } 
-                            // else tool status inactive
+                            } // else tool status inactive
                             else {
                                 toolsScanned.append("Inactive Tool Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                 error = true;
                             }
-                        } 
-                        // else invalid tool entered
+                        } // else invalid tool entered
                         else {
                             toolsScanned.append("Invalid Tool Error\n");
                             error = true;
                         }
-                        
+
                         // clear input, update stats
                         tool.setText("");
                         scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
@@ -303,12 +296,24 @@ public class Main {
                     // check if any errors occured
                     if (error) {
                         // ask user if they want to continue scanning or exit
-                        int cont = JOptionPane.showConfirmDialog(null, "One or more errors occured scanning tools for " + api.getStudentName(studentID) + "\nPlease continue if all the tools were scanned, otherwise go back to scanning", "Tool Scan Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                        JLabel errorTitle = new JLabel("One or more errors occured scanning tools for " + api.getStudentName(studentID));
+                        JLabel errorTitle2 = new JLabel("\nPlease continue if all the tools were scanned, otherwise go back to scanning");
+
+                        errorTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
+                        errorTitle.setForeground(Color.white);
+                        errorTitle2.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+                        errorTitle2.setForeground(Color.white);
+
+                        Object[] errorDisplay = {
+                            errorTitle,
+                            errorTitle2,
+                            scroll
+                        };
+                        int cont = JOptionPane.showConfirmDialog(null, errorDisplay, "Tool Scan Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
                         if (cont == JOptionPane.OK_OPTION) {
                             JOptionPane.getRootFrame().dispose();
                         }
-                    } 
-                    // else successfully end tool scan for student
+                    } // else successfully end tool scan for student
                     else {
                         JOptionPane.getRootFrame().dispose();
                     }
@@ -378,7 +383,7 @@ public class Main {
                         unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
                                 + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
-                        
+
                         // increment tool out counter
                         toolsOut++;
                     }
@@ -393,7 +398,7 @@ public class Main {
                         unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
                                 + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
-                        
+
                         // increment tool out counter
                         toolsOut++;
                     }
@@ -409,11 +414,11 @@ public class Main {
         JLabel unavailableTitle = new JLabel("(" + toolsOut + ")" + " Unavailable Tools - " + session + " Session\n\n");
         unavailableTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         unavailableTitle.setForeground(Color.white);
-        
+
         JTextArea textArea = new JTextArea(unavailableTools);
         // check if no unavailable tools, and display to user if so
         if (unavailableTools.isEmpty()) {
-            textArea.setText("No Unavailable Tools for " + session + " Session");
+            textArea.setText("All tools are currently available for " + session + " Session");
         }
         textArea.setFont(new Font("Segoe UI", Font.PLAIN, 24));
         JScrollPane scrollPane = new JScrollPane(textArea);
@@ -421,14 +426,14 @@ public class Main {
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
         scrollPane.setPreferredSize(new Dimension(500, 500));
-        
+
         Object[] display = {
             unavailableTitle,
             scrollPane
         };
-        
+
         JOptionPane.showMessageDialog(null, display, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
-        
+
         // Ensure return to Tool Master Panel
         toolMaster(api, session);
     }
