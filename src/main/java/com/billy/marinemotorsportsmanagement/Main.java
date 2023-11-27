@@ -3,6 +3,10 @@ package com.billy.marinemotorsportsmanagement;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,7 +18,11 @@ import javax.swing.border.EmptyBorder;
  * @version 1.0
  * @since 11/1/23
  */
+
 public class Main {
+    
+    public static int in = 0;
+    public static int out = 0;
 
     public static void main(String[] args) {
         // Initiate api
@@ -197,65 +205,85 @@ public class Main {
             // run specific student till exit 
             int errors = 0;
             boolean studentSession = true;
-            ArrayList<String> resultList = new ArrayList<>();
-            while (studentSession) {
-                String results = "";
-                // Build resultList
-                for (int i = 0; i < resultList.size(); i++) {
-                    results += resultList.get(i) + "\n";
-                }
-                String toolSelected = JOptionPane.showInputDialog(null, "Scanning tools for: " + api.getStudentName(studentID) + "\n\n\n" + results, "Tool Scan: " + api.getStudentName(studentID), JOptionPane.PLAIN_MESSAGE);
 
-                // check if a tool was actually scanned
-                if (toolSelected != null) {
-                    if (toolSelected.toUpperCase().contains("MMS")) {
-                        toolSelected = toolSelected.replaceAll("[^0-9]+", ""); // clean input
-                        int toolID = Integer.parseInt(toolSelected); // string -> int
-
-                        // borrow or return tool
-                        // tool active, continue
-                        if (api.toolStatus(toolID)) {
-                            // check if can borrow
-                            if (api.toolAvailability(toolID)) {
-                                // borrow tool
-                                if (api.borrowTool(studentID, toolID)) {
-                                    resultList.add("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID);
-                                } else {
-                                    resultList.add("Borrow Error, ID:" + toolID);
-                                    errors++;
-                                }
-                            } // else, check if can return
-                            else if (!api.toolAvailability(toolID)) {
-                                // return tool
+            // init gui
+            JLabel scanTitle = new JLabel("Scanning tools for: " + api.getStudentName(studentID));
+            JLabel scanStats = new JLabel("Tools Borrowed: 0 | Tools Returned: 0");
+            scanTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            scanTitle.setForeground(Color.white);
+            scanStats.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+            scanStats.setForeground(Color.white);
+            JTextArea toolsScanned = new JTextArea();
+            toolsScanned.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+            JScrollPane scroll = new JScrollPane(toolsScanned);
+            toolsScanned.setLineWrap(true);
+            toolsScanned.setWrapStyleWord(true);
+            toolsScanned.setEditable(false);
+            scroll.setPreferredSize(new Dimension(200, 350));
+            JTextField tool = new JTextField();
+                     
+            // input listener
+            tool.addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e, int studentID) {
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        // if blank
+                        if (tool.getText().isBlank()) {
+                            System.out.println("Input is blank");
+                        } 
+                        // else if tool contains mms, start scan process
+                        else if (tool.getText().toUpperCase().contains("MMS")) {
+                            // parse tool id
+                            String scannedTool = tool.getText();
+                            scannedTool = scannedTool.replaceAll("[^0-9]+", "");
+                            int toolID = Integer.parseInt(scannedTool);
+                            
+                            // if tool unavailable, attempt return
+                            if (!api.toolAvailability(toolID)) {
                                 if (api.returnTool(toolID)) {
-                                    resultList.add("Returned: " + api.getToolName(toolID) + ", ID: " + toolID);
+                                    toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                    in++;
                                 } else {
-                                    resultList.add("Return Error, ID: " + toolID);
-                                    errors++;
+                                    toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                 }
-                            } // else, unknown error
-                            else {
-                                resultList.add("Unknown Error - ID: " + toolID);
-                                errors++;
                             }
-                        } // error, tool inactive, must scan another tool
+                            
+                            // else if tool available, attempt borrow
+                            else if (api.toolAvailability(toolID)) {
+                                if (api.borrowTool(studentID, toolID)) {
+                                    toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                    out++;
+                                } else {
+                                    toolsScanned.append("Borrow Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                }
+                            }
+                        } 
+                        // else invalid tool entered
                         else {
-                            resultList.add("Error: " + api.getToolName(toolID) + " is inactive, Tool ID: " + toolID);
-                            errors++;
+                            toolsScanned.append("Invalid Tool Error\n");
                         }
-                    } // Input does not contain MMS 
-                    else {
-                        resultList.add("Error: Invalid Input");
-                        errors++;
+                        
+                        // clear input
+                        tool.setText("");
+                        scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
                     }
-                } // exit quick scan
-                else {
-                    if (errors > 0) {
-                        JOptionPane.showMessageDialog(null, "There were " + errors + " errors scanning tools for: " + api.getStudentName(studentID) + ".\nPlease ensure all tools were properly scanned: \n\n" + results);
-                    }
-                    studentSession = false;
                 }
-            }
+            });
+
+            JButton finish = new JButton("Finish Scan");
+            finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            finish.addActionListener((ActionEvent ae)
+                    -> JOptionPane.getRootFrame().dispose());
+
+            Object[] display = {
+                scanTitle,
+                scanStats,
+                scroll,
+                tool,
+                finish
+            };
+
+            // start studentSession
+            JOptionPane.showOptionDialog(null, display, "Tool Scan", 0, -1, null, new Object[]{}, null);
         }
     }
 
@@ -267,7 +295,6 @@ public class Main {
      * @param session current session (AM/PM)
      */
     public static void unavailableTools(Tool api, String session) {
-
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
