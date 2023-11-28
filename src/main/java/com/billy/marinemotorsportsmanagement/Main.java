@@ -34,8 +34,8 @@ public class Main {
             api.exit();
         }
 
-        // Configure UI
-        uiConfig();
+        // Configure UI (student)
+        uiConfig(false);
 
         // Load main menu
         mainMenu(api);
@@ -46,13 +46,15 @@ public class Main {
 
     /**
      * The uiConfig method configures the way that the UI is displayed
+     *
+     * @param admin true if admin config must be loaded, else student config
+     * loaded
      */
-    public static void uiConfig() {
+    public static void uiConfig(boolean admin) {
         // JOptionPane
         // Fonts
         UIManager.put("OptionPane.messageForeground", Color.white);
         UIManager.put("OptionPane.messageFont", new Font("Segoe UI", Font.BOLD, 32));
-        UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 32));
         UIManager.put("OptionPane.textFieldFont", new Font("Segoe UI", Font.PLAIN, 28));
         UIManager.put("OptionPane.listFont", new Font("Segoe UI", Font.PLAIN, 28));
         UIManager.put("ComboBox.font", new Font("Segoe UI", Font.BOLD, 32));
@@ -65,7 +67,6 @@ public class Main {
         // Btns
         UIManager.put("OptionPane.cancelButtonText", "Back");
         UIManager.put("OptionPane.okButtonText", "Continue");
-        UIManager.put("Button.border", new EmptyBorder(35, 50, 35, 50));
         UIManager.put("Button.background", new Color(97, 97, 114));
         UIManager.put("Button.foreground", Color.white);
 
@@ -73,6 +74,17 @@ public class Main {
         // Fonts
         UIManager.put("TextField.font", new Font("Segoe UI", Font.PLAIN, 28));
         UIManager.put("PasswordField.font", new Font("Segoe UI", Font.PLAIN, 28));
+
+        // Admin Config
+        if (admin) {
+            UIManager.put("Button.border", new EmptyBorder(25, 25, 25, 25));
+            UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 20));
+        } 
+        // Student Config
+        else {
+            UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 32));
+            UIManager.put("Button.border", new EmptyBorder(35, 50, 35, 50));
+        }
     }
 
     /**
@@ -81,6 +93,9 @@ public class Main {
      * @param api the api
      */
     public static void mainMenu(Tool api) {
+        // Configure UI (default, student)
+        uiConfig(false);
+
         // Initialize menu options
         String[] options = {"Tool Master", "Teacher"};
         int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nPlease select who you are:", "Marine Motorsports Management System", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
@@ -92,6 +107,8 @@ public class Main {
 
             // load admin panel
             case 1:
+                // Configure UI (teacher)
+                uiConfig(true);
                 admin(api);
                 break;
 
@@ -294,8 +311,7 @@ public class Main {
                                 // Tool doesn't exist
                                 if (api.getToolName(toolID) == null) {
                                     toolsScanned.append("Unknown Tool Error, ID: " + toolID + "\n");
-                                } 
-                                // Tool exists, but is inactive
+                                } // Tool exists, but is inactive
                                 else {
                                     toolsScanned.append("Inactive Tool Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                 }
@@ -316,7 +332,7 @@ public class Main {
             // JButton Finish (Finish scanning button)
             JButton finish = new JButton("Finish Scan");
             finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
-            
+
             // Create Action Listener for finish scan button
             ActionListener finishEvent = new ActionListener() {
                 @Override
@@ -338,10 +354,10 @@ public class Main {
                             errorTitle2,// Title Containing info/student with errors
                             scroll // Tools Scanned (display tools scanned in/out)
                         };
-                        
+
                         // Display Error Message
                         int cont = JOptionPane.showConfirmDialog(null, errorDisplay, "Tool Scan Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                        
+
                         // If OK, exit tool scan successfully
                         if (cont == JOptionPane.OK_OPTION) {
                             JOptionPane.getRootFrame().dispose();
@@ -352,7 +368,7 @@ public class Main {
                     }
                 }
             };
-            
+
             // Add Finish Button Listener
             finish.addActionListener(finishEvent);
 
@@ -458,12 +474,12 @@ public class Main {
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
-        
+
         // Check if no unavailable tools, and display to user if so in Text Area
         if (unavailableTools.isEmpty()) {
             textArea.setText("All tools are currently available for " + session + " Session");
         }
-        
+
         // JScrollPane scroll (display JTextArea with scrollbar)
         JScrollPane scroll = new JScrollPane(textArea);
         scroll.setPreferredSize(new Dimension(500, 500));
@@ -493,19 +509,19 @@ public class Main {
         JLabel loginTitle = new JLabel("Please enter your credentials");
         loginTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         loginTitle.setForeground(Color.white);
-        
+
         // JTextField & JLabel Username (Username field for login)
         JTextField username = new JTextField();
         JLabel usernameTitle = new JLabel("Username");
         usernameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
         usernameTitle.setForeground(Color.white);
-        
+
         // JPasswordField & JLabel Password (Password field for login)
         JPasswordField password = new JPasswordField();
         JLabel passwordTitle = new JLabel("Password");
         passwordTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
         passwordTitle.setForeground(Color.white);
-        
+
         // Login Field Display Array
         Object[] loginField = {
             loginTitle, // Login Title (self-explanatory)
@@ -567,19 +583,19 @@ public class Main {
                 JLabel addStudentTitle = new JLabel("Add Student");
                 addStudentTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
                 addStudentTitle.setForeground(Color.white);
-                
+
                 // JTextField & JLabel Full Name (Text box to enter Full Student Name)
                 JTextField fullName = new JTextField();
                 JLabel fullNameTitle = new JLabel("Full Name");
                 fullNameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
                 fullNameTitle.setForeground(Color.white);
-                
+
                 // JTextField & JLabel Student Session (Text box to enter Student Session)
                 JTextField studentSession = new JTextField();
                 JLabel studentSessionTitle = new JLabel("Session (AM or PM)");
                 studentSessionTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
                 studentSessionTitle.setForeground(Color.white);
-                
+
                 // Add Student Field Display Array
                 Object[] addStudentField = {
                     addStudentTitle,
@@ -589,7 +605,7 @@ public class Main {
 
                 // Display Add Student Field
                 int addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Admin Panel - Add Student", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                
+
                 // If Ok, attempt student creation
                 if (addStudentInfo == JOptionPane.OK_OPTION) {
                     boolean added = false;
@@ -780,24 +796,24 @@ public class Main {
                         JLabel viewEnabledStudents = new JLabel("View Enabled Students");
                         viewEnabledStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
                         viewEnabledStudents.setForeground(Color.white);
-                        
+
                         // JTextArea Students Enabled (display enabled students)
                         JTextArea studentsEnabled = new JTextArea(enabledStudentsString);
                         studentsEnabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
                         studentsEnabled.setLineWrap(true);
                         studentsEnabled.setWrapStyleWord(true);
                         studentsEnabled.setEditable(false);
-                        
+
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new JScrollPane(studentsEnabled);
                         scroll.setPreferredSize(new Dimension(500, 500));
-                        
+
                         // View Enabled Students Array
                         Object[] display = {
                             viewEnabledStudents,
                             scroll
                         };
-                        
+
                         // Display Enabled Students
                         JOptionPane.showMessageDialog(null, display, "Admin Panel - View Enabled Students", JOptionPane.PLAIN_MESSAGE, null);
                     } // Else no enabled Students found
@@ -813,7 +829,7 @@ public class Main {
                         JLabel viewDisabledStudents = new JLabel("View Disabled Students");
                         viewDisabledStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
                         viewDisabledStudents.setForeground(Color.white);
-                        
+
                         // JTextArea Students Disabled (display disabled students)
                         JTextArea studentsDisabled = new JTextArea(disabledStudentsString);
                         studentsDisabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
@@ -824,13 +840,13 @@ public class Main {
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new JScrollPane(studentsDisabled);
                         scroll.setPreferredSize(new Dimension(500, 500));
-                        
+
                         // View Disabled Students Array
                         Object[] display = {
                             viewDisabledStudents,
                             scroll
                         };
-                        
+
                         // Display Disabled Students
                         JOptionPane.showMessageDialog(null, display, "Admin Panel - View Disabled Students", JOptionPane.PLAIN_MESSAGE, null);
                     } // Else no disabled students found
@@ -849,24 +865,24 @@ public class Main {
                         JLabel viewAllStudents = new JLabel("View All Students");
                         viewAllStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
                         viewAllStudents.setForeground(Color.white);
-                        
+
                         // JTextArea All Students (display all students)
                         JTextArea allStudents = new JTextArea(fullStudentString);
                         allStudents.setFont(new Font("Segoe UI", Font.PLAIN, 20));
                         allStudents.setLineWrap(true);
                         allStudents.setWrapStyleWord(true);
                         allStudents.setEditable(false);
-                        
+
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new JScrollPane(allStudents);
                         scroll.setPreferredSize(new Dimension(500, 500));
-                        
+
                         // View All Students Array
                         Object[] display = {
                             viewAllStudents,
                             scroll
                         };
-                        
+
                         // Display All Students
                         JOptionPane.showMessageDialog(null, display, "Admin Panel - View All Students", JOptionPane.PLAIN_MESSAGE, null);
                     } // Else no students exist (at all)
@@ -1084,11 +1100,11 @@ public class Main {
                         toolsEnabled.setLineWrap(true);
                         toolsEnabled.setWrapStyleWord(true);
                         toolsEnabled.setEditable(false);
-                        
+
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new JScrollPane(toolsEnabled);
                         scroll.setPreferredSize(new Dimension(500, 500));
-                        
+
                         // Display Enabled Tools
                         JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View Enabled Tools", JOptionPane.PLAIN_MESSAGE, null);
                     } // Else no enabled tools found
@@ -1106,11 +1122,11 @@ public class Main {
                         toolsDisabled.setLineWrap(true);
                         toolsDisabled.setWrapStyleWord(true);
                         toolsDisabled.setEditable(false);
-                        
+
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new JScrollPane(toolsDisabled);
                         scroll.setPreferredSize(new Dimension(500, 500));
-                        
+
                         /// Display Disabled Tools
                         JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View Disabled Tools", JOptionPane.PLAIN_MESSAGE, null);
                     } // else no disabled tools found
@@ -1131,11 +1147,11 @@ public class Main {
                         toolsAll.setLineWrap(true);
                         toolsAll.setWrapStyleWord(true);
                         toolsAll.setEditable(false);
-                        
+
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new JScrollPane(toolsAll);
                         scroll.setPreferredSize(new Dimension(500, 500));
-                        
+
                         // Display All Tools
                         JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View All Tools", JOptionPane.PLAIN_MESSAGE, null);
 
