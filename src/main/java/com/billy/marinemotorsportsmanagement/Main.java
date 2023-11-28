@@ -7,10 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
@@ -101,15 +98,28 @@ public class Main {
             // exit application
             default:
                 // Login Field
-                JLabel exitMessage = new JLabel("Please enter the admininistrator login to exit the application.");
-                exitMessage.setFont(new Font("Segoe UI", Font.PLAIN, 28));
+                // JLabel exitMessage
+                JLabel exitMessage = new JLabel("Please enter admininistrator credentials to exit the application.");
+                exitMessage.setFont(new Font("Segoe UI", Font.BOLD, 28));
                 exitMessage.setForeground(Color.white);
+
+                // JTextField & JLabel Username (Username field for login)
                 JTextField username = new JTextField();
+                JLabel usernameTitle = new JLabel("Username");
+                usernameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
+                usernameTitle.setForeground(Color.white);
+
+                // JPasswordField & JLabel Password (Password field for login)
                 JPasswordField password = new JPasswordField();
+                JLabel passwordTitle = new JLabel("Password");
+                passwordTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
+                passwordTitle.setForeground(Color.white);
+
+                // Display Array
                 Object[] loginField = {
                     exitMessage,
-                    "Username", username,
-                    "Password", password
+                    usernameTitle, username,
+                    passwordTitle, password
                 };
 
                 // Attempt login till session status is active
@@ -125,7 +135,7 @@ public class Main {
                         mainMenu(api);
                     } // Else, login was incorrect
                     else {
-                        JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
         }
@@ -175,162 +185,188 @@ public class Main {
      * @param session current session (AM/PM)
      */
     public static void quickScan(Tool api, String session) {
-        // get borrower
-        // build student list
+        // Build Student List
         String[] studentList = new String[api.studentNameList(true, session).size()];
         studentList = api.studentNameList(true, session).toArray(studentList);
         Integer[] studentIDList = new Integer[studentList.length];
         studentIDList = api.studentIDList(true, session).toArray(studentIDList);
 
-        // add id to student list that already contains name
+        // Add StudentID to Student List containing Student Name already
         for (int i = 0; i < studentList.length; i++) {
             studentList[i] += ", ID: " + studentIDList[i];
         }
 
-        // select a student from dropdown
         // Run quick scan till exit
         while (true) {
-            // update vars
+            // Update vars
             studentID = 0;
             in = 0;
             out = 0;
             error = false;
+
             // Get chosen student or exit quick scan
             String studentSelected = (String) JOptionPane.showInputDialog(null, "Select a Student", "Tool Master Panel - Quick Scan", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
 
-            // ensure student chosen, otherwise return
+            // Ensure a student was chosen, otherwise return
             if (studentSelected != null) {
-                // get student id
+                // Get student id
                 studentSelected = studentSelected.replaceAll("[^0-9]+", ""); // strip everything but id
                 studentID = Integer.parseInt(studentSelected);
             } else {
-                // exit quick scan
+                // Exit quick scan
                 toolMaster(api, session);
             }
 
-            // init gui
+            // Initialize Tool Scan GUI
+            // JLabel Scan Title (display user tools being scanned for)
             JLabel scanTitle = new JLabel("Scanning tools for: " + api.getStudentName(studentID));
-            JLabel scanStats = new JLabel("Tools Borrowed: 0 | Tools Returned: 0");
             scanTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
             scanTitle.setForeground(Color.white);
+
+            // JLabel Scan Stats (borrow/return count)
+            JLabel scanStats = new JLabel("Tools Borrowed: 0 | Tools Returned: 0");
             scanStats.setFont(new Font("Segoe UI", Font.PLAIN, 28));
             scanStats.setForeground(Color.white);
+
+            // JTextArea Tools Scanned (display tools scanned in/out)
             JTextArea toolsScanned = new JTextArea();
             toolsScanned.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-            JScrollPane scroll = new JScrollPane(toolsScanned);
             toolsScanned.setLineWrap(true);
             toolsScanned.setWrapStyleWord(true);
             toolsScanned.setEditable(false);
+
+            // JScrollPane scroll (display JTextArea with scrollbar)
+            JScrollPane scroll = new JScrollPane(toolsScanned);
             scroll.setPreferredSize(new Dimension(200, 350));
+
+            // JTextField tool (Text box to read scanned tool)
             JTextField tool = new JTextField() {
-                // focus text field
+                // Set focus on TextField
                 public void addNotify() {
                     super.addNotify();
                     requestFocus();
                 }
             };
 
-            // handle tool scanning
+            // Barcode Scan Handler/Listener
             tool.addKeyListener(new KeyAdapter() {
                 public void keyPressed(KeyEvent e) {
+                    // If enter is pressed
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        // if blank
+                        // Check if text box is empty
                         if (tool.getText().isBlank()) {
                             toolsScanned.append("Invalid Scan Error\n");
-                        } // else if tool contains mms, start scan process
+                        } // Else, if text box contains MMS-, scan is valid, continue
                         else if (tool.getText().toUpperCase().contains("MMS-")) {
-                            // parse tool id
+                            // Parse Tool ID (remove MMS-)
                             String scannedTool = tool.getText();
                             scannedTool = scannedTool.replaceAll("[^0-9]+", "");
                             int toolID = Integer.parseInt(scannedTool);
 
-                            // ensure tool status active
+                            // Ensure scanned tool is valid & active
                             if (api.toolStatus(toolID)) {
-                                // if tool isnt available, return
+                                // If tool isn't available, return tool
                                 if (!api.toolAvailability(toolID)) {
-                                    // return success
+                                    // Return success
                                     if (api.returnTool(toolID)) {
                                         toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         in++;
-                                    } // return error
+                                    } // Return error
                                     else {
                                         toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         error = true;
                                     }
-                                } // else if tool is available, borrow
+                                } // Else if tool is available, borrow tool
                                 else if (api.toolAvailability(toolID)) {
-                                    // borrow success
+                                    // Borrow success
                                     if (api.borrowTool(studentID, toolID)) {
                                         toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         out++;
-                                    } // borrow error
+                                    } // Borrow error
                                     else {
                                         toolsScanned.append("Borrow Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                         error = true;
                                     }
                                 }
-                            } // else tool status inactive
+                            } // Else, check if tool doesn't exist or is just inactive
                             else {
-                                toolsScanned.append("Inactive Tool Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                 error = true;
+                                // Tool doesn't exist
+                                if (api.getToolName(toolID) == null) {
+                                    toolsScanned.append("Unknown Tool Error, ID: " + toolID + "\n");
+                                } 
+                                // Tool exists, but is inactive
+                                else {
+                                    toolsScanned.append("Inactive Tool Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                }
                             }
-                        } // else invalid tool entered
+                        } // Else unknown error
                         else {
-                            toolsScanned.append("Invalid Tool Error\n");
+                            toolsScanned.append("Unknown Scan Error\n");
                             error = true;
                         }
 
-                        // clear input, update stats
+                        // Clear textbox input, update scan stats
                         tool.setText("");
                         scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
                     }
                 }
             });
 
+            // JButton Finish (Finish scanning button)
             JButton finish = new JButton("Finish Scan");
             finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
-            // create action listener for finish scan
-            ActionListener test = new ActionListener() {
+            
+            // Create Action Listener for finish scan button
+            ActionListener finishEvent = new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    // check if any errors occured
+                    // Check if any errors occured
                     if (error) {
-                        // ask user if they want to continue scanning or exit
+                        // Ask user if they want to continue scanning or exit
+                        // JLabel Error Titles (Title containing info/student with errors)
                         JLabel errorTitle = new JLabel("One or more errors occured scanning tools for " + api.getStudentName(studentID));
                         JLabel errorTitle2 = new JLabel("\nPlease continue if all the tools were scanned, otherwise go back to scanning");
-
                         errorTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
                         errorTitle.setForeground(Color.white);
                         errorTitle2.setFont(new Font("Segoe UI", Font.PLAIN, 24));
                         errorTitle2.setForeground(Color.white);
 
+                        // Error Display Array
                         Object[] errorDisplay = {
-                            errorTitle,
-                            errorTitle2,
-                            scroll
+                            errorTitle, // Title Containing info/student with errors
+                            errorTitle2,// Title Containing info/student with errors
+                            scroll // Tools Scanned (display tools scanned in/out)
                         };
+                        
+                        // Display Error Message
                         int cont = JOptionPane.showConfirmDialog(null, errorDisplay, "Tool Scan Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                        
+                        // If OK, exit tool scan successfully
                         if (cont == JOptionPane.OK_OPTION) {
                             JOptionPane.getRootFrame().dispose();
                         }
-                    } // else successfully end tool scan for student
+                    } // Else if no errors, successfully exit tool scan
                     else {
                         JOptionPane.getRootFrame().dispose();
                     }
                 }
             };
-            finish.addActionListener(test);
+            
+            // Add Finish Button Listener
+            finish.addActionListener(finishEvent);
 
-            Object[] display = {
-                scanTitle,
-                scanStats,
-                scroll,
-                tool,
-                finish
+            // Tool Scan Display Array
+            Object[] toolScanDisplay = {
+                scanTitle, // Scan Title (display user tools being scanned for)
+                scanStats, // Scan Stats (borrow/return count)
+                scroll, // Tools Scanned (display tools scanned in/out)
+                tool, // Tool (Text box to read scanned tool)
+                finish // Finish (Finish scanning button)
             };
 
-            // start studentSession
-            JOptionPane.showOptionDialog(null, display, "Tool Scan", 0, -1, null, new Object[]{}, null);
+            // Start Student Scan Session
+            JOptionPane.showOptionDialog(null, toolScanDisplay, "Tool Scan", 0, -1, null, new Object[]{}, null);
         }
     }
 
@@ -345,7 +381,7 @@ public class Main {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No borrowed tools found", "Tool Master Panel - Tool Report", JOptionPane.ERROR_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No borrowed tools found", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
             toolMaster(api, session);
         }
 
@@ -371,7 +407,7 @@ public class Main {
             allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
         }
 
-        // init unavailable tool vars
+        // Init unavailable tool vars
         String unavailableTools = "";
         int toolsOut = 0;
         switch (session) {
@@ -384,7 +420,7 @@ public class Main {
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
                                 + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
 
-                        // increment tool out counter
+                        // Increment tool out counter
                         toolsOut++;
                     }
                 }
@@ -399,7 +435,7 @@ public class Main {
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
                                 + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
 
-                        // increment tool out counter
+                        // Increment tool out counter
                         toolsOut++;
                     }
                 }
@@ -410,28 +446,35 @@ public class Main {
                 toolMaster(api, session);
         }
 
-        // Display results
+        // Display Results
+        // JLabel Unavailable Title (display amount of tools unavailable + session)
         JLabel unavailableTitle = new JLabel("(" + toolsOut + ")" + " Unavailable Tools - " + session + " Session\n\n");
         unavailableTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
         unavailableTitle.setForeground(Color.white);
 
+        // JTextArea Text Area (display all unavailable tools)
         JTextArea textArea = new JTextArea(unavailableTools);
-        // check if no unavailable tools, and display to user if so
-        if (unavailableTools.isEmpty()) {
-            textArea.setText("All tools are currently available for " + session + " Session");
-        }
         textArea.setFont(new Font("Segoe UI", Font.PLAIN, 24));
-        JScrollPane scrollPane = new JScrollPane(textArea);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
-        scrollPane.setPreferredSize(new Dimension(500, 500));
+        
+        // Check if no unavailable tools, and display to user if so in Text Area
+        if (unavailableTools.isEmpty()) {
+            textArea.setText("All tools are currently available for " + session + " Session");
+        }
+        
+        // JScrollPane scroll (display JTextArea with scrollbar)
+        JScrollPane scroll = new JScrollPane(textArea);
+        scroll.setPreferredSize(new Dimension(500, 500));
 
+        // Unavailable Tools Display Array
         Object[] display = {
-            unavailableTitle,
-            scrollPane
+            unavailableTitle, // Unavailable Title (display amount of tools unavailable + session)
+            scroll // Text Area (display all unavailable tools)
         };
 
+        // Display Unavailable Tools
         JOptionPane.showMessageDialog(null, display, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
 
         // Ensure return to Tool Master Panel
@@ -446,35 +489,50 @@ public class Main {
      */
     public static void admin(Tool api) {
         // Login Field
-        JLabel loginMessage = new JLabel("Please enter your credentials");
-        loginMessage.setFont(new Font("Segoe UI", Font.PLAIN, 28));
-        loginMessage.setForeground(Color.white);
+        // JLabel Login Title (self-explanatory)
+        JLabel loginTitle = new JLabel("Please enter your credentials");
+        loginTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        loginTitle.setForeground(Color.white);
+        
+        // JTextField & JLabel Username (Username field for login)
         JTextField username = new JTextField();
+        JLabel usernameTitle = new JLabel("Username");
+        usernameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
+        usernameTitle.setForeground(Color.white);
+        
+        // JPasswordField & JLabel Password (Password field for login)
         JPasswordField password = new JPasswordField();
+        JLabel passwordTitle = new JLabel("Password");
+        passwordTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
+        passwordTitle.setForeground(Color.white);
+        
+        // Login Field Display Array
         Object[] loginField = {
-            loginMessage,
-            "Username", username,
-            "Password", password
+            loginTitle, // Login Title (self-explanatory)
+            usernameTitle, username, // Username (Username field for login)
+            passwordTitle, password // Password (Password field for login)
         };
 
         // Attempt login till session status is active
         while (!api.sessionStatus()) {
-            // Login Dialog
+            // Display Login Dialog
             int option = JOptionPane.showConfirmDialog(null, loginField, "Admin Login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
             // If Ok, check login
             if (option == JOptionPane.OK_OPTION && api.login(username.getText(), password.getText())) {
+                // Display Success Message
                 JOptionPane.showMessageDialog(null, "Welcome, Login Successful", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
             } // If no, exit to menu
             else if (option == JOptionPane.CANCEL_OPTION) {
                 mainMenu(api);
             } // Else, login was incorrect
             else {
-                JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.ERROR_MESSAGE, null);
+                // Display Invalid Credentials Message
+                JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
             }
         }
 
-        // Initialize options
+        // Initialize Options
         String[] options = {"Student Management", "Tool Management", "Logout of Admin"};
         int selection = JOptionPane.showOptionDialog(null, "Hi, Admin!\nWhat would you like to do today?", "Admin Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
@@ -501,40 +559,57 @@ public class Main {
     public static void studentManagementAdmin(Tool api) {
         // Select Add or Remove or Back
         String[] studentOptions = {"Add Student", "Disable Student", "Re-enable Student", "View Students", "Back to Admin Panel"};
-        int studentSelection = JOptionPane.showOptionDialog(null, "Please select an action", "Admin Panel - Student Management", 0, JOptionPane.QUESTION_MESSAGE, null, studentOptions, studentOptions[0]);
+        int studentSelection = JOptionPane.showOptionDialog(null, "Please select an action", "Admin Panel - Student Management", 0, JOptionPane.PLAIN_MESSAGE, null, studentOptions, studentOptions[0]);
         switch (studentSelection) {
             case 0 -> {
-                // Add student
-                // Student Field
+                // Add Student Field
+                // JLabel Add Student Title (Title)
+                JLabel addStudentTitle = new JLabel("Add Student");
+                addStudentTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+                addStudentTitle.setForeground(Color.white);
+                
+                // JTextField & JLabel Full Name (Text box to enter Full Student Name)
                 JTextField fullName = new JTextField();
+                JLabel fullNameTitle = new JLabel("Full Name");
+                fullNameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
+                fullNameTitle.setForeground(Color.white);
+                
+                // JTextField & JLabel Student Session (Text box to enter Student Session)
                 JTextField studentSession = new JTextField();
+                JLabel studentSessionTitle = new JLabel("Session (AM or PM)");
+                studentSessionTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
+                studentSessionTitle.setForeground(Color.white);
+                
+                // Add Student Field Display Array
                 Object[] addStudentField = {
-                    "Full Name", fullName,
-                    "Session (AM or PM):", studentSession
+                    addStudentTitle,
+                    fullNameTitle, fullName, // Full Name (Text box to enter Full Student Name)
+                    studentSessionTitle, studentSession // Student Session (Text box to enter Student Session)
                 };
 
-                // 
-                int addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Admin Panel - Add Student", JOptionPane.OK_CANCEL_OPTION);
+                // Display Add Student Field
+                int addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Admin Panel - Add Student", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                
                 // If Ok, attempt student creation
                 if (addStudentInfo == JOptionPane.OK_OPTION) {
                     boolean added = false;
                     // If student added
                     if (api.addStudent(fullName.getText(), studentSession.getText())) {
                         String successMessage = "Student successfully added:\n\n" + "Name: " + fullName.getText() + "\nSession: " + studentSession.getText();
-                        JOptionPane.showMessageDialog(null, successMessage, "Add Student", JOptionPane.INFORMATION_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, successMessage, "Add Student", JOptionPane.PLAIN_MESSAGE, null);
                     } // Else, if student not added, try again till added or cancelled
                     else {
                         while (!added) {
-                            JOptionPane.showMessageDialog(null, "Student has not been added, please ensure you enter a valid session.", "Add Student", JOptionPane.ERROR_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Student has not been added, please ensure you enter a valid session.", "Add Student", JOptionPane.PLAIN_MESSAGE, null);
                             addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Admin Panel - Add Student", JOptionPane.OK_CANCEL_OPTION);
-                            // if yes, continue trying to add student
+                            // If yes, continue trying to add student
                             if (addStudentInfo == JOptionPane.YES_OPTION) {
                                 if (api.addStudent(fullName.getText(), studentSession.getText())) {
                                     added = true;
                                     String successAddMessage = "Student successfully added:\n\n" + "Name: " + fullName.getText() + "\nSession: " + studentSession.getText();
                                     JOptionPane.showMessageDialog(null, successAddMessage, "Admin Panel - Add Student", JOptionPane.PLAIN_MESSAGE, null);
                                 }
-                            } // if no, exit loop and return to menu
+                            } // If no, exit loop and return to menu
                             else {
                                 break;
                             }
@@ -578,7 +653,7 @@ public class Main {
                             String successRemoveMessage = "Student successfully disabled: " + studentToDisable;
                             JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Student has not been disabled. Error.", "Admin Panel - Disable Student", JOptionPane.ERROR_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Student has not been disabled. Error.", "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
                         }
                     } // If No, return to student management panel
                     else {
@@ -586,7 +661,7 @@ public class Main {
                     }
                 } // if no enabled students
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no students to disable.", "Admin Panel - Disable Student", JOptionPane.ERROR_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no students to disable.", "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
                 // Return to student management panel once completed
                 studentManagementAdmin(api);
@@ -620,7 +695,7 @@ public class Main {
                             String successRemoveMessage = "Student successfully re-enabled: " + studentToDisable;
                             JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Student has not been re-enabled. Error.", "Admin Panel - Re-enable Student", JOptionPane.ERROR_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Student has not been re-enabled. Error.", "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
                         }
                     } // If No, return to student management panel
                     else {
@@ -628,7 +703,7 @@ public class Main {
                     }
                 } // if no disabled students
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no students to re-enable.", "Admin Panel - Re-enable Student", JOptionPane.ERROR_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no students to re-enable.", "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
                 // Return to student management panel once completed
                 studentManagementAdmin(api);
@@ -651,22 +726,22 @@ public class Main {
         // Check if any student available to borrow
         if (api.studentIDList(false).isEmpty() && api.studentIDList(true).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No Students exist", "Admin Panel - View Students", JOptionPane.ERROR_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No Students exist", "Admin Panel - View Students", JOptionPane.PLAIN_MESSAGE, null);
             toolManagementAdmin(api);
-        } // else continue 
+        } // Else continue 
         else {
-            // initialize flags & arrays
+            // Initialize flags & arrays
             boolean disabledStudents = false;
             boolean enabledStudents = false;
             String enabledStudentsString = "";
             String disabledStudentsString = "";
 
-            // check disabled students
+            // Check disabled students
             if (!api.studentNameList(false).isEmpty()) {
-                // update flag
+                // Update flag
                 disabledStudents = true;
 
-                // build disabled students
+                // Build disabled students
                 // Get disabled student list
                 ArrayList<String> disabledStudentNameList = api.studentNameList(false);
                 ArrayList<Integer> disabledStudentIDList = api.studentIDList(false);
@@ -677,12 +752,12 @@ public class Main {
                 }
             }
 
-            // check enabled students
+            // Check enabled students
             if (!api.studentNameList(true).isEmpty()) {
-                // update flag
+                // Update flag
                 enabledStudents = true;
 
-                // build enabled students
+                // Build enabled students
                 // Get enabled student list
                 ArrayList<String> enabledStudentNameList = api.studentNameList(true);
                 ArrayList<Integer> enabledStudentIDList = api.studentIDList(true);
@@ -697,59 +772,109 @@ public class Main {
             String[] viewStudentOptions = {"View Enabled Students", "View Disabled Students", "View all Students", "Back"};
             int viewStudentSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Students", 0, JOptionPane.PLAIN_MESSAGE, null, viewStudentOptions, viewStudentOptions[0]);
             switch (viewStudentSelection) {
-                // view enabled Students
+                // View Enabled Students
                 case 0 -> {
-                    // check if enabled Students found
+                    // Check if enabled Students found
                     if (enabledStudents) {
-                        JTextArea textArea = new JTextArea(enabledStudentsString);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        textArea.setLineWrap(true);
-                        textArea.setWrapStyleWord(true);
-                        textArea.setEditable(false);
-                        scrollPane.setPreferredSize(new Dimension(500, 500));
-                        JOptionPane.showMessageDialog(null, scrollPane, "Admin Panel - View Enabled Students", JOptionPane.PLAIN_MESSAGE, null);
-                    } // else no enabled Students found
+                        // JLabel View Enabled Students Title (Title)
+                        JLabel viewEnabledStudents = new JLabel("View Enabled Students");
+                        viewEnabledStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
+                        viewEnabledStudents.setForeground(Color.white);
+                        
+                        // JTextArea Students Enabled (display enabled students)
+                        JTextArea studentsEnabled = new JTextArea(enabledStudentsString);
+                        studentsEnabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+                        studentsEnabled.setLineWrap(true);
+                        studentsEnabled.setWrapStyleWord(true);
+                        studentsEnabled.setEditable(false);
+                        
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new JScrollPane(studentsEnabled);
+                        scroll.setPreferredSize(new Dimension(500, 500));
+                        
+                        // View Enabled Students Array
+                        Object[] display = {
+                            viewEnabledStudents,
+                            scroll
+                        };
+                        
+                        // Display Enabled Students
+                        JOptionPane.showMessageDialog(null, display, "Admin Panel - View Enabled Students", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no enabled Students found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Enabled Students exist", "Admin Panel - View Enabled Students", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Enabled Students exist", "Admin Panel - View Enabled Students", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // view disabled Students
+                // View Disabled Students
                 case 1 -> {
-                    // check if disabled Students found
+                    // Check if Disabled Students found
                     if (disabledStudents) {
-                        JTextArea textArea = new JTextArea(disabledStudentsString);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        textArea.setLineWrap(true);
-                        textArea.setWrapStyleWord(true);
-                        textArea.setEditable(false);
-                        scrollPane.setPreferredSize(new Dimension(500, 500));
-                        JOptionPane.showMessageDialog(null, scrollPane, "Admin Panel - View Disabled Students", JOptionPane.PLAIN_MESSAGE, null);
-                    } // else no disabled students found
+                        // JLabel View Disabled Students Title (Title)
+                        JLabel viewDisabledStudents = new JLabel("View Disabled Students");
+                        viewDisabledStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
+                        viewDisabledStudents.setForeground(Color.white);
+                        
+                        // JTextArea Students Disabled (display disabled students)
+                        JTextArea studentsDisabled = new JTextArea(disabledStudentsString);
+                        studentsDisabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+                        studentsDisabled.setLineWrap(true);
+                        studentsDisabled.setWrapStyleWord(true);
+                        studentsDisabled.setEditable(false);
+
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new JScrollPane(studentsDisabled);
+                        scroll.setPreferredSize(new Dimension(500, 500));
+                        
+                        // View Disabled Students Array
+                        Object[] display = {
+                            viewDisabledStudents,
+                            scroll
+                        };
+                        
+                        // Display Disabled Students
+                        JOptionPane.showMessageDialog(null, display, "Admin Panel - View Disabled Students", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no disabled students found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Disabled Students exist", "Admin Panel Panel - View Disabled Students", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Disabled Students exist", "Admin Panel Panel - View Disabled Students", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // view all tools
+                // View All students
                 case 2 -> {
-                    // check if disabled or enabled Students found
+                    // Check if Disabled or Enabled Students found
                     if (disabledStudents || enabledStudents) {
-                        // Combine disabled + enabled
+                        // Combine Disabled + Enabled
                         String fullStudentString = enabledStudentsString + disabledStudentsString;
 
-                        // Display Students
-                        JTextArea textArea = new JTextArea(fullStudentString);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        textArea.setLineWrap(true);
-                        textArea.setWrapStyleWord(true);
-                        textArea.setEditable(false);
-                        scrollPane.setPreferredSize(new Dimension(500, 500));
-                        JOptionPane.showMessageDialog(null, scrollPane, "Admin Panel - View All Students", JOptionPane.PLAIN_MESSAGE, null);
-                    } // else no enabled or disabled Students found
+                        // JLabel View All Students Title (Title)
+                        JLabel viewAllStudents = new JLabel("View All Students");
+                        viewAllStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
+                        viewAllStudents.setForeground(Color.white);
+                        
+                        // JTextArea All Students (display all students)
+                        JTextArea allStudents = new JTextArea(fullStudentString);
+                        allStudents.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+                        allStudents.setLineWrap(true);
+                        allStudents.setWrapStyleWord(true);
+                        allStudents.setEditable(false);
+                        
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new JScrollPane(allStudents);
+                        scroll.setPreferredSize(new Dimension(500, 500));
+                        
+                        // View All Students Array
+                        Object[] display = {
+                            viewAllStudents,
+                            scroll
+                        };
+                        
+                        // Display All Students
+                        JOptionPane.showMessageDialog(null, display, "Admin Panel - View All Students", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no students exist (at all)
                     else {
-                        JOptionPane.showMessageDialog(null, "No Students exist", "Tool Master Panel - View All Students", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Students exist", "Tool Master Panel - View All Students", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // return to Student management
+                // Return to Student management
                 default ->
                     studentManagementAdmin(api);
             }
@@ -781,7 +906,7 @@ public class Main {
                         JOptionPane.showMessageDialog(null, successAddMessage, "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
                     } // Else if tool not added,
                     else {
-                        JOptionPane.showMessageDialog(null, "Tool has not been added, error.", "Admin Panel - Add Tool", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Tool has not been added, error.", "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
                     }
                     // If no, return to admin panel
                 } else {
@@ -819,7 +944,7 @@ public class Main {
                             String successRemoveMessage = "Tool successfully disabled: " + toolToDisable;
                             JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Tool has not been disabled. Error.", "Admin Panel - Disable Tool", JOptionPane.ERROR_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Tool has not been disabled. Error.", "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null);
                         }
 
                         // Return to tool management once completed
@@ -831,7 +956,7 @@ public class Main {
                     }
                 } // if no enabled tools
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to disable.", "Admin Panel - Disable Tool", JOptionPane.ERROR_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no tools to disable.", "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null);
                 }
 
                 // Return to tool management panel once completed
@@ -865,7 +990,7 @@ public class Main {
                             String successRemoveMessage = "Tool successfully re-enabled: " + toolToDisable;
                             JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Tool has not been re-enabled. Error.", "Admin Panel - Re-enable Tool", JOptionPane.ERROR_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Tool has not been re-enabled. Error.", "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null);
                         }
 
                         // Return to tool management once completed
@@ -877,7 +1002,7 @@ public class Main {
                     }
                 } // If no enabled tools
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to re-enable.", "Admin Panel - Re-enable Tool", JOptionPane.ERROR_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no tools to re-enable.", "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null);
                 }
 
                 // Return to tool management panel once completed
@@ -903,22 +1028,22 @@ public class Main {
         // Check if any tools available to borrow
         if (api.toolIDList(false).isEmpty() && api.toolIDList(true).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No Tools exist", "Admin Panel - View Tools", JOptionPane.ERROR_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No Tools exist", "Admin Panel - View Tools", JOptionPane.PLAIN_MESSAGE, null);
             toolManagementAdmin(api);
-        } // else continue 
+        } // Else continue 
         else {
-            // initialize flags & arrays
+            // Initialize flags & arrays
             boolean disabledTools = false;
             boolean enabledTools = false;
             String enabledToolsString = "";
             String disabledToolsString = "";
 
-            // check disabled tools
+            // Check Disabled Tools
             if (!api.toolNameList(false).isEmpty()) {
-                // update flag
+                // Update flag
                 disabledTools = true;
 
-                // build disabled tools
+                // Build Disabled tools
                 // Get disabled tool list
                 ArrayList<String> disabledToolNameList = api.toolNameList(false);
                 ArrayList<Integer> disabledToolIDList = api.toolIDList(false);
@@ -929,12 +1054,12 @@ public class Main {
                 }
             }
 
-            // check enabled tools
+            // Check Enabled tools
             if (!api.toolNameList(true).isEmpty()) {
-                // update flag
+                // Update flag
                 enabledTools = true;
 
-                // build enabled tools
+                // Build enabled tools
                 // Get enabled tool list
                 ArrayList<String> enabledToolNameList = api.toolNameList(true);
                 ArrayList<Integer> enabledToolIDList = api.toolIDList(true);
@@ -949,59 +1074,77 @@ public class Main {
             String[] viewToolOptions = {"View Enabled Tools", "View Disabled Tools", "View all Tools", "Back"};
             int viewToolSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Tools", 0, JOptionPane.PLAIN_MESSAGE, null, viewToolOptions, viewToolOptions[0]);
             switch (viewToolSelection) {
-                // view enabled tools
+                // View Enabled Tools
                 case 0 -> {
-                    // check if enabled tools found
+                    // Check if enabled tools found
                     if (enabledTools) {
-                        JTextArea textArea = new JTextArea(enabledToolsString);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        textArea.setLineWrap(true);
-                        textArea.setWrapStyleWord(true);
-                        textArea.setEditable(false);
-                        scrollPane.setPreferredSize(new Dimension(500, 500));
-                        JOptionPane.showMessageDialog(null, scrollPane, "Admin Panel - View Enabled Tools", JOptionPane.PLAIN_MESSAGE, null);
-                    } // else no enabled tools found
+                        // JTextArea Enabled Tools (display all enabled tools)
+                        JTextArea toolsEnabled = new JTextArea(enabledToolsString);
+                        toolsEnabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+                        toolsEnabled.setLineWrap(true);
+                        toolsEnabled.setWrapStyleWord(true);
+                        toolsEnabled.setEditable(false);
+                        
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new JScrollPane(toolsEnabled);
+                        scroll.setPreferredSize(new Dimension(500, 500));
+                        
+                        // Display Enabled Tools
+                        JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View Enabled Tools", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no enabled tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Enabled Tools exist", "Admin Panel - View Enabled Tools", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Enabled Tools exist", "Admin Panel - View Enabled Tools", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // view disabled tools
+                // View Disabled Tools
                 case 1 -> {
-                    // check if disabled tools found
+                    // Check if Disabled Tools found
                     if (disabledTools) {
-                        JTextArea textArea = new JTextArea(disabledToolsString);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        textArea.setLineWrap(true);
-                        textArea.setWrapStyleWord(true);
-                        textArea.setEditable(false);
-                        scrollPane.setPreferredSize(new Dimension(500, 500));
-                        JOptionPane.showMessageDialog(null, scrollPane, "Admin Panel - View Disabled Tools", JOptionPane.PLAIN_MESSAGE, null);
+                        // JTextArea Disabled Tools (display all disabled tools)
+                        JTextArea toolsDisabled = new JTextArea(disabledToolsString);
+                        toolsDisabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+                        toolsDisabled.setLineWrap(true);
+                        toolsDisabled.setWrapStyleWord(true);
+                        toolsDisabled.setEditable(false);
+                        
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new JScrollPane(toolsDisabled);
+                        scroll.setPreferredSize(new Dimension(500, 500));
+                        
+                        /// Display Disabled Tools
+                        JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View Disabled Tools", JOptionPane.PLAIN_MESSAGE, null);
                     } // else no disabled tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Disabled Tools exist", "Admin Panel Panel - View Disabled Tools", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Disabled Tools exist", "Admin Panel Panel - View Disabled Tools", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // view all tools
+                // View All Tools
                 case 2 -> {
                     // check if disabled or enabled tools found
                     if (disabledTools || enabledTools) {
-                        // combine both disabled + enabled
+                        // Combine both disabled + enabled
                         String allTools = enabledToolsString + disabledToolsString;
 
-                        JTextArea textArea = new JTextArea(allTools);
-                        JScrollPane scrollPane = new JScrollPane(textArea);
-                        textArea.setLineWrap(true);
-                        textArea.setWrapStyleWord(true);
-                        textArea.setEditable(false);
-                        scrollPane.setPreferredSize(new Dimension(500, 500));
-                        JOptionPane.showMessageDialog(null, scrollPane, "Admin Panel - View All Tools", JOptionPane.PLAIN_MESSAGE, null);
+                        // JTextArea toolsAll (display all tools)
+                        JTextArea toolsAll = new JTextArea(allTools);
+                        toolsAll.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+                        toolsAll.setLineWrap(true);
+                        toolsAll.setWrapStyleWord(true);
+                        toolsAll.setEditable(false);
+                        
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new JScrollPane(toolsAll);
+                        scroll.setPreferredSize(new Dimension(500, 500));
+                        
+                        // Display All Tools
+                        JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View All Tools", JOptionPane.PLAIN_MESSAGE, null);
 
-                    } // else no disabled or enabled tools found
+                    } // Else no Disabled or Enabled Tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Tools exist", "Tool Master Panel - View All Tools", JOptionPane.ERROR_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No Tools exist", "Tool Master Panel - View All Tools", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // return to tool management
+                // Return to tool management
                 default ->
                     toolManagementAdmin(api);
             }
