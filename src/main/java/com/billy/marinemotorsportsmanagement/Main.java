@@ -23,7 +23,7 @@ public class Main {
 
     // Init api
     private static final Tool api = new Tool();
-    
+
     // Init vars for Tool Scan
     public static int in = 0, out = 0, studentID = 0;
     public static boolean error = false;
@@ -81,11 +81,10 @@ public class Main {
         if (admin) {
             UIManager.put("Button.border", new EmptyBorder(25, 25, 25, 25));
             UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 20));
-        } 
-        // Student Config
+        } // Student Config
         else {
-            UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 32));
-            UIManager.put("Button.border", new EmptyBorder(35, 50, 35, 50));
+            UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 30));
+            UIManager.put("Button.border", new EmptyBorder(35, 40, 35, 40));
         }
     }
 
@@ -161,7 +160,7 @@ public class Main {
     /**
      * The toolMaster method controls various different functions that are
      * utilized by the toolMaster
-     * 
+     *
      * @param session null if no session chosen, else pass session for method
      */
     public static void toolMaster(String session) {
@@ -198,19 +197,19 @@ public class Main {
     /**
      * The quickScan method allows the tool master to quickly return or borrow a
      * tool by automatically identifying if it should be borrowed or returned
-     * 
+     *
      * @param session current session (AM/PM)
      */
     public static void quickScan(String session) {
         // Build Student Name Array
         String[] studentList = new String[api.studentNameList(true, session).size()];
         studentList = api.studentNameList(true, session).toArray(studentList);
-        
+
         // Edit Student Name Array to only contain first letter of last name
         for (int i = 0; i < studentList.length; i++) {
             // Init var
             boolean similarity = false;
-            
+
             // Check current name (i) against all other names to see if any has
             // the same last name. If so, add last name letter
             for (int j = 0; j < studentList.length; j++) {
@@ -219,7 +218,7 @@ public class Main {
                     break;
                 }
             }
-            
+
             // Complete changes if similar (same first name) or not similar (different first name)
             if (similarity) {
                 studentList[i] = studentList[i].replaceAll(" .*", " ") + studentList[i].replaceAll("^.*?\\s", "").charAt(0) + ".";
@@ -227,11 +226,11 @@ public class Main {
                 studentList[i] = studentList[i].replaceAll(" .*", " ");
             }
         }
-        
+
         // Build Student ID Array
         Integer[] studentIDList = new Integer[studentList.length];
         studentIDList = api.studentIDList(true, session).toArray(studentIDList);
-        
+
         // Re-arrange both Arrays in alphabetical order
         String temp;
         int numTemp;
@@ -273,10 +272,10 @@ public class Main {
             ActionListener chooseStudent = (ActionEvent ae) -> {
                 // Get index
                 JButton btn = (JButton) ae.getSource();
-                studentID = (int)btn.getClientProperty("index");
+                studentID = (int) btn.getClientProperty("index");
                 JOptionPane.getRootFrame().dispose();
             };
-            
+
             // Add all buttons
             JButton[] buttonArray = new JButton[studentList.length];
             for (int i = 0; i < studentList.length; i++) {
@@ -286,24 +285,23 @@ public class Main {
                 buttonArray[i].addActionListener(chooseStudent);
                 studentPanel.add(buttonArray[i]);
             }
-            
+
             // Choose Student Display Array
             Object[] chooseStudentDisplay = {
                 studentPanelTitle,
-                studentPanel,
-            };
+                studentPanel,};
 
             // Display Student Selection & Handle Exit
             int exit = JOptionPane.showOptionDialog(null, chooseStudentDisplay, "Scan Tools", 0, -1, null, new String[]{"Back"}, 0);
-            
+
             // Handle Exit
             if (exit == 0) {
                 toolMaster(session);
             }
-            
+
             // Match StudentID with Student Name Selected
             studentID = studentIDList[studentID];
-            
+
             // Initialize Tool Scan GUI
             // JLabel Scan Title (display user tools being scanned for)
             JLabel scanTitle = new JLabel("Scanning tools for: " + api.getStudentName(studentID));
@@ -459,7 +457,7 @@ public class Main {
     /**
      * The Tool Lookup method looks up the status of a tool by their id (if
      * borrowed, if so by who, otherwise it is available)
-     * 
+     *
      * @param session current session (AM/PM)
      */
     public static void toolLookup(String session) {
@@ -470,13 +468,17 @@ public class Main {
         // Get Tool ID
         while (toolTemp.isEmpty()) {
             toolTemp = JOptionPane.showInputDialog(null, "Please enter tool ID to check its status", "Tool Status Lookup", -1);
+            // Check if back
+            if (toolTemp == null) {
+                // Return to tool master
+                toolMaster(session);
+            }
         }
         
         // Check if input contains tool id
-        if (toolTemp.replaceAll("\\D","").matches("\\d+")) {
+        if (toolTemp.replaceAll("\\D", "").matches("\\d+")) {
             toolID = Integer.parseInt(toolTemp.replaceAll("\\D", ""));
-        } 
-        // Else invalid input
+        } // Else invalid input
         else {
             // Return to tool master
             toolMaster(session);
@@ -503,7 +505,7 @@ public class Main {
         // Return to tool master
         toolMaster(session);
     }
-    
+
     /**
      * The unavailableTools method provides the methods for viewing the various
      * unavailable tool reports
@@ -614,8 +616,6 @@ public class Main {
         toolMaster(session);
     }
 
-
-    
     /**
      * The admin method controls authentication and various different admin
      * functions for the admin panel
