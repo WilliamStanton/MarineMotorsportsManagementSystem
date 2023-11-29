@@ -3,6 +3,7 @@ package com.billy.marinemotorsportsmanagement;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -20,13 +21,14 @@ import javax.swing.border.EmptyBorder;
  */
 public class Main {
 
+    // Init api
+    private static final Tool api = new Tool();
+    
     // Init vars for Tool Scan
     public static int in = 0, out = 0, studentID = 0;
     public static boolean error = false;
 
     public static void main(String[] args) {
-        // Initiate api
-        Tool api = new Tool();
 
         // Ensure Database Connection before continuing
         if (!api.databaseConnection()) {
@@ -38,7 +40,7 @@ public class Main {
         uiConfig(false);
 
         // Load main menu
-        mainMenu(api);
+        mainMenu();
 
         // Exit
         api.exit();
@@ -89,10 +91,8 @@ public class Main {
 
     /**
      * The mainMenu method displays the options Student, Admin, or exit.
-     *
-     * @param api the api
      */
-    public static void mainMenu(Tool api) {
+    public static void mainMenu() {
         // Configure UI (default, student)
         uiConfig(false);
 
@@ -102,14 +102,14 @@ public class Main {
         switch (selection) {
             // load tool master panel
             case 0:
-                toolMaster(api, null);
+                toolMaster(null);
                 break;
 
             // load admin panel
             case 1:
                 // Configure UI (teacher)
                 uiConfig(true);
-                admin(api);
+                admin();
                 break;
 
             // exit application
@@ -149,7 +149,7 @@ public class Main {
                         api.exit();
                     } // If no, exit to menu
                     else if (option == JOptionPane.CANCEL_OPTION) {
-                        mainMenu(api);
+                        mainMenu();
                     } // Else, login was incorrect
                     else {
                         JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
@@ -161,11 +161,10 @@ public class Main {
     /**
      * The toolMaster method controls various different functions that are
      * utilized by the toolMaster
-     *
-     * @param api contains methods for management
+     * 
      * @param session null if no session chosen, else pass session for method
      */
-    public static void toolMaster(Tool api, String session) {
+    public static void toolMaster(String session) {
         // Select Session
         if (session == null) {
             String[] sessions = {"AM", "PM", "Back"};
@@ -177,40 +176,80 @@ public class Main {
                 case 1 ->
                     session = "PM";
                 default ->
-                    mainMenu(api);
+                    mainMenu();
             }
         }
 
         // Initialize menu options
-        String[] options = {"Scan Tools", "View Borrowed Tools", "Log out of " + session + " Session"};
+        String[] options = {"Scan Tools", "Tool Lookup", "View Borrowed Tools", "Log out of " + session + " Session"};
         int selection = JOptionPane.showOptionDialog(null, "Tool Master - Current Session: " + session + "\nWhat would you like to do?", "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             case 0 ->
-                quickScan(api, session);
+                quickScan(session);
             case 1 ->
-                unavailableTools(api, session);
+                toolLookup(session);
+            case 2 ->
+                unavailableTools(session);
             default ->
-                mainMenu(api);
+                mainMenu();
         }
     }
 
     /**
      * The quickScan method allows the tool master to quickly return or borrow a
      * tool by automatically identifying if it should be borrowed or returned
-     *
-     * @param api contains methods for management
+     * 
      * @param session current session (AM/PM)
      */
-    public static void quickScan(Tool api, String session) {
-        // Build Student List
+    public static void quickScan(String session) {
+        // Build Student Name Array
         String[] studentList = new String[api.studentNameList(true, session).size()];
         studentList = api.studentNameList(true, session).toArray(studentList);
+        
+        // Edit Student Name Array to only contain first letter of last name
+        for (int i = 0; i < studentList.length; i++) {
+            // Init var
+            boolean similarity = false;
+            
+            // Check current name (i) against all other names to see if any has
+            // the same last name. If so, add last name letter
+            for (int j = 0; j < studentList.length; j++) {
+                if (studentList[i].replaceAll(" .*", "").equals(studentList[j].replaceAll(" .*", "")) && i != j) {
+                    similarity = true;
+                    break;
+                }
+            }
+            
+            // Complete changes if similar (same first name) or not similar (different first name)
+            if (similarity) {
+                studentList[i] = studentList[i].replaceAll(" .*", " ") + studentList[i].replaceAll("^.*?\\s", "").charAt(0) + ".";
+            } else {
+                studentList[i] = studentList[i].replaceAll(" .*", " ");
+            }
+        }
+        
+        // Build Student ID Array
         Integer[] studentIDList = new Integer[studentList.length];
         studentIDList = api.studentIDList(true, session).toArray(studentIDList);
-
-        // Add StudentID to Student List containing Student Name already
+        
+        // Re-arrange both Arrays in alphabetical order
+        String temp;
+        int numTemp;
+        // re-arrange array
         for (int i = 0; i < studentList.length; i++) {
-            studentList[i] += ", ID: " + studentIDList[i];
+            for (int j = i + 1; j < studentList.length; j++) {
+                if (studentList[i].compareTo(studentList[j]) > 0) {
+                    // handle student names
+                    temp = studentList[i];
+                    studentList[i] = studentList[j];
+                    studentList[j] = temp;
+
+                    // handle student ids
+                    numTemp = studentIDList[i];
+                    studentIDList[i] = studentIDList[j];
+                    studentIDList[j] = numTemp;
+                }
+            }
         }
 
         // Run quick scan till exit
@@ -221,19 +260,50 @@ public class Main {
             out = 0;
             error = false;
 
-            // Get chosen student or exit quick scan
-            String studentSelected = (String) JOptionPane.showInputDialog(null, "Select a Student", "Tool Master Panel - Quick Scan", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
+            // Get Chosen Student
+            // JPanel Student Panel (displays all students as buttons)
+            JPanel studentPanel = new JPanel(new GridLayout(6, 5, 6, 6));
 
-            // Ensure a student was chosen, otherwise return
-            if (studentSelected != null) {
-                // Get student id
-                studentSelected = studentSelected.replaceAll("[^0-9]+", ""); // strip everything but id
-                studentID = Integer.parseInt(studentSelected);
-            } else {
-                // Exit quick scan
-                toolMaster(api, session);
+            // JLabel Student Panel Title (display title)
+            JLabel studentPanelTitle = new JLabel("Select a Student - " + session + " Session");
+            studentPanelTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
+            studentPanelTitle.setForeground(Color.white);
+
+            // Chosen Student ActionListener
+            ActionListener chooseStudent = (ActionEvent ae) -> {
+                // Get index
+                JButton btn = (JButton) ae.getSource();
+                studentID = (int)btn.getClientProperty("index");
+                JOptionPane.getRootFrame().dispose();
+            };
+            
+            // Add all buttons
+            JButton[] buttonArray = new JButton[studentList.length];
+            for (int i = 0; i < studentList.length; i++) {
+                buttonArray[i] = new JButton(studentList[i]);
+                buttonArray[i].putClientProperty("index", i);
+                buttonArray[i].setFont(new Font("Arial", Font.PLAIN, 26));
+                buttonArray[i].addActionListener(chooseStudent);
+                studentPanel.add(buttonArray[i]);
             }
+            
+            // Choose Student Display Array
+            Object[] chooseStudentDisplay = {
+                studentPanelTitle,
+                studentPanel,
+            };
 
+            // Display Student Selection & Handle Exit
+            int exit = JOptionPane.showOptionDialog(null, chooseStudentDisplay, "Scan Tools", 0, -1, null, new String[]{"Back"}, 0);
+            
+            // Handle Exit
+            if (exit == 0) {
+                toolMaster(session);
+            }
+            
+            // Match StudentID with Student Name Selected
+            studentID = studentIDList[studentID];
+            
             // Initialize Tool Scan GUI
             // JLabel Scan Title (display user tools being scanned for)
             JLabel scanTitle = new JLabel("Scanning tools for: " + api.getStudentName(studentID));
@@ -356,7 +426,7 @@ public class Main {
                         };
 
                         // Display Error Message
-                        int cont = JOptionPane.showConfirmDialog(null, errorDisplay, "Tool Scan Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                        int cont = JOptionPane.showConfirmDialog(null, errorDisplay, "Scan Tools Error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
                         // If OK, exit tool scan successfully
                         if (cont == JOptionPane.OK_OPTION) {
@@ -382,23 +452,70 @@ public class Main {
             };
 
             // Start Student Scan Session
-            JOptionPane.showOptionDialog(null, toolScanDisplay, "Tool Scan", 0, -1, null, new Object[]{}, null);
+            JOptionPane.showOptionDialog(null, toolScanDisplay, "Scan Tools", 0, -1, null, new Object[]{}, null);
         }
     }
 
     /**
+     * The Tool Lookup method looks up the status of a tool by their id (if
+     * borrowed, if so by who, otherwise it is available)
+     * 
+     * @param session current session (AM/PM)
+     */
+    public static void toolLookup(String session) {
+        // Init var
+        String toolTemp = "";
+        int toolID = 0;
+
+        // Get Tool ID
+        while (toolTemp.isEmpty()) {
+            toolTemp = JOptionPane.showInputDialog(null, "Please enter tool ID to check its status", "Tool Status Lookup", -1);
+        }
+        
+        // Check if input contains tool id
+        if (toolTemp.replaceAll("\\D","").matches("\\d+")) {
+            toolID = Integer.parseInt(toolTemp.replaceAll("\\D", ""));
+        } 
+        // Else invalid input
+        else {
+            // Return to tool master
+            toolMaster(session);
+        }
+
+        // Check if tool is enabled
+        if (api.toolStatus(toolID)) {
+            // Check tool availability
+            if (api.toolAvailability(toolID)) {
+                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow.", "Tool Status Lookup", -1);
+            } // Else tool is currently unavailable
+            else {
+                // Get Tool Name + Borrower Name + Session
+                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrower: " + api.getStudentName(api.getToolBorrowerID(toolID)) + "\nBorrower Session: " + api.getStudentSession(api.getToolBorrowerID(toolID)), "Tool Status Lookup", -1);
+            }
+        } // Else tool is currently disabled
+        else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
+            JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled", "Tool ", -1);
+        } // Else tool does not exist
+        else {
+            JOptionPane.showMessageDialog(null, "The tool by (ID: " + toolID + ") does not exist", "Tool ", -1);
+        }
+
+        // Return to tool master
+        toolMaster(session);
+    }
+    
+    /**
      * The unavailableTools method provides the methods for viewing the various
      * unavailable tool reports
      *
-     * @param api contains methods for management
      * @param session current session (AM/PM)
      */
-    public static void unavailableTools(Tool api, String session) {
+    public static void unavailableTools(String session) {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
             JOptionPane.showMessageDialog(null, "No borrowed tools found", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
-            toolMaster(api, session);
+            toolMaster(session);
         }
 
         // Load all Unavailable Tools
@@ -459,7 +576,7 @@ public class Main {
 
             // Back to Tool Master Panel
             default ->
-                toolMaster(api, session);
+                toolMaster(session);
         }
 
         // Display Results
@@ -494,16 +611,16 @@ public class Main {
         JOptionPane.showMessageDialog(null, display, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
 
         // Ensure return to Tool Master Panel
-        toolMaster(api, session);
+        toolMaster(session);
     }
 
+
+    
     /**
      * The admin method controls authentication and various different admin
      * functions for the admin panel
-     *
-     * @param api contains methods for management
      */
-    public static void admin(Tool api) {
+    public static void admin() {
         // Login Field
         // JLabel Login Title (self-explanatory)
         JLabel loginTitle = new JLabel("Please enter your credentials");
@@ -540,7 +657,7 @@ public class Main {
                 JOptionPane.showMessageDialog(null, "Welcome, Login Successful", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
             } // If no, exit to menu
             else if (option == JOptionPane.CANCEL_OPTION) {
-                mainMenu(api);
+                mainMenu();
             } // Else, login was incorrect
             else {
                 // Display Invalid Credentials Message
@@ -554,14 +671,14 @@ public class Main {
         switch (selection) {
             // Manage Students
             case 0 ->
-                studentManagementAdmin(api);
+                studentManagementAdmin();
             // Manage Tools
             case 1 ->
-                toolManagementAdmin(api);
+                toolManagementAdmin();
             // Return to main menu and logout
             case 2 -> {
                 api.logout();
-                mainMenu(api);
+                mainMenu();
             }
         }
     }
@@ -569,10 +686,8 @@ public class Main {
     /**
      * The studentManagementAdmin method provides options for managing students
      * and is used only in the admin class
-     *
-     * @param api contains methods for management
      */
-    public static void studentManagementAdmin(Tool api) {
+    public static void studentManagementAdmin() {
         // Select Add or Remove or Back
         String[] studentOptions = {"Add Student", "Disable Student", "Re-enable Student", "View Students", "Back to Admin Panel"};
         int studentSelection = JOptionPane.showOptionDialog(null, "Please select an action", "Admin Panel - Student Management", 0, JOptionPane.PLAIN_MESSAGE, null, studentOptions, studentOptions[0]);
@@ -633,10 +748,10 @@ public class Main {
                     }
 
                     // Return to student management panel
-                    studentManagementAdmin(api);
+                    studentManagementAdmin();
                 } // If No, return to student management panel
                 else {
-                    studentManagementAdmin(api);
+                    studentManagementAdmin();
                 }
             }
 
@@ -673,14 +788,14 @@ public class Main {
                         }
                     } // If No, return to student management panel
                     else {
-                        studentManagementAdmin(api);
+                        studentManagementAdmin();
                     }
                 } // if no enabled students
                 else {
                     JOptionPane.showMessageDialog(null, "There are no students to disable.", "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
                 // Return to student management panel once completed
-                studentManagementAdmin(api);
+                studentManagementAdmin();
             }
             case 2 -> {
                 // if any students are disabled
@@ -715,20 +830,20 @@ public class Main {
                         }
                     } // If No, return to student management panel
                     else {
-                        studentManagementAdmin(api);
+                        studentManagementAdmin();
                     }
                 } // if no disabled students
                 else {
                     JOptionPane.showMessageDialog(null, "There are no students to re-enable.", "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
                 // Return to student management panel once completed
-                studentManagementAdmin(api);
+                studentManagementAdmin();
             }
             case 3 ->
-                viewStudentsAdmin(api);
+                viewStudentsAdmin();
 
             default -> // Return back to admin panel
-                admin(api);
+                admin();
         }
     }
 
@@ -738,12 +853,12 @@ public class Main {
      *
      * @param api
      */
-    public static void viewStudentsAdmin(Tool api) {
+    public static void viewStudentsAdmin() {
         // Check if any student available to borrow
         if (api.studentIDList(false).isEmpty() && api.studentIDList(true).isEmpty()) {
             // Back to tool master if no tools found
             JOptionPane.showMessageDialog(null, "No Students exist", "Admin Panel - View Students", JOptionPane.PLAIN_MESSAGE, null);
-            toolManagementAdmin(api);
+            toolManagementAdmin();
         } // Else continue 
         else {
             // Initialize flags & arrays
@@ -892,20 +1007,18 @@ public class Main {
                 }
                 // Return to Student management
                 default ->
-                    studentManagementAdmin(api);
+                    studentManagementAdmin();
             }
         }
         // Return to view students panel once completed
-        viewStudentsAdmin(api);
+        viewStudentsAdmin();
     }
 
     /**
      * The toolManagementAdmin method provides options for managing students and
      * is used only in the admin method
-     *
-     * @param api contains methods for management
      */
-    public static void toolManagementAdmin(Tool api) {
+    public static void toolManagementAdmin() {
         // Select Add or Remove or Back
         String[] toolOptions = {"Add tool", "Disable tool", "Re-enable Tool", "View Tools", "Back"};
         int toolSelection = JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - Tool Management", 0, JOptionPane.PLAIN_MESSAGE, null, toolOptions, toolOptions[0]);
@@ -926,11 +1039,11 @@ public class Main {
                     }
                     // If no, return to admin panel
                 } else {
-                    toolManagementAdmin(api);
+                    toolManagementAdmin();
                 }
 
                 // Return to tool management once completed
-                toolManagementAdmin(api);
+                toolManagementAdmin();
             }
 
             case 1 -> {
@@ -964,11 +1077,11 @@ public class Main {
                         }
 
                         // Return to tool management once completed
-                        toolManagementAdmin(api);
+                        toolManagementAdmin();
                         break;
                     } // If No, return to tool management
                     else {
-                        toolManagementAdmin(api);
+                        toolManagementAdmin();
                     }
                 } // if no enabled tools
                 else {
@@ -976,7 +1089,7 @@ public class Main {
                 }
 
                 // Return to tool management panel once completed
-                toolManagementAdmin(api);
+                toolManagementAdmin();
             }
 
             // Re-enable tools
@@ -1010,11 +1123,11 @@ public class Main {
                         }
 
                         // Return to tool management once completed
-                        toolManagementAdmin(api);
+                        toolManagementAdmin();
                         break;
                     } // If no, return to tool management
                     else {
-                        toolManagementAdmin(api);
+                        toolManagementAdmin();
                     }
                 } // If no enabled tools
                 else {
@@ -1022,30 +1135,28 @@ public class Main {
                 }
 
                 // Return to tool management panel once completed
-                toolManagementAdmin(api);
+                toolManagementAdmin();
             }
 
             // View tools
             case 3 ->
-                viewToolsAdmin(api);
+                viewToolsAdmin();
 
             default -> // Back to admin panel
-                admin(api);
+                admin();
         }
     }
 
     /**
      * The viewToolsAdmin method shows disabled/enabled tools, and all tools
      * used only in the admin method
-     *
-     * @param api used only in the admin class
      */
-    public static void viewToolsAdmin(Tool api) {
+    public static void viewToolsAdmin() {
         // Check if any tools available to borrow
         if (api.toolIDList(false).isEmpty() && api.toolIDList(true).isEmpty()) {
             // Back to tool master if no tools found
             JOptionPane.showMessageDialog(null, "No Tools exist", "Admin Panel - View Tools", JOptionPane.PLAIN_MESSAGE, null);
-            toolManagementAdmin(api);
+            toolManagementAdmin();
         } // Else continue 
         else {
             // Initialize flags & arrays
@@ -1162,10 +1273,10 @@ public class Main {
                 }
                 // Return to tool management
                 default ->
-                    toolManagementAdmin(api);
+                    toolManagementAdmin();
             }
         }
         // Return to view tools panel once completed
-        viewToolsAdmin(api);
+        viewToolsAdmin();
     }
 }
