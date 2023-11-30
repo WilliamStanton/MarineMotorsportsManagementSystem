@@ -62,7 +62,7 @@ public class Main {
         UIManager.put("ComboBox.font", new Font("Segoe UI", Font.BOLD, 32));
 
         // JOptionPane Size
-        UIManager.put("OptionPane.border", new EmptyBorder(120, 120, 120, 120));
+        UIManager.put("OptionPane.border", new EmptyBorder(100, 100, 100, 100));
         UIManager.put("OptionPane.background", new Color(66, 66, 100));
         UIManager.put("Panel.background", new Color(66, 66, 100));
 
@@ -79,12 +79,12 @@ public class Main {
 
         // Admin Config
         if (admin) {
-            UIManager.put("Button.border", new EmptyBorder(25, 25, 25, 25));
+            UIManager.put("Button.border", new EmptyBorder(20, 20, 20, 20));
             UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 20));
         } // Student Config
         else {
-            UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 30));
-            UIManager.put("Button.border", new EmptyBorder(35, 40, 35, 40));
+            UIManager.put("OptionPane.buttonFont", new Font("Segoe UI", Font.BOLD, 26));
+            UIManager.put("Button.border", new EmptyBorder(20, 25, 20, 25));
         }
     }
 
@@ -180,7 +180,7 @@ public class Main {
         }
 
         // Initialize menu options
-        String[] options = {"Scan Tools", "Tool Lookup", "View Borrowed Tools", "Log out of " + session + " Session"};
+        String[] options = {"Scan Tools", "Tool Lookup", "All Borrowed Tools", "Log out of " + session + " Session"};
         int selection = JOptionPane.showOptionDialog(null, "Tool Master - Current Session: " + session + "\nWhat would you like to do?", "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             case 0 ->
@@ -281,7 +281,7 @@ public class Main {
             for (int i = 0; i < studentList.length; i++) {
                 buttonArray[i] = new JButton(studentList[i]);
                 buttonArray[i].putClientProperty("index", i);
-                buttonArray[i].setFont(new Font("Arial", Font.PLAIN, 26));
+                buttonArray[i].setFont(new Font("Arial", Font.PLAIN, 24));
                 buttonArray[i].addActionListener(chooseStudent);
                 studentPanel.add(buttonArray[i]);
             }
@@ -335,6 +335,7 @@ public class Main {
 
             // Barcode Scan Handler/Listener
             tool.addKeyListener(new KeyAdapter() {
+                @Override
                 public void keyPressed(KeyEvent e) {
                     // If enter is pressed
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
@@ -492,7 +493,7 @@ public class Main {
             } // Else tool is currently unavailable
             else {
                 // Get Tool Name + Borrower Name + Session
-                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrower: " + api.getStudentName(api.getToolBorrowerID(toolID)) + "\nBorrower Session: " + api.getStudentSession(api.getToolBorrowerID(toolID)), "Tool Status Lookup", -1);
+                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrower: " + api.getStudentName(api.getToolBorrowerID(toolID)) + "\nBorrower Session: " + api.getStudentSession(api.getToolBorrowerID(toolID)) + "\nBorrow Date: " + api.getToolBorrowDate(toolID), "Tool Status Lookup", -1);
             }
         } // Else tool is currently disabled
         else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
@@ -553,7 +554,8 @@ public class Main {
                     if (allBorrowerSessionsUnavailable.get(i).equals("AM")) {
                         unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
+                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
+                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
 
                         // Increment tool out counter
                         toolsOut++;
@@ -568,7 +570,8 @@ public class Main {
                     if (allBorrowerSessionsUnavailable.get(i).equals("PM")) {
                         unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i) + "\n\n";
+                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
+                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
 
                         // Increment tool out counter
                         toolsOut++;
@@ -925,8 +928,8 @@ public class Main {
 
                         // View Enabled Students Array
                         Object[] display = {
-                            viewEnabledStudents,
-                            scroll
+                            viewEnabledStudents, // View Enabled Students Title (Title)
+                            scroll // Students Enabled (display enabled students)
                         };
 
                         // Display Enabled Students
@@ -958,8 +961,8 @@ public class Main {
 
                         // View Disabled Students Array
                         Object[] display = {
-                            viewDisabledStudents,
-                            scroll
+                            viewDisabledStudents, // Students Disabled (display disabled students)
+                            scroll // scroll (display JTextArea with scrollbar)
                         };
 
                         // Display Disabled Students
