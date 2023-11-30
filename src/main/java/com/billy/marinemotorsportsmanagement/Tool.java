@@ -15,9 +15,9 @@ public class Tool extends Student {
 
     /**
      * The getToolName method returns the name of a tool by id
-     * 
+     *
      * @param toolID the id of the tool
-     * 
+     *
      * @return the name of the tool, otherwise null if not found
      */
     public String getToolName(int toolID) {
@@ -35,7 +35,7 @@ public class Tool extends Student {
             }
 
             connection.close(); // Close DB connection
-            
+
             // Return Tool Name
             return toolName;
         } catch (SQLException ex) {
@@ -46,18 +46,20 @@ public class Tool extends Student {
         // return tool not found
         return null;
     }
-    
+
     /**
-     * The getToolBorrowerID method returns the id of the person borrowing a tool currently
-     * 
+     * The getToolBorrowerID method returns the id of the person borrowing a
+     * tool currently
+     *
      * @param toolID the tool id to get the borrower name for
-     * 
-     * @return the name of the borrower, otherwise 0 if the tool isn't being borrowed
+     *
+     * @return the name of the borrower, otherwise 0 if the tool isn't being
+     * borrowed
      */
     public int getToolBorrowerID(int toolID) {
         // Initialize Variables
         int borrower = 0;
-        
+
         ArrayList<Boolean> avail = new ArrayList<>();
         ArrayList<Integer> id = new ArrayList<>();
         // Attempt to connect to db
@@ -82,16 +84,53 @@ public class Tool extends Student {
         } else {
             borrower = id.get(avail.size() - 1);
         }
-        
+
         // Return borrower, otherwise null if not found
         return borrower;
     }
-    
+
+    /**
+     * The getToolBorrowDate method gets the date of which the tool was taken out
+     * only will check for tools that are currently being borrowed
+     * 
+     * @param toolID the tool id to check
+     * 
+     * @return date the tool was taken out, else null if tool is currently available
+     */
+    public String getToolBorrowDate(int toolID) {
+        // Initialize Variables
+        String borrowDate = "";
+
+        // Check Tool Availability
+        if (toolAvailability(toolID)) {
+            return null;
+        } else {
+            // Attempt to connect to db
+            try (Connection connection = DriverManager.getConnection(databaseURL)) {
+                Statement statement = connection.createStatement(); // Create SQL Statement
+                ResultSet result = statement.executeQuery("SELECT Borrow.Date FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + "));"); // Get results for SQL Statement
+
+                // Get Tool Borrow Date
+                while (result.next()) {
+                    borrowDate = result.getString("Date");
+                }
+
+                connection.close(); // Close DB connection
+            } catch (SQLException ex) {
+                // IF cannot connect to DB, print exception
+                ex.printStackTrace();
+            }
+        }
+
+        // Return Tool Borrow Date
+        return borrowDate.replaceAll(" .*", "");
+    }
+
     /**
      * The toolStatus method checks if a tool is enabled or disabled
      *
      * @param toolID the tool id to check
-     * 
+     *
      * @return true if enabled, false if disabled/not found
      */
     public boolean toolStatus(int toolID) {
@@ -123,7 +162,7 @@ public class Tool extends Student {
      * not
      *
      * @param toolID the tool to check availability
-     * 
+     *
      * @return the tool availability
      */
     public boolean toolAvailability(int toolID) {
@@ -164,7 +203,7 @@ public class Tool extends Student {
      *
      * @param studentID the student id borrowing the tool
      * @param toolID the tool id of the tool being borrowed
-     * 
+     *
      * @return true if successfully borrowed, else false
      */
     public boolean borrowTool(int studentID, int toolID) {
@@ -190,7 +229,7 @@ public class Tool extends Student {
      * The returnTool method allows returning a tool that is currently borrowed
      *
      * @param toolID the tool id of the tool being returned
-     * 
+     *
      * @return true if successfully returned, else false
      */
     public boolean returnTool(int toolID) {
@@ -218,7 +257,7 @@ public class Tool extends Student {
      * The createTool method adds a tool
      *
      * @param toolName the name of the tool to add
-     * 
+     *
      * @return tool id if successfully added, else 0
      */
     public int createTool(String toolName) {
@@ -227,7 +266,7 @@ public class Tool extends Student {
             // Add the tool
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name] ) VALUES (\"" + toolName + "\");"); // Create SQL Statement
             preparedStatement.executeUpdate(); // execute statement
-            
+
             // Get the ids of all tools
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Tool.ID FROM Tool WHERE (((Tool.Status)=True));"); // Get results for SQL Statement
@@ -237,10 +276,9 @@ public class Tool extends Student {
             while (result.next()) {
                 id = result.getInt("ID");
             }
-            
+
             connection.close(); // Close DB connection
             return id; // Successful creation, return id of latest added tool
-            
 
         } catch (SQLException ex) {
             // IF cannot connect to DB, print exception
@@ -253,7 +291,7 @@ public class Tool extends Student {
      * The disableTool method disables a tool by marking it as inactive
      *
      * @param toolID the tool ID to disable
-     * 
+     *
      * @return true if successfully disabled, else false
      */
     public boolean disableTool(int toolID) {
@@ -273,13 +311,13 @@ public class Tool extends Student {
             return false; // Tool disable unsuccessful
         }
     }
-    
+
     /**
      * The enableTool method re-enables a tool that is currently disabled
      *
      * @param toolID the tool ID to re-enable
-     * 
-     * @return true if successfully re-enabled, else 
+     *
+     * @return true if successfully re-enabled, else
      */
     public boolean enableTool(int toolID) {
         // Ensure that the tool is disabled, before re-enabling it
@@ -297,16 +335,16 @@ public class Tool extends Student {
                 ex.printStackTrace();
             }
         }
-        
+
         // Tool re-enable unsuccessful
         return false;
     }
-    
+
     /**
      * The toolNameList method returns the names of all active/inactive tools
      *
      * @param status true if active, false if inactive
-     * 
+     *
      * @return the list of active/inactive tools names
      */
     public ArrayList<String> toolNameList(boolean status) {
@@ -334,11 +372,12 @@ public class Tool extends Student {
     }
 
     /**
-     * The toolNameList method returns the names of all active/inactive and available/unavailable tools
+     * The toolNameList method returns the names of all active/inactive and
+     * available/unavailable tools
      *
      * @param status true if active, false if inactive
      * @param availability true if tool available, false if tool unavailable
-     * 
+     *
      * @return list of names of active/inactive tools
      */
     public ArrayList<String> toolNameList(boolean status, boolean availability) {
@@ -374,12 +413,12 @@ public class Tool extends Student {
         // Return Tool Name List with specified availability and status
         return tools;
     }
-    
+
     /**
      * The toolIDList method returns the ids of all active/inactive tools
      *
      * @param status true if active, false if inactive
-     * 
+     *
      * @return list of active/inactive tools ids
      */
     public ArrayList<Integer> toolIDList(boolean status) {
@@ -405,13 +444,14 @@ public class Tool extends Student {
         // Return Tool ID List with specified status
         return tools;
     }
-    
+
     /**
-     * The toolIDList method returns the names of all active/inactive and available/unavailable tools
+     * The toolIDList method returns the names of all active/inactive and
+     * available/unavailable tools
      *
      * @param status true if active, false if inactive
      * @param availability true if tool available, false if tool unavailable
-     * 
+     *
      * @return list of names of active/inactive tools
      */
     public ArrayList<Integer> toolIDList(boolean status, boolean availability) {
