@@ -692,7 +692,7 @@ public class Main {
      */
     public static void studentManagementAdmin() {
         // Select Add or Remove or Back
-        String[] studentOptions = {"Add Student", "Disable Student", "Re-enable Student", "View Students", "Back to Admin Panel"};
+        String[] studentOptions = {"Add Student", "Disable Student", "Re-enable Student", "View Students", "Back"};
         int studentSelection = JOptionPane.showOptionDialog(null, "Please select an action", "Admin Panel - Student Management", 0, JOptionPane.PLAIN_MESSAGE, null, studentOptions, studentOptions[0]);
         switch (studentSelection) {
             case 0 -> {
