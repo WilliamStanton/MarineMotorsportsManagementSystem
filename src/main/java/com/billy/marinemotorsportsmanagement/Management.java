@@ -17,7 +17,7 @@ public class Management {
     /**
      * SQL Database URL
      */
-    public static final String databaseURL = "jdbc:ucanaccess://C://Users//mms//Documents//MMMS.accdb"; // db dir
+    public static final String databaseURL = "jdbc:ucanaccess://C://Users//MMMS.accdb"; // db dir
     private boolean activeSession;
     private final String username;
     private final String password;
@@ -26,8 +26,8 @@ public class Management {
     public Management() {
         activeSession = false;
         // default admin login
-        username = "admin";
-        password = "password";
+        username = "Jason";
+        password = "MarineMotorHeaven99";
     }
     
     /**
