@@ -35,7 +35,7 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Database Error\nNot Connected, please contact support");
             api.exit();
         }
-
+        
         // Configure UI (student)
         uiConfig(false);
 
