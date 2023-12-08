@@ -1,3 +1,4 @@
+## ABOUT ##
 The Marine Motorsports Management Program aims to increase productivity, reliability, and management of tools in the Marine Motorsports BOCES class.
 The application utilizes a barcode scanning tool to scan barcodes of tools that are added to the system and are given a unique id.
 The application features a fully functional GUI for both Tool Masters (students) and Administrators (teachers).
