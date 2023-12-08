@@ -17,7 +17,7 @@ public class Management {
     /**
      * SQL Database URL
      */
-    public static final String databaseURL = "jdbc:ucanaccess://C://Users//MMMS.accdb"; // db dir
+    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Public//MMMS.accdb"; // db dir
     private boolean activeSession;
     private final String username;
     private final String password;
