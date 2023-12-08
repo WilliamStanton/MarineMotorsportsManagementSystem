@@ -1,5 +1,6 @@
 package com.billy.marinemotorsportsmanagement;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.*;
 
 /**
@@ -11,13 +12,15 @@ import java.sql.*;
  * @since 11/1/23
  */
 public class Management {
-
+    // Load .env from documents folder of current user
+    Dotenv dotenv = Dotenv.configure().directory("C:\\Users\\" + System.getProperty("user.name") + "\\Documents").load();
+    
     // Declare variables
 
     /**
      * SQL Database URL
      */
-    public static final String databaseURL = "jdbc:ucanaccess://C://Users//Public//MMMS.accdb"; // db dir
+    public final String databaseURL = dotenv.get("DB_URL"); // db dir
     private boolean activeSession;
     private final String username;
     private final String password;
@@ -26,8 +29,8 @@ public class Management {
     public Management() {
         activeSession = false;
         // default admin login
-        username = "Jason";
-        password = "MarineMotorHeaven99";
+        username = dotenv.get("ADMIN_USERNAME");
+        password = dotenv.get("ADMIN_PASSWORD");
     }
     
     /**
