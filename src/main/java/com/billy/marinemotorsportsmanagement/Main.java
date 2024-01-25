@@ -188,7 +188,7 @@ public class Main {
             case 1 ->
                 toolLookup(session);
             case 2 ->
-                unavailableTools(session);
+                borrowedTools(session);
             default ->
                 mainMenu();
         }
@@ -353,18 +353,10 @@ public class Main {
                             if (api.toolStatus(toolID)) {
                                 // If tool isn't available, return tool
                                 if (!api.toolAvailability(toolID)) {
-                                        toolsScanned.append("Tool Unavailable - please return from borrower first: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-//                                    // Return success
-//                                    if (api.returnTool(toolID, studentID)) {
-//                                        toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-//                                        in++;
-//                                    } // Return error
-//                                    else {
-//                                        toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-//                                        error = true;
-//                                    }
+                                    toolsScanned.append("Borrow Error, Tool Unavailable: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                    error = true;
                                 } // Else if tool is available, borrow tool
-                                if (api.toolAvailability(toolID)) {
+                                else if (api.toolAvailability(toolID)) {
                                     // Borrow success
                                     if (api.borrowTool(studentID, toolID)) {
                                         toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
@@ -400,8 +392,67 @@ public class Main {
             });
 
             // JButton Finish (Finish scanning button)
+            JButton returnTools = new JButton("Go Return Tools");
+            returnTools.setFont(new Font("Segoe UI", Font.BOLD, 28));
+
             JButton finish = new JButton("Finish Scan");
             finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
+
+            // Create Action Listener for return tools button
+            ActionListener returnToolsEvent = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    // JPanel Return Tool Panel (displays all tools as buttons)
+                    JPanel returnToolPanel = new JPanel(new GridLayout(6, 5, 6, 6));
+
+                    // Title
+                    JLabel title = new JLabel("Return Tools for " + api.getStudentName(studentID));
+                    title.setFont(new Font("Segoe UI", Font.BOLD, 32));
+                    title.setForeground(Color.white);
+
+                    // Chosen Tool ActionListener
+                    ActionListener chooseTool = (ActionEvent ae2) -> {
+                        // Get index
+                        JButton btn = (JButton) ae2.getSource();
+                        int toolID = (int) btn.getClientProperty("index");
+                        boolean success = api.returnTool(toolID, studentID);
+                        System.out.println(success);
+                        if (success) {
+                            returnTools.doClick();
+
+                            JOptionPane.getRootFrame().dispose();
+                        }
+                    };
+
+                    // Add all tools as buttons
+                    ArrayList<Integer> toolIDList = api.getStudentToolIDList(studentID);
+                    System.out.println(toolIDList);
+                    JButton[] buttonArray = new JButton[toolIDList.size()];
+                    for (int i = 0; i < buttonArray.length; i++) {
+                        buttonArray[i] = new JButton(api.getToolName(toolIDList.get(i)));
+                        buttonArray[i].putClientProperty("index", toolIDList.get(i));
+                        buttonArray[i].setFont(new Font("Arial", Font.PLAIN, 24));
+                        buttonArray[i].addActionListener(chooseTool);
+                        returnToolPanel.add(buttonArray[i]);
+                    }
+
+                    Object[] returnToolsDisplay = {
+                        title, returnToolPanel
+                    };
+
+                    // Display Return Tools
+                    int cont = JOptionPane.showConfirmDialog(null, returnToolsDisplay, "Return Tools", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                    // If OK, exit tool scan successfully
+                    if (cont == JOptionPane.OK_OPTION) {
+                        JOptionPane.getRootFrame().dispose();
+                    }
+
+                }
+            };
+
+            returnTools.addActionListener(returnToolsEvent);
+
 
             // Create Action Listener for finish scan button
             ActionListener finishEvent = new ActionListener() {
@@ -448,6 +499,7 @@ public class Main {
                 scanStats, // Scan Stats (borrow/return count)
                 scroll, // Tools Scanned (display tools scanned in/out)
                 tool, // Tool (Text box to read scanned tool)
+                returnTools, // Return Tools (easily return tools for selected student)
                 finish // Finish (Finish scanning button)
             };
 
@@ -514,12 +566,12 @@ public class Main {
     }
 
     /**
-     * The unavailableTools method provides the methods for viewing the various
+     * The borrowedTools method provides the methods for viewing the various
      * unavailable tool reports
      *
      * @param session current session (AM/PM)
      */
-    public static void unavailableTools(String session) {
+    public static void borrowedTools(String session) {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
@@ -530,12 +582,15 @@ public class Main {
         // Load all Unavailable Tools
         // Get all tool ids
         ArrayList<Integer> allToolIDSUnavailable = api.toolIDList(true, false);
+        System.out.println(allToolIDSUnavailable);
 
         // Get all tool names
         ArrayList<String> allToolNamesUnavailable = new ArrayList<>();
         for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
             allToolNamesUnavailable.add(api.getToolName(allToolIDSUnavailable.get(i)));
         }
+        System.out.println(allToolNamesUnavailable);
+
 
 //        // Get all borrower names
 //        ArrayList<Integer> allBorrowerNamesUnavailable = new ArrayList<>();
@@ -549,17 +604,19 @@ public class Main {
 //            allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
 //        }
 
-        // Init unavailable tool vars
-        String unavailableTools = "";
+        // Init borrowed tool vars
+        String borrowedTools = "";
         int toolsOut = 0;
         switch (session) {
-            // AM Class - Unavailable Tools
+            // AM Class - Borrowed Tools
             case "AM" -> {
-                // Build list of AM Class unavailable tools
+                // Build list of AM Class borrowed tools
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
                     if (session.equals("AM")) {
-                        unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i);
+                        borrowedTools += "\n" + (i+1) + ") Tool Name: " + allToolNamesUnavailable.get(i)
+                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
+                                + "\n     - Amount Out: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false)
+                                + "\n     - Amount Available: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true);
 //                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
 //                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
 
@@ -574,7 +631,7 @@ public class Main {
                 // Build list of PM Class unavailable tools
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
                     if (session.equals("PM")) {
-                        unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
+                        borrowedTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i);
 //                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
 //                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
@@ -592,19 +649,19 @@ public class Main {
 
         // Display Results
         // JLabel Unavailable Title (display amount of tools unavailable + session)
-        JLabel unavailableTitle = new JLabel("(" + toolsOut + ")" + " Unavailable Tools - " + session + " Session\n\n");
-        unavailableTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        unavailableTitle.setForeground(Color.white);
+        JLabel borrowedTitle = new JLabel("(" + toolsOut + ")" + " Borrowed Tools - " + session + " Session\n\n");
+        borrowedTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        borrowedTitle.setForeground(Color.white);
 
-        // JTextArea Text Area (display all unavailable tools)
-        JTextArea textArea = new JTextArea(unavailableTools);
+        // JTextArea Text Area (display all borrowed tools)
+        JTextArea textArea = new JTextArea(borrowedTools);
         textArea.setFont(new Font("Segoe UI", Font.PLAIN, 24));
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
 
         // Check if no unavailable tools, and display to user if so in Text Area
-        if (unavailableTools.isEmpty()) {
+        if (borrowedTools.isEmpty()) {
             textArea.setText("All tools are currently available for " + session + " Session");
         }
 
@@ -614,7 +671,7 @@ public class Main {
 
         // Unavailable Tools Display Array
         Object[] display = {
-            unavailableTitle, // Unavailable Title (display amount of tools unavailable + session)
+            borrowedTitle, // Borrowers Title (display amount of tools unavailable + session)
             scroll // Text Area (display all unavailable tools)
         };
 

@@ -135,6 +135,31 @@ public class Student extends Management {
         return session;
     }
 
+    public ArrayList<Integer> getStudentToolIDList(int studentID) {
+        // Initialize Variables
+        ArrayList<Integer> toolIDList = new ArrayList<>();
+
+        // Attempt to connect to db
+        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Borrow.[Tool ID] FROM Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] WHERE (((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.Returned)=False));"); // Get results for SQL Statement
+            // If tools found, add to list
+            while (result.next()) {
+                int temp = result.getInt("Tool ID");
+                toolIDList.add(temp);
+                System.out.println(temp);
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // Return Student Session, otherwise null
+        return toolIDList;
+    }
+
     /**
      * The studentStatus method checks if a student is inactive or active
      *

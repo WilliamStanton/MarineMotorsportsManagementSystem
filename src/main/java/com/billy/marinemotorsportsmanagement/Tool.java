@@ -318,17 +318,24 @@ public class Tool extends Student {
         if (!toolAvailability(toolID)) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
-                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] SET Borrow.Returned = True WHERE (((Borrow.[Tool ID])=" + toolID + ") AND ((Borrow.Returned)=False) AND ((Borrow.[Student ID])=" + studentID + "));"); // Create SQL Statement
-                preparedStatement.executeUpdate(); // execute statement
-                connection.close(); // Close DB connection
+                PreparedStatement preparedStatement = connection.prepareStatement("SELECT Borrow.Returned FROM Borrow WHERE (((Borrow.Returned)=False) AND ((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.[Tool ID])=" + toolID + "));", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT); // Create SQL Statement
+                ResultSet result = preparedStatement.executeQuery();
+
+                // Check if any tools found with specified status, add the names to an arraylist
+                if (result.next()) {
+                    result.updateBoolean("Returned", true);
+                    result.updateRow();
+                    connection.close(); // Close DB connection
+                    return true;
+                } else {
+                    connection.close(); // Close DB connection
+                    return false;
+                }
 
             } catch (SQLException ex) {
                 // IF cannot connect to DB, print exception
                 ex.printStackTrace();
             }
-
-            // Successful return
-            return true;
         }
 
         // Unsuccessful return
