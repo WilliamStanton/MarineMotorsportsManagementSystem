@@ -2,6 +2,7 @@ package com.billy.marinemotorsportsmanagement;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Tool Class allows for various methods of tool manipulation and
@@ -53,24 +54,20 @@ public class Tool extends Student {
      *
      * @param toolID the tool id to get the borrower name for
      *
-     * @return the name of the borrower, otherwise 0 if the tool isn't being
+     * @return the name of the borrower, otherwise empty if the tool isn't being
      * borrowed
      */
-    public int getToolBorrowerID(int toolID) {
+    public ArrayList<Integer> getToolBorrowerIDS(int toolID) {
         // Initialize Variables
-        int borrower = 0;
-
-        ArrayList<Boolean> avail = new ArrayList<>();
-        ArrayList<Integer> id = new ArrayList<>();
+        ArrayList<Integer> borrowers = new ArrayList<>();
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Borrow.Returned, Borrow.[Student ID] FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + "));"); // Get results for SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Borrow.[Student ID] FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + ") AND ((Borrow.Returned)=No));"); // Get results for SQL Statement
 
             // Add all results
             while (result.next()) {
-                avail.add(result.getBoolean("Returned"));
-                id.add(result.getInt("Student ID"));
+                borrowers.add(result.getInt("Student ID"));
             }
             connection.close(); // Close DB connection
         } catch (SQLException ex) {
@@ -78,20 +75,13 @@ public class Tool extends Student {
             ex.printStackTrace();
         }
 
-        // Check last result for answer, if no results, then available
-        if (avail.size() <= 0) {
-            return 0;
-        } else {
-            borrower = id.get(avail.size() - 1);
-        }
-
         // Return borrower, otherwise null if not found
-        return borrower;
+        return borrowers;
     }
 
     /**
      * The getToolBorrowDate method gets the date of which the tool was taken out
-     * only will check for tools that are currently being borrowed
+     * only will check for tools that are currently being borrowed NEED FIX
      * 
      * @param toolID the tool id to check
      * 
@@ -168,34 +158,97 @@ public class Tool extends Student {
     public boolean toolAvailability(int toolID) {
         // Initialize Variables
         boolean availability = false;
-        ArrayList<Boolean> avail = new ArrayList<>();
+        ArrayList<Boolean> unavail = new ArrayList<>();
 
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             Statement statement = connection.createStatement(); // Create SQL Statement
-            ResultSet result = statement.executeQuery("SELECT Borrow.Returned FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + "));"); // Get results for SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Borrow.Returned FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + " ) AND ((Borrow.Returned)=No));"); // Get results for SQL Statement
 
             // Add all results for specified tool to ArrayList
             while (result.next()) {
-                avail.add(result.getBoolean("Returned"));
+                unavail.add(result.getBoolean("Returned"));
             }
+
             connection.close(); // Close DB connection
         } catch (SQLException ex) {
             // IF cannot connect to DB, print exception
             ex.printStackTrace();
         }
 
-        // Check the last index of arraylist to see if tool is available/unavailable, 
-        // otherwise if no results then available
-        if (avail.size() <= 0) {
+
+        // Check if unavailable is less than quantity
+        if (unavail.size() != getToolQuantity(toolID) ) {
             availability = true;
-        } else {
-            availability = avail.get(avail.size() - 1);
         }
 
         // Return tool availability
         return availability;
     }
+
+    public int getToolQuantity(int toolID) {
+        // init var
+        int quantity = 0;
+
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+
+            // Get quantity
+            ResultSet result = statement.executeQuery("SELECT Tool.Quantity FROM Tool WHERE (((Tool.ID)=" + toolID + "));"); // Get results for SQL Statement
+            while (result.next()) {
+                quantity = result.getInt("Quantity");
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        return quantity;
+    }
+
+    /**
+     * The getToolAvailibilityQuantity method returns the amount of unavailable tools (if availability is false), otherwise
+     * returns the amount of available tools (if availibility is true)
+     *
+     * @param toolID
+     * @param availability determines if method returns the amount of unavailable tools (if availability is false), otherwise it
+     * returns the amount of available tools (if availibility is true)
+     *
+     * @return
+     */
+    public int getToolAvailablityQuantity(int toolID, boolean availability) {
+        // init var
+        int quantity = 0;
+
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+
+            // Get quantity
+            ResultSet result = statement.executeQuery("SELECT Borrow.[Tool ID], Borrow.Returned FROM Tool INNER JOIN Borrow ON Tool.ID = Borrow.[Tool ID] WHERE (((Borrow.[Tool ID])=" + toolID + ") AND ((Borrow.Returned)=No));"); // Get results for SQL Statement
+            while (result.next()) {
+                    quantity++;
+            }
+
+            // if true, get the amount of available tools instead of unavailable tools
+            if (availability) {
+                quantity = getToolQuantity(toolID) - quantity;
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // amount of unavailable or available tools
+        return quantity;
+    }
+
+
 
     /**
      * The borrowTool method allows borrowing of a tool that is currently
@@ -226,17 +279,46 @@ public class Tool extends Student {
     }
 
     /**
-     * The returnTool method allows returning a tool that is currently borrowed
+     * The forceReturnTool method allows returns all the quantity of the tool id
      *
-     * @param toolID the tool id of the tool being returned
+     * @param toolID the tool id of all the tool being force returned
      *
      * @return true if successfully returned, else false
      */
-    public boolean returnTool(int toolID) {
+    public boolean forceReturnTools(int toolID) {
         if (!toolAvailability(toolID)) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
                 PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Borrow SET Borrow.[Returned] = True WHERE Borrow.[Tool ID] = " + toolID + ";"); // Create SQL Statement
+                preparedStatement.executeUpdate(); // execute statement
+                connection.close(); // Close DB connection
+
+            } catch (SQLException ex) {
+                // IF cannot connect to DB, print exception
+                ex.printStackTrace();
+            }
+
+            // Successful return
+            return true;
+        }
+
+        // Unsuccessful return
+        return false;
+    }
+
+    /**
+     * The returnTool method allows returns a tool of id from pool
+     *
+     * @param toolID the tool id to be returned
+     *
+     * @return true if successfully returned, else false
+     *
+     */
+    public boolean returnTool(int toolID, int studentID) {
+        if (!toolAvailability(toolID)) {
+            // Attempt to connect to db
+            try (Connection connection = DriverManager.getConnection(databaseURL)) {
+                PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] SET Borrow.Returned = True WHERE (((Borrow.[Tool ID])=" + toolID + ") AND ((Borrow.Returned)=False) AND ((Borrow.[Student ID])=" + studentID + "));"); // Create SQL Statement
                 preparedStatement.executeUpdate(); // execute statement
                 connection.close(); // Close DB connection
 
@@ -465,12 +547,12 @@ public class Tool extends Student {
 
             // Check if any tools found with specified availability/status, add the ids to an arraylist
             while (result.next()) {
-                // If looking for available tools, add available tools tools to arraylist with specified status
+                // If looking for available tools, add available tools to arraylist with specified status
                 if (availability) {
                     if (toolAvailability(result.getInt("ID"))) {
                         tools.add(result.getInt("ID"));
                     }
-                } // If looking for unavailable tools, add available tools tools to arraylist with specified status
+                } // If looking for unavailable tools, add available tools to arraylist with specified status
                 else {
                     if (!toolAvailability(result.getInt("ID"))) {
                         tools.add(result.getInt("ID"));

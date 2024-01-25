@@ -93,7 +93,7 @@ public class Main {
      */
     public static void mainMenu() {
         // Configure UI (default, student)
-        uiConfig(false);
+         uiConfig(false);
 
         // Initialize menu options
         String[] options = {"Tool Master", "Teacher"};
@@ -353,17 +353,18 @@ public class Main {
                             if (api.toolStatus(toolID)) {
                                 // If tool isn't available, return tool
                                 if (!api.toolAvailability(toolID)) {
-                                    // Return success
-                                    if (api.returnTool(toolID)) {
-                                        toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                        in++;
-                                    } // Return error
-                                    else {
-                                        toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                        error = true;
-                                    }
+                                        toolsScanned.append("Tool Unavailable - please return from borrower first: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+//                                    // Return success
+//                                    if (api.returnTool(toolID, studentID)) {
+//                                        toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+//                                        in++;
+//                                    } // Return error
+//                                    else {
+//                                        toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+//                                        error = true;
+//                                    }
                                 } // Else if tool is available, borrow tool
-                                else if (api.toolAvailability(toolID)) {
+                                if (api.toolAvailability(toolID)) {
                                     // Borrow success
                                     if (api.borrowTool(studentID, toolID)) {
                                         toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
@@ -489,11 +490,16 @@ public class Main {
         if (api.toolStatus(toolID)) {
             // Check tool availability
             if (api.toolAvailability(toolID)) {
-                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow.", "Tool Status Lookup", -1);
+                JOptionPane.showMessageDialog(null, "Tool Name: " + api.getToolName(toolID) + " is available\nAmount Out: " + api.getToolAvailablityQuantity(toolID, false) + "\nAmount Available: " + api.getToolAvailablityQuantity(toolID, true),"Tool Status Lookup", -1);
             } // Else tool is currently unavailable
             else {
-                // Get Tool Name + Borrower Name + Session
-                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrower: " + api.getStudentName(api.getToolBorrowerID(toolID)) + "\nBorrower Session: " + api.getStudentSession(api.getToolBorrowerID(toolID)) + "\nBorrow Date: " + api.getToolBorrowDate(toolID), "Tool Status Lookup", -1);
+                String borrowerNames = "";
+                var borrowers = api.getToolBorrowerIDS(toolID);
+                for (int i = 0; i < api.getToolAvailablityQuantity(toolID, false); i++) {
+                    borrowerNames += "\n" + (i+1) + ") " + api.getStudentName(borrowers.get(i));
+                }
+                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") are currently all being borrowed by: " + borrowerNames, "Tool Status Lookup", -1);
+//                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrowers: " + api.getStudentName(api.getToolBorrowerIDS(toolID)) + "Tool Status Lookup", -1);
             }
         } // Else tool is currently disabled
         else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
@@ -517,7 +523,7 @@ public class Main {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No borrowed tools found", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No tools are currently being borrowed - returning to Tool Master Menu", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
             toolMaster(session);
         }
 
@@ -531,17 +537,17 @@ public class Main {
             allToolNamesUnavailable.add(api.getToolName(allToolIDSUnavailable.get(i)));
         }
 
-        // Get all borrower names
-        ArrayList<String> allBorrowerNamesUnavailable = new ArrayList<>();
-        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-            allBorrowerNamesUnavailable.add(api.getStudentName(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
-        }
-
-        // Get all borrower sessions
-        ArrayList<String> allBorrowerSessionsUnavailable = new ArrayList<>();
-        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-            allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
-        }
+//        // Get all borrower names
+//        ArrayList<Integer> allBorrowerNamesUnavailable = new ArrayList<>();
+//        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
+//            allBorrowerNamesUnavailable.add(api.getStudentName(api.getToolBorrowerIDS(allToolIDSUnavailable.get(i))));
+//        }
+//
+//        // Get all borrower sessions
+//        ArrayList<String> allBorrowerSessionsUnavailable = new ArrayList<>();
+//        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
+//            allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
+//        }
 
         // Init unavailable tool vars
         String unavailableTools = "";
@@ -551,11 +557,11 @@ public class Main {
             case "AM" -> {
                 // Build list of AM Class unavailable tools
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-                    if (allBorrowerSessionsUnavailable.get(i).equals("AM")) {
+                    if (session.equals("AM")) {
                         unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
-                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
+                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i);
+//                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
+//                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
 
                         // Increment tool out counter
                         toolsOut++;
@@ -567,11 +573,11 @@ public class Main {
             case "PM" -> {
                 // Build list of PM Class unavailable tools
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-                    if (allBorrowerSessionsUnavailable.get(i).equals("PM")) {
+                    if (session.equals("PM")) {
                         unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
-                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
+                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i);
+//                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
+//                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
 
                         // Increment tool out counter
                         toolsOut++;
