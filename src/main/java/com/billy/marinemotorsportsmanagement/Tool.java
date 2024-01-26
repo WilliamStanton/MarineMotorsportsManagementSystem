@@ -260,7 +260,7 @@ public class Tool extends Student {
      * @return true if successfully borrowed, else false
      */
     public boolean borrowTool(int studentID, int toolID) {
-        if (toolAvailability(toolID) && studentStatus(studentID)) {
+        if (studentStatus(studentID)) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Borrow ( [Student ID], [Tool ID] ) VALUES (\"" + studentID + "\",\"" + toolID + "\");"); // Create SQL Statement
@@ -315,28 +315,23 @@ public class Tool extends Student {
      *
      */
     public boolean returnTool(int toolID, int studentID) {
-        boolean t = true;
-        if (t) {
-            // Attempt to connect to db
-            try (Connection connection = DriverManager.getConnection(databaseURL)) {
-                PreparedStatement preparedStatement = connection.prepareStatement("SELECT Borrow.Returned FROM Borrow WHERE (((Borrow.Returned)=False) AND ((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.[Tool ID])=" + toolID + "));", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT); // Create SQL Statement
-                ResultSet result = preparedStatement.executeQuery();
-
-                // Check if any tools found with specified status, add the names to an arraylist
-                if (result.next()) {
-                    result.updateBoolean("Returned", true);
-                    result.updateRow();
-                    connection.close(); // Close DB connection
-                    return true;
-                } else {
-                    connection.close(); // Close DB connection
-                    return false;
-                }
-
-            } catch (SQLException ex) {
-                // IF cannot connect to DB, print exception
-                ex.printStackTrace();
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT Borrow.Returned FROM Borrow WHERE (((Borrow.Returned)=False) AND ((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.[Tool ID])=" + toolID + "));", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT); // Create SQL Statement
+            ResultSet result = preparedStatement.executeQuery();
+            // Check if any tools found with specified status, add the names to an arraylist
+            if (result.next()) {
+                result.updateBoolean("Returned", true);
+                result.updateRow();
+                connection.close(); // Close DB connection
+                return true;
+            } else {
+                connection.close(); // Close DB connection
+                return false;
             }
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
         }
 
         // Unsuccessful return
@@ -362,7 +357,7 @@ public class Tool extends Student {
             Statement statement = connection.createStatement(); // Create SQL Statement
             ResultSet result = statement.executeQuery("SELECT Tool.ID FROM Tool WHERE (((Tool.Status)=True));"); // Get results for SQL Statement
 
-            // Get the last index, reuslt is the id of the latest tool added
+            // Get the last index, result is the id of the latest tool added
             int id = 0;
             while (result.next()) {
                 id = result.getInt("ID");
@@ -467,7 +462,7 @@ public class Tool extends Student {
      * available/unavailable tools
      *
      * @param status true if active, false if inactive
-     * @param availability true if tool available, false if tool unavailable
+     * @param availability true if tool available, false if tool has at least quantity unavailable
      *
      * @return list of names of active/inactive tools
      */
@@ -563,9 +558,12 @@ public class Tool extends Student {
                     }
                 } // If looking for unavailable tools, add available tools to arraylist with specified status
                 else {
-                    if (!toolAvailability(result.getInt("ID"))) {
+                    if (getToolAvailablityQuantity(result.getInt("ID"), false) > 0) {
                         tools.add(result.getInt("ID"));
                     }
+//                    if (!toolAvailability(result.getInt("ID"))) {
+//                        tools.add(result.getInt("ID"));
+//                    }
                 }
             }
 

@@ -1,9 +1,6 @@
 package com.billy.marinemotorsportsmanagement;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -356,7 +353,7 @@ public class Main {
                                     toolsScanned.append("Borrow Error, Tool Unavailable: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                                     error = true;
                                 } // Else if tool is available, borrow tool
-                                else if (api.toolAvailability(toolID)) {
+                                else {
                                     // Borrow success
                                     if (api.borrowTool(studentID, toolID)) {
                                         toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
@@ -398,6 +395,22 @@ public class Main {
             JButton finish = new JButton("Finish Scan");
             finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
 
+            // Create Action Listener for exiting return tools
+            JButton returnBtn = new JButton("Back");
+            returnTools.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            ActionListener closeReturn = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent evt) {
+                    Window w = SwingUtilities.getWindowAncestor(returnBtn);
+
+                    if (w != null) {
+                        w.setVisible(false);
+                    }
+                }
+            };
+
+            returnBtn.addActionListener(closeReturn);
+
             // Create Action Listener for return tools button
             ActionListener returnToolsEvent = new ActionListener() {
                 @Override
@@ -419,8 +432,8 @@ public class Main {
                         if (success) {
                             toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                             in++;
+                            returnBtn.doClick();
                             returnTools.doClick();
-                            JOptionPane.getRootFrame().dispose();
                         }
                     };
 
@@ -436,14 +449,13 @@ public class Main {
                     }
 
                     Object[] returnToolsDisplay = {
-                        title, returnToolPanel
+                        title, returnToolPanel, returnBtn
                     };
 
                     // Display Return Tools
-                    JOptionPane.showMessageDialog(null, returnToolsDisplay, "Return Tools", JOptionPane.OK_OPTION);
+                    JOptionPane.showOptionDialog(null, returnToolsDisplay, "Return Tools", 0, -1, null, new Object[]{}, null);
                 }
             };
-
             returnTools.addActionListener(returnToolsEvent);
 
 
@@ -512,6 +524,35 @@ public class Main {
         String toolTemp = "";
         int toolID = 0;
 
+        // JLabel Tool Lookup Title
+        JLabel toolLookupTitle = new JLabel("");
+        toolLookupTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        toolLookupTitle.setForeground(Color.white);
+
+        // JLabel Tool Inventory Title
+        JLabel toolInventoryTitle = new JLabel("");
+        toolInventoryTitle.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+        toolInventoryTitle.setForeground(Color.white);
+
+        // JTextArea Text Area (display specified tool data)
+        JTextArea textArea = new JTextArea("");
+        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+
+        // JScrollPane scroll (display JTextArea with scrollbar)
+        JScrollPane scroll = new JScrollPane(textArea);
+        scroll.setPreferredSize(new Dimension(500, 500));
+
+        // (Optional) error message
+        String error = "";
+
+        // JOptionPane display array
+        Object[] display = {
+                error
+        };
+
         // Get Tool ID
         while (toolTemp.isEmpty()) {
             toolTemp = JOptionPane.showInputDialog(null, "Please enter tool ID to check its status", "Tool Status Lookup", -1);
@@ -535,7 +576,32 @@ public class Main {
         if (api.toolStatus(toolID)) {
             // Check tool availability
             if (api.toolAvailability(toolID)) {
-                JOptionPane.showMessageDialog(null, "Tool Name: " + api.getToolName(toolID) + " is available\nAmount Out: " + api.getToolAvailablityQuantity(toolID, false) + "\nAmount Available: " + api.getToolAvailablityQuantity(toolID, true),"Tool Status Lookup", -1);
+                // Check if there is *any* of the tool out, if so, build list of names
+                int borrowed = api.getToolAvailablityQuantity(toolID, false);
+                String borrowerNames = "Borrowers: \n";
+                if (borrowed > 0) {
+                    var borrowers = api.getToolBorrowerIDS(toolID);
+                    for (int i = 0; i < api.getToolAvailablityQuantity(toolID, false); i++) {
+                        borrowerNames += (i+1) + ") " + api.getStudentName(borrowers.get(i)) + " (" + api.getStudentSession(borrowers.get(i)) + " Session)\n";
+                    }
+
+                    // Set display
+                    toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+                    display = new Object[] {
+                            toolLookupTitle,
+                            toolInventoryTitle,
+                            scroll
+                    };
+                } else {
+                    // Set display
+                    toolInventoryTitle.setText("Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+                    display = new Object[] {
+                            toolLookupTitle,
+                            toolInventoryTitle,
+                    };
+                }
+                toolLookupTitle.setText(api.getToolName(toolID) + " is available");
+                textArea.setText(borrowerNames);
             } // Else tool is currently unavailable
             else {
                 String borrowerNames = "";
@@ -543,16 +609,19 @@ public class Main {
                 for (int i = 0; i < api.getToolAvailablityQuantity(toolID, false); i++) {
                     borrowerNames += "\n" + (i+1) + ") " + api.getStudentName(borrowers.get(i));
                 }
-                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") are currently all being borrowed by: " + borrowerNames, "Tool Status Lookup", -1);
-//                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrowers: " + api.getStudentName(api.getToolBorrowerIDS(toolID)) + "Tool Status Lookup", -1);
+                JOptionPane.showMessageDialog(null,  api.getToolName(toolID) + " (ID: " + toolID + ") are all being borrowed: " + borrowerNames, "Tool Status Lookup", -1);
             }
         } // Else tool is currently disabled
         else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
-            JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled", "Tool ", -1);
+            // Set error
+            error = api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled";
         } // Else tool does not exist
         else {
-            JOptionPane.showMessageDialog(null, "The tool by (ID: " + toolID + ") does not exist", "Tool ", -1);
+            // Set error
+            error = "The tool by (ID: " + toolID + ") does not exist";
         }
+
+        JOptionPane.showMessageDialog(null, display, "Tool Status Lookup", -1);
 
         // Return to tool master
         toolMaster(session);
@@ -568,34 +637,19 @@ public class Main {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No tools are currently being borrowed - returning to Tool Master Menu", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "All tools are currently available in the " + session + " Session. " + "Returning to Tool Master Menu", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
             toolMaster(session);
         }
 
         // Load all Unavailable Tools
         // Get all tool ids
         ArrayList<Integer> allToolIDSUnavailable = api.toolIDList(true, false);
-        System.out.println(allToolIDSUnavailable);
 
         // Get all tool names
         ArrayList<String> allToolNamesUnavailable = new ArrayList<>();
         for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
             allToolNamesUnavailable.add(api.getToolName(allToolIDSUnavailable.get(i)));
         }
-        System.out.println(allToolNamesUnavailable);
-
-
-//        // Get all borrower names
-//        ArrayList<Integer> allBorrowerNamesUnavailable = new ArrayList<>();
-//        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-//            allBorrowerNamesUnavailable.add(api.getStudentName(api.getToolBorrowerIDS(allToolIDSUnavailable.get(i))));
-//        }
-//
-//        // Get all borrower sessions
-//        ArrayList<String> allBorrowerSessionsUnavailable = new ArrayList<>();
-//        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-//            allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
-//        }
 
         // Init borrowed tool vars
         String borrowedTools = "";
@@ -606,12 +660,11 @@ public class Main {
                 // Build list of AM Class borrowed tools
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
                     if (session.equals("AM")) {
-                        borrowedTools += "\n" + (i+1) + ") Tool Name: " + allToolNamesUnavailable.get(i)
+                        borrowedTools += (i+1) + ") " + allToolNamesUnavailable.get(i)
+                                + "\n     - Borrowed: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false)
+                                + "\n     - Inventory: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true)
                                 + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Amount Out: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false)
-                                + "\n     - Amount Available: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true);
-//                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
-//                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
+                                + "\n--------------------------------------------\n";
 
                         // Increment tool out counter
                         toolsOut++;
@@ -624,10 +677,11 @@ public class Main {
                 // Build list of PM Class unavailable tools
                 for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
                     if (session.equals("PM")) {
-                        borrowedTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i);
-//                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
-//                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
+                        borrowedTools += (i+1) + ") " + allToolNamesUnavailable.get(i)
+                                + "\n     - Borrowed: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false)
+                                + "\n     - Inventory: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true)
+                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
+                                + "\n--------------------------------------------\n";
 
                         // Increment tool out counter
                         toolsOut++;
