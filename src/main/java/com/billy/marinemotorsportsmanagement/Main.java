@@ -396,8 +396,8 @@ public class Main {
             finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
 
             // Create Action Listener for exiting return tools
-            JButton returnBtn = new JButton("Back");
-            returnTools.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            JButton returnBtn = new JButton("Back to Scanning");
+            returnBtn.setFont(new Font("Segoe UI", Font.BOLD, 28));
             ActionListener closeReturn = new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent evt) {
