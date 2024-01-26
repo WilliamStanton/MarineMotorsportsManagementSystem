@@ -315,7 +315,8 @@ public class Tool extends Student {
      *
      */
     public boolean returnTool(int toolID, int studentID) {
-        if (!toolAvailability(toolID)) {
+        boolean t = true;
+        if (t) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
                 PreparedStatement preparedStatement = connection.prepareStatement("SELECT Borrow.Returned FROM Borrow WHERE (((Borrow.Returned)=False) AND ((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.[Tool ID])=" + toolID + "));", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE, ResultSet.CLOSE_CURSORS_AT_COMMIT); // Create SQL Statement
@@ -346,14 +347,15 @@ public class Tool extends Student {
      * The createTool method adds a tool
      *
      * @param toolName the name of the tool to add
+     * @param quantity the quantity of the tool
      *
      * @return tool id if successfully added, else 0
      */
-    public int createTool(String toolName) {
+    public int createTool(String toolName, int quantity) {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
             // Add the tool
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name] ) VALUES (\"" + toolName + "\");"); // Create SQL Statement
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name], Status, Quantity ) VALUES (\"" + toolName + "\",True," + quantity + ");"); // Create SQL Statement
             preparedStatement.executeUpdate(); // execute statement
 
             // Get the ids of all tools

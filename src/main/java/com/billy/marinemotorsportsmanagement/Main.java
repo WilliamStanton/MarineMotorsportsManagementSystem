@@ -416,17 +416,16 @@ public class Main {
                         JButton btn = (JButton) ae2.getSource();
                         int toolID = (int) btn.getClientProperty("index");
                         boolean success = api.returnTool(toolID, studentID);
-                        System.out.println(success);
                         if (success) {
+                            toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                            in++;
                             returnTools.doClick();
-
                             JOptionPane.getRootFrame().dispose();
                         }
                     };
 
                     // Add all tools as buttons
                     ArrayList<Integer> toolIDList = api.getStudentToolIDList(studentID);
-                    System.out.println(toolIDList);
                     JButton[] buttonArray = new JButton[toolIDList.size()];
                     for (int i = 0; i < buttonArray.length; i++) {
                         buttonArray[i] = new JButton(api.getToolName(toolIDList.get(i)));
@@ -441,13 +440,7 @@ public class Main {
                     };
 
                     // Display Return Tools
-                    int cont = JOptionPane.showConfirmDialog(null, returnToolsDisplay, "Return Tools", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-                    // If OK, exit tool scan successfully
-                    if (cont == JOptionPane.OK_OPTION) {
-                        JOptionPane.getRootFrame().dispose();
-                    }
-
+                    JOptionPane.showMessageDialog(null, returnToolsDisplay, "Return Tools", JOptionPane.OK_OPTION);
                 }
             };
 
@@ -1091,11 +1084,26 @@ public class Main {
         switch (toolSelection) {
             case 0 -> {
                 // Add a tool
-                String toolName = JOptionPane.showInputDialog(null, "Enter a name for the new tool", "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
-                // If yes, add 
-                if (toolName != null) {
+                JLabel toolNameTitle = new JLabel("Enter a name for the new tool");
+                JTextField toolName = new JTextField();
+                JLabel toolQuantityTitle = new JLabel("Tool Quantity");
+                JTextField toolQuantity = new JTextField();
+
+                Object[] display = {
+                        toolNameTitle,
+                    toolName,
+                    toolQuantityTitle,
+                    toolQuantity
+                };
+
+                while (toolName.getText().isBlank() && toolQuantity.getText().isBlank()) {
+                    JOptionPane.showMessageDialog(null, display, "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
+                }
+
+                // If yes, add
+                if (Integer.parseInt(toolQuantity.getText()) > 0) {
                     // If tool added
-                    int toolID = api.createTool(toolName);
+                    int toolID = api.createTool(toolName.getText(), Integer.parseInt(toolQuantity.getText()));
                     if (toolID != 0) {
                         String successAddMessage = "Tool successfully added: " + toolName + ", ID: " + toolID;
                         JOptionPane.showMessageDialog(null, successAddMessage, "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);

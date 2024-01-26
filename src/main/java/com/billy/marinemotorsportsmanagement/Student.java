@@ -145,9 +145,7 @@ public class Student extends Management {
             ResultSet result = statement.executeQuery("SELECT Borrow.[Tool ID] FROM Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] WHERE (((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.Returned)=False));"); // Get results for SQL Statement
             // If tools found, add to list
             while (result.next()) {
-                int temp = result.getInt("Tool ID");
-                toolIDList.add(temp);
-                System.out.println(temp);
+                toolIDList.add(result.getInt("Tool ID"));
             }
 
             connection.close(); // Close DB connection
