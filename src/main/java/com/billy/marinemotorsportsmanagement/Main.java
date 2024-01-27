@@ -5,6 +5,10 @@ import com.billy.marinemotorsportsmanagement.JComponents.JButton.ButtonArray;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Description;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Field;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Title;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.BorrowedTools;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.StudentRoster;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolInventory;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolLookup;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.Scroll;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.TextArea;
 
@@ -199,7 +203,7 @@ public class Main {
         }
 
         // Initialize menu options
-        String[] options = {"Scan Tools", "Tool Lookup", "All Borrowed Tools", "Log out of " + session + " Session"};
+        String[] options = {"Scan Tools", "Tool Lookup", "View Borrowed Tools", "Log out of " + session + " Session"};
 
         // Tool Master selection display
         JLabel toolMasterTitle = new Title("Tool Master | " + session + " Session");
@@ -438,7 +442,7 @@ public class Main {
                     JLabel description = new Description("");
                     var toolCount = api.getStudentToolIDList(studentID).size();
                     if (toolCount > 1) {
-                         description.setText("Borrowing " + toolCount + " tools");
+                         description.setText("Click tool to return | Borrowing " + toolCount + " tools");
                     } else if (toolCount == 0){
                         description.setText("This student currently has no tools out!");
                     } else {
@@ -547,24 +551,23 @@ public class Main {
         JLabel toolInventoryTitle = new Description();
 
         // JTextArea Text Area (display specified tool data)
-        JTextArea textArea = new TextArea();
+        JTable toolBorrowers = new JTable();
 
         // JScrollPane scroll (display JTextArea with scrollbar)
-        JScrollPane scroll = new Scroll(textArea, 500, 500);
+        JScrollPane scroll = new Scroll(toolBorrowers, 500, 500);
 
         // (Optional) error message
-        String error = "";
+        JLabel toolLookupError = new Title("");
 
         // JOptionPane display array
         Object[] display = {
-                error
+                toolLookupError
         };
 
         // Get Tool ID
         while (toolTemp.isEmpty()) {
-
             // Tool Lookup Title
-            JLabel toolLookupDescription = new Description("Enter a Tool ID to check if a tool is available & who has it!");
+            JLabel toolLookupDescription = new Description("Scan tool or enter tool ID to check its availability");
             toolLookupTitle.setText("Tool Lookup");
             Object[] toolLookupDisplay = {
                 toolLookupTitle,
@@ -579,7 +582,7 @@ public class Main {
                 toolMaster(session);
             }
         }
-        
+
         // Check if input contains tool id
         if (toolTemp.replaceAll("\\D", "").matches("\\d+")) {
             toolID = Integer.parseInt(toolTemp.replaceAll("\\D", ""));
@@ -591,51 +594,53 @@ public class Main {
 
         // Check if tool is enabled
         if (api.toolStatus(toolID)) {
-            // Check tool availability
-            if (api.toolAvailability(toolID)) {
-                // Check if there is *any* of the tool out, if so, build list of names
-                int borrowed = api.getToolAvailablityQuantity(toolID, false);
-                String borrowerNames = "Borrowers: \n";
-                if (borrowed > 0) {
-                    var borrowers = api.getToolBorrowerIDS(toolID);
-                    for (int i = 0; i < api.getToolAvailablityQuantity(toolID, false); i++) {
-                        borrowerNames += (i+1) + ") " + api.getStudentName(borrowers.get(i)) + " (" + api.getStudentSession(borrowers.get(i)) + " Session)\n";
-                    }
+            // Check if there is *any* of the tool out, if so, build list of names
+            var borrowerIds = api.getToolBorrowerIDS(toolID);
+            String[][] borrowerData = new String[borrowerIds.size()][3];
+            if (borrowerIds.size() > 0) {
+                for (int i = 0; i < borrowerIds.size(); i++) {
+                    borrowerData[i][0] = api.getToolName(toolID);
+                    borrowerData[i][1] = String.valueOf(toolID);
+                    borrowerData[i][2] = String.valueOf(api.getStudentName(borrowerIds.get(i)));
+                }
+                scroll = new Scroll(new ToolLookup(borrowerData, 500, 500));
+            }
+            if (api.toolAvailability(toolID) && borrowerIds.size() > 0) {
+                // Set display
+                toolLookupTitle.setText(api.getToolName(toolID) + " is currently available to borrow");
+                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
 
-                    // Set display
-                    toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+                display = new Object[]{
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                        scroll
+                };
+            } else if (api.toolAvailability(toolID) && borrowerIds.isEmpty()) {
+                toolLookupTitle.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow");
+                toolInventoryTitle.setText("Borrowers: 0 | Inventory: " + api.getToolQuantity(toolID));
+
+                display = new Object[]{
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                };
+            }
+            else {
+                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
                     display = new Object[] {
                             toolLookupTitle,
                             toolInventoryTitle,
                             scroll
                     };
-                } else {
-                    // Set display
-                    toolInventoryTitle.setText("Inventory: " + api.getToolAvailablityQuantity(toolID, true));
-                    display = new Object[] {
-                            toolLookupTitle,
-                            toolInventoryTitle,
-                    };
-                }
-                toolLookupTitle.setText(api.getToolName(toolID) + " is available");
-                textArea.setText(borrowerNames);
-            } // Else tool is currently unavailable
-            else {
-                String borrowerNames = "";
-                var borrowers = api.getToolBorrowerIDS(toolID);
-                for (int i = 0; i < api.getToolAvailablityQuantity(toolID, false); i++) {
-                    borrowerNames += "\n" + (i+1) + ") " + api.getStudentName(borrowers.get(i));
-                }
-                JOptionPane.showMessageDialog(null,  api.getToolName(toolID) + " (ID: " + toolID + ") are all being borrowed: " + borrowerNames, "Tool Lookup", -1);
+                toolLookupTitle.setText(api.getToolName(toolID) + " is currently unavailable to borrow");
             }
-        } // Else tool is currently disabled
+        }
         else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
             // Set error
-            error = api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled";
+            toolLookupError.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled");
         } // Else tool does not exist
         else {
             // Set error
-            error = "The tool by (ID: " + toolID + ") does not exist";
+            toolLookupError.setText("The tool by (ID: " + toolID + ") does not exist");
         }
 
         JOptionPane.showMessageDialog(null, display, "Tool Lookup", -1);
@@ -658,83 +663,39 @@ public class Main {
             toolMaster(session);
         }
 
-        // Load all Unavailable Tools
-        // Get all tool ids
+        // Get all unavailable tool ids
         ArrayList<Integer> allToolIDSUnavailable = api.toolIDList(true, false);
+        String[][] unavailableToolData = new String[allToolIDSUnavailable.size()][4];
 
-        // Get all tool names
-        ArrayList<String> allToolNamesUnavailable = new ArrayList<>();
+        // Build list of AM Class borrowed tools
         for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-            allToolNamesUnavailable.add(api.getToolName(allToolIDSUnavailable.get(i)));
+            unavailableToolData[i][0] = api.getToolName(allToolIDSUnavailable.get(i));
+            unavailableToolData[i][1] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i) , true));
+            unavailableToolData[i][2] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i) , false));
+            unavailableToolData[i][3] = String.valueOf(allToolIDSUnavailable.get(i));
         }
 
-        // Init borrowed tool vars
-        String borrowedTools = "";
-        int toolsOut = 0;
-        switch (session) {
-            // AM Class - Borrowed Tools
-            case "AM" -> {
-                // Build list of AM Class borrowed tools
-                for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-                    if (session.equals("AM")) {
-                        borrowedTools += (i+1) + ") " + allToolNamesUnavailable.get(i)
-                                + "\n     - Borrowed: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false)
-                                + "\n     - Inventory: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n--------------------------------------------\n";
+        // JLabel Title
+        JLabel borrowedTitle = new Title("Borrowed Tools");
+        JLabel borrowedDescription = new Description(allToolIDSUnavailable.size() + " tools are currently being borrowed");
 
-                        // Increment tool out counter
-                        toolsOut++;
-                    }
-                }
-            }
+        // JTable (display all borrowed tools)
+        JTable borrowedTools = new BorrowedTools(unavailableToolData);
 
-            // PM Class - Unavailable Tools
-            case "PM" -> {
-                // Build list of PM Class unavailable tools
-                for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-                    if (session.equals("PM")) {
-                        borrowedTools += (i+1) + ") " + allToolNamesUnavailable.get(i)
-                                + "\n     - Borrowed: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false)
-                                + "\n     - Inventory: " + api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n--------------------------------------------\n";
-
-                        // Increment tool out counter
-                        toolsOut++;
-                    }
-                }
-            }
-
-            // Back to Tool Master Panel
-            default -> toolMaster(session);
-        }
-
-        // Display Results
-        // JLabel Unavailable Title (display amount of tools unavailable + session)
-        JLabel borrowedTitle = new Title("(" + toolsOut + ")" + " Borrowed Tools - " + session + " Session\n\n");
-
-        // JTextArea Text Area (display all borrowed tools)
-        JTextArea textArea = new TextArea(borrowedTools);
-
-        // Check if no unavailable tools, and display to user if so in Text Area
-        if (borrowedTools.isEmpty()) {
-            textArea.setText("All tools are currently available for " + session + " Session");
-        }
-
-        // JScrollPane scroll (display JTextArea with scrollbar)
-        JScrollPane scroll = new Scroll(textArea, 500, 500);
+        // JScrollPane scroll (display JTable with scrollbar)
+        JScrollPane scroll = new Scroll(borrowedTools, 500, 500);
 
         // Unavailable Tools Display Array
         Object[] display = {
-            borrowedTitle, // Borrowers Title (display amount of tools unavailable + session)
-            scroll // Text Area (display all unavailable tools)
+                borrowedTitle, // Borrowers Title (display amount of tools unavailable + session)
+                borrowedDescription,
+                scroll // Text Area (display all unavailable tools)
         };
 
         // Display Unavailable Tools
         JOptionPane.showMessageDialog(null, display, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
 
-        // Ensure return to Tool Master Panel
+        // Ensure return back to Tool Master Panel
         toolMaster(session);
     }
 
@@ -1032,38 +993,39 @@ public class Main {
         } // Else continue 
         else {
             // Initialize flags & arrays
-            boolean inactiveStudents = false;
+            // Build Active Students
             boolean activeStudents = false;
-            String activeStudentsString = "";
-            String inactiveStudentsString = "";
+            ArrayList<Integer> activeStudentIDList = api.studentIDList(true);
+            String[][] activeStudentData = new String[activeStudentIDList.size()][3];
+
+            // Build Inactive Students
+            boolean inactiveStudents = false;
+            ArrayList<Integer> inactiveStudentIDList = api.studentIDList(false);
+            String[][] inactiveStudentData = new String[inactiveStudentIDList.size()][3];
 
             // Check inactive students
-            if (!api.studentNameList(false).isEmpty()) {
+            if (!inactiveStudentIDList.isEmpty()) {
                 // Update flag
                 inactiveStudents = true;
 
-                // Build inactive students
-                // Get disabled student list
-                ArrayList<Integer> inactiveStudentIDList = api.studentIDList(false);
-
-                // Combine names with ids
+                // Get inactive student list
                 for (int i = 0; i < inactiveStudentIDList.size(); i++) {
-                    inactiveStudentsString += (api.getStudentName(inactiveStudentIDList.get(i)) + " (ID: " + inactiveStudentIDList.get(i) + ") | " + api.getStudentSession(inactiveStudentIDList.get(i)) + " Session") + "\n";
+                    inactiveStudentData[i][0] = api.getStudentName(inactiveStudentIDList.get(i));
+                    inactiveStudentData[i][1] = String.valueOf(inactiveStudentIDList.get(i));
+                    inactiveStudentData[i][2] = api.getStudentSession(inactiveStudentIDList.get(i));
                 }
             }
 
             // Check active students
-            if (!api.studentNameList(true).isEmpty()) {
+            if (!activeStudentIDList.isEmpty()) {
                 // Update flag
                 activeStudents = true;
 
-                // Build active students
                 // Get active student list
-                ArrayList<Integer> activeStudentIDList = api.studentIDList(true);
-
-                // Combine names with ids
                 for (int i = 0; i < activeStudentIDList.size(); i++) {
-                    activeStudentsString += (api.getStudentName(activeStudentIDList.get(i)) + " (ID: " + activeStudentIDList.get(i) + ") | " + api.getStudentSession(activeStudentIDList.get(i)) + " Session") + "\n";
+                    activeStudentData[i][0] = api.getStudentName(activeStudentIDList.get(i));
+                    activeStudentData[i][1] = String.valueOf(activeStudentIDList.get(i));
+                    activeStudentData[i][2] = api.getStudentSession(activeStudentIDList.get(i));
                 }
             }
 
@@ -1088,11 +1050,11 @@ public class Main {
                         JLabel viewActiveStudentsTitle = new Title("Student Roster");
                         JLabel viewActiveStudentsDescription = new Description(api.studentIDList(true).size() + " Active Students");
 
-                        // JTextArea Students active (display active students)
-                        JTextArea studentsEnabled = new TextArea(activeStudentsString, 20);
+                        // JTable (display active students)
+                        JTable activeStudentsList = new StudentRoster(activeStudentData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(studentsEnabled, 500, 500);
+                        JScrollPane scroll = new Scroll(activeStudentsList, 500, 500);
 
                         // View active Students Array
                         Object[] display = {
@@ -1116,11 +1078,11 @@ public class Main {
                         JLabel viewInactiveStudentsTitle = new Title("Student Roster");
                         JLabel viewInactiveStudentsDescription = new Description(api.studentIDList(false).size() + " Inactive Students");
 
-                        // JTextArea Students Inactive (display inactive students)
-                        JTextArea studentsInactive = new TextArea(inactiveStudentsString, 20);
+                        // JTable (display active students)
+                        JTable inactiveStudentsList = new StudentRoster(inactiveStudentData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(studentsInactive, 500, 500);
+                        JScrollPane scroll = new Scroll(inactiveStudentsList, 500, 500);
 
                         // View Disabled Students Array
                         Object[] display = {
@@ -1419,36 +1381,38 @@ public class Main {
             // Initialize flags & arrays
             boolean inactiveTools = false;
             boolean activeTools = false;
-            String activeToolsString = "";
-            String inactiveToolsString = "";
+
+            // Inactive Tools
+            ArrayList<Integer> inactiveToolIDList = api.toolIDList(false);
+            String[][] inactiveToolData = new String[inactiveToolIDList.size()][3];
+
+            // Active Tools
+            ArrayList<Integer> activeToolIDList = api.toolIDList(true);
+            String[][] activeToolData = new String[activeToolIDList.size()][3];
 
             // Check Inactive Tools
-            if (!api.toolNameList(false).isEmpty()) {
+            if (!inactiveToolIDList.isEmpty()) {
                 // Update flag
                 inactiveTools = true;
 
-                // Build Inactive tools
-                // Get Inactive tool list
-                ArrayList<Integer> inactiveToolIDList = api.toolIDList(false);
-
-                // Combine names with ids
-                for (int i = 0; i < inactiveToolIDList.size(); i++) {
-                    inactiveToolsString += (api.getToolName(inactiveToolIDList.get(i)) + " (ID: " + inactiveToolIDList.get(i) + ") | Quantity: " + api.getToolQuantity(inactiveToolIDList.get(i)) + "\n");
+                // Build data
+                for (int i = 0; i < inactiveToolData.length; i++) {
+                    inactiveToolData[i][0] = api.getToolName(inactiveToolIDList.get(i));
+                    inactiveToolData[i][1] = String.valueOf(inactiveToolIDList.get(i));
+                    inactiveToolData[i][2] = String.valueOf(api.getToolQuantity(inactiveToolIDList.get(i)));
                 }
             }
 
             // Check Active tools
-            if (!api.toolNameList(true).isEmpty()) {
+            if (!activeToolIDList.isEmpty()) {
                 // Update flag
                 activeTools = true;
 
-                // Build Active tools
-                // Get Active tool list
-                ArrayList<Integer> activeToolIDList = api.toolIDList(true);
-
-                // Combine names with ids
-                for (int i = 0; i < activeToolIDList.size(); i++) {
-                    activeToolsString += (api.getToolName(activeToolIDList.get(i)) + " (ID: " + activeToolIDList.get(i) + ") | Quantity: " + api.getToolQuantity(activeToolIDList.get(i)) + "\n");
+                // Build data
+                for (int i = 0; i < activeToolData.length; i++) {
+                    activeToolData[i][0] = api.getToolName(activeToolIDList.get(i));
+                    activeToolData[i][1] = String.valueOf(activeToolIDList.get(i));
+                    activeToolData[i][2] = String.valueOf(api.getToolQuantity(activeToolIDList.get(i)));
                 }
             }
 
@@ -1474,10 +1438,10 @@ public class Main {
                         JLabel toolsActiveDescription = new Description(api.toolNameList(true).size() + " Active Tools");
 
                         // JTextArea Active Tools (display all enabled tools)
-                        JTextArea toolsActive = new TextArea(activeToolsString, 20);
+                        JTable toolsActiveTable = new ToolInventory(activeToolData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(toolsActive, 500, 500);
+                        JScrollPane scroll = new Scroll(toolsActiveTable, 500, 500);
 
                         // Active Tools Display
                         Object[] enabledToolsDisplay = {
@@ -1501,11 +1465,11 @@ public class Main {
                         JLabel toolsInactiveTitle = new Title("Tool Inventory");
                         JLabel toolsInactiveDescription = new Description(api.toolNameList(false).size() + " Inactive Tools");
 
-                        // JTextArea Inactive Tools (display all Inactive tools)
-                        JTextArea toolsDisabled = new TextArea(inactiveToolsString, 20);
+                        // JTextArea Active Tools (display all enabled tools)
+                        JTable toolsInactiveTable = new ToolInventory(inactiveToolData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(toolsDisabled, 500, 500);
+                        JScrollPane scroll = new Scroll(toolsInactiveTable, 500, 500);
 
                         // Inactive Tools Display
                         Object[] inactiveToolsDisplay = {
