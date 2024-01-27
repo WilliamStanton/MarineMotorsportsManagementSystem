@@ -192,12 +192,9 @@ public class Main {
             int sessionChoice = JOptionPane.showOptionDialog(null, display, "Tool Master Panel - Select Session", 0, JOptionPane.PLAIN_MESSAGE, null, sessions, sessions[0]);
 
             switch (sessionChoice) {
-                case 0 ->
-                    session = "AM";
-                case 1 ->
-                    session = "PM";
-                default ->
-                    mainMenu();
+                case 0 -> session = "AM";
+                case 1 -> session = "PM";
+                default -> mainMenu();
             }
         }
 
@@ -214,14 +211,10 @@ public class Main {
 
         int selection = JOptionPane.showOptionDialog(null, toolMasterSelection, "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
-            case 0 ->
-                quickScan(session);
-            case 1 ->
-                toolLookup(session);
-            case 2 ->
-                borrowedTools(session);
-            default ->
-                mainMenu();
+            case 0 -> quickScan(session);
+            case 1 -> toolLookup(session);
+            case 2 -> borrowedTools(session);
+            default -> mainMenu();
         }
     }
 
@@ -714,8 +707,7 @@ public class Main {
             }
 
             // Back to Tool Master Panel
-            default ->
-                toolMaster(session);
+            default -> toolMaster(session);
         }
 
         // Display Results
@@ -834,7 +826,7 @@ public class Main {
      */
     public static void studentManagementAdmin() {
         // Select Add or Remove or Back
-        String[] studentOptions = {"Add Student", "Reactivate Student", "Deactivate Student", "Student Roster", "Back"};
+        String[] studentOptions = {"Add Student", "Toggle Students", "Student Roster", "Back"};
 
         // Student Management Display
         JLabel studentManagementTitle = new Title("Student Management");
@@ -905,6 +897,38 @@ public class Main {
             }
 
             case 1 -> {
+                toggleStudentsAdmin();
+            }
+
+            case 2 ->
+                studentRosterAdmin();
+
+            // Return back to Teacher Panel
+            default -> admin();
+        }
+    }
+
+    /**
+     * The toggleStudentsAdmin method allows for the admin to activate/deactivate students
+     */
+    public static void toggleStudentsAdmin() {
+        // Toggle Students
+        // Select Reactivate or Deactivate or Back
+        String[] toggleOptions = {"Reactivate Student", "Deactivate Student", "Back"};
+
+        // Student Management Display
+        JLabel toggleStudentsTitle = new Title("Toggle Students");
+        JLabel toggleStudentsDescription = new Description("Please select an action");
+
+        Object[] toggleStudentsDisplay = {
+                toggleStudentsTitle,
+                toggleStudentsDescription
+        };
+
+        int toggleStudentsSelection = JOptionPane.showOptionDialog(null, toggleStudentsDisplay, "Teacher Panel - Toggle Students", 0, JOptionPane.PLAIN_MESSAGE, null, toggleOptions, toggleOptions[0]);
+
+        switch(toggleStudentsSelection) {
+            case 0 -> {
                 // if any students are deactivated
                 if (!api.studentNameList(false).isEmpty()) {
                     // Get all students names
@@ -935,19 +959,19 @@ public class Main {
                         } else {
                             JOptionPane.showMessageDialog(null, "Error, student has not been reactivated.", "Teacher Panel - Reactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                         }
-                    } // If No, return to student management panel
+                    } // If No, return to toggle students
                     else {
-                        studentManagementAdmin();
+                        toggleStudentsAdmin();
                     }
                 } // if no deactivated students
                 else {
                     JOptionPane.showMessageDialog(null, "There are no students to reactivate.", "Teacher Panel - Reactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
-                // Return to student management panel once completed
-                studentManagementAdmin();
+                // Return to toggle students once completed
+                toggleStudentsAdmin();
             }
 
-            case 2 -> {
+            case 1 -> {
                 // Deactivate student
                 // if any students are deactivated
                 if (!api.studentNameList(true).isEmpty()) {
@@ -978,28 +1002,25 @@ public class Main {
                         } else {
                             JOptionPane.showMessageDialog(null, "Error, student has not been deactivated.", "Teacher Panel - Deactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                         }
-                    } // If No, return to student management panel
+                    } // Return to toggle students once completed
                     else {
-                        studentManagementAdmin();
+                        toggleStudentsAdmin();
                     }
                 } // if no inactive students
                 else {
                     JOptionPane.showMessageDialog(null, "There are no students to deactivate.", "Teacher Panel - Deactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
-                // Return to student management panel once completed
-                studentManagementAdmin();
+                // Return to toggle students once completed
+                toggleStudentsAdmin();
             }
 
-            case 3 ->
-                studentRosterAdmin();
-
-            default -> // Return back to Teacher Panel
-                admin();
+            // Return back to Student Management
+            default -> studentManagementAdmin();
         }
     }
 
     /**
-     * The studentRosterAdmin method shows inactive/active students
+     * The studentRosterAdmin method shows active/inactive students
      * used only in the admin method
      */
     public static void studentRosterAdmin() {
@@ -1116,9 +1137,8 @@ public class Main {
                     }
                 }
 
-                // Return to Student management
-                default ->
-                    studentManagementAdmin();
+                // Return back to Student management
+                default -> studentManagementAdmin();
             }
         }
         // Return to student roster panel once completed
@@ -1131,7 +1151,7 @@ public class Main {
      */
     public static void toolManagementAdmin() {
         // Select Add or Remove or Back
-        String[] toolOptions = {"Add tool", "Reactivate Tool", "Deactivate Tool", "Tool Inventory", "Back"};
+        String[] toolOptions = {"Add Tool", "Update Quantity", "Toggle Tools", "Tool Inventory", "Back"};
 
         // Tool Management Display
         JLabel toolManagementTitle = new Title("Tool Management");
@@ -1195,8 +1215,92 @@ public class Main {
                 toolManagementAdmin();
             }
 
+            // Update Quantity
+            case 1 ->  {
+                // Update Quantity Display
+                JLabel updateQuantityTitle = new Title("Update Quantity");
+                JLabel updateQuantityToolField = new Field("Tool ID");
+                JTextField toolID = new JTextField();
+                JLabel updateQuantityField = new Field("New Quantity");
+                JTextField quantity = new JTextField();
 
-            case 1 -> {
+                Object[] display = {
+                  updateQuantityTitle,
+                  updateQuantityToolField,
+                  toolID,
+                  updateQuantityField,
+                  quantity
+                };
+
+                while (toolID.getText().isBlank() && quantity.getText().isBlank()) {
+                    int btn = JOptionPane.showOptionDialog(null, display, "Teacher Panel - Update Quantity", 0, -1, null, new String[]{"Update Quantity", "Back"}, 0);
+
+                    if (btn == 0) {
+                        // If yes, change quantity
+                        if ((!toolID.getText().isBlank()) && (!quantity.getText().isBlank())) {
+                            // If quantity changed
+                            if (Integer.parseInt(quantity.getText()) > 0 && api.getToolName(Integer.parseInt(toolID.getText())) != null) {
+                                boolean result = api.updateToolQuantity(Integer.parseInt(toolID.getText()), Integer.parseInt(quantity.getText()));
+                                if (result) {
+                                    String successAddMessage = "Tool quantity updated: " + api.getToolName(Integer.parseInt(toolID.getText())) + " (ID: " + toolID.getText() + "), Quantity: " + api.getToolQuantity(Integer.parseInt(toolID.getText()));
+                                    JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                } // Else if tool not added,
+                                else {
+                                    JOptionPane.showMessageDialog(null, "Error updating tool quantity.", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                }
+                            } // Quantity less than 1 or tool id doesn't exist
+                            else {
+                                if (api.getToolName(Integer.parseInt(toolID.getText())) == null) {
+                                    JOptionPane.showMessageDialog(null, "Tool ID doesn't exist", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, quantity must be greater than 0", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                }
+                            }
+
+                            // If no, return to Teacher Panel
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, one or more fields were not completed.", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                            toolManagementAdmin();
+                        }
+                    }
+                    else {
+                        toolManagementAdmin();
+                    }
+
+                    // Return back to tool management
+                    toolManagementAdmin();
+                }
+            }
+
+            // Toggle tools
+            case 2 -> toggleToolsAdmin();
+
+            // Tool Inventory
+            case 3 -> toolInventoryAdmin();
+
+            // Back to Teacher Panel
+            default -> admin();
+        }
+    }
+
+    public static void toggleToolsAdmin() {
+        // Toggle Tools
+        // Select Reactivate or Deactivate or Back
+        String[] toggleOptions = {"Reactivate Tool", "Deactivate Tool", "Back"};
+
+        // Tool Management Display
+        JLabel toggleToolsTitle = new Title("Toggle Tools");
+        JLabel toggleToolsDescription = new Description("Please select an action");
+
+        Object[] toggleToolsDisplay = {
+                toggleToolsTitle,
+                toggleToolsDescription
+        };
+
+        int toggleToolsSelection = JOptionPane.showOptionDialog(null, toggleToolsDisplay, "Teacher Panel - Toggle Tools", 0, JOptionPane.PLAIN_MESSAGE, null, toggleOptions, toggleOptions[0]);
+
+        switch(toggleToolsSelection) {
+            case 0 -> {
                 // Reactivate tools
                 // Get deactivated tool list
                 if (!api.toolNameList(false).isEmpty()) {
@@ -1227,11 +1331,11 @@ public class Main {
                         }
 
                         // Return to tool management once completed
-                        toolManagementAdmin();
+                        toggleToolsAdmin();
                         break;
                     } // If no, return to tool management
                     else {
-                        toolManagementAdmin();
+                        toggleToolsAdmin();
                     }
                 } // If no enabled tools
                 else {
@@ -1239,10 +1343,10 @@ public class Main {
                 }
 
                 // Return to tool management panel once completed
-                toolManagementAdmin();
+                toggleToolsAdmin();
             }
 
-            case 2 -> {
+            case 1 -> {
                 // Deactivate a tool
                 // Get activated tool list
                 if (!api.toolNameList(true).isEmpty()) {
@@ -1265,35 +1369,38 @@ public class Main {
                     if (toolToDeactivate != null) {
                         // Strip String to only ID
                         String toolID = toolToDeactivate.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+
+                        // Deactivate tool
                         if (api.disableTool(Integer.parseInt(toolID))) {
+                            // Return all the tools if they are being borrowed
+                            if (api.getToolBorrowerIDS(Integer.parseInt(toolID)).size() > 0) {
+                                api.forceReturnTools((Integer.parseInt(toolID)));
+                            }
+
                             String successRemoveMessage = "Tool successfully deactivated: " + toolToDeactivate;
                             JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
                             JOptionPane.showMessageDialog(null, "Error, tool has not been deactivated", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
                         }
 
-                        // Return to tool management once completed
-                        toolManagementAdmin();
+                        // Return to toggle tools once completed
+                        toggleToolsAdmin();
                         break;
-                    } // If No, return to tool management
+                    } // If No, return to toggle tools panel
                     else {
-                        toolManagementAdmin();
+                        toggleToolsAdmin();
                     }
                 } // if no activated tools
                 else {
                     JOptionPane.showMessageDialog(null, "There are no tools to deactivate.", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
                 }
 
-                // Return to tool management panel once completed
-                toolManagementAdmin();
+                // Return to toggle tools once completed
+                toggleToolsAdmin();
             }
 
-            // View tools
-            case 3 ->
-                toolInventoryAdmin();
-
-            default -> // Back to Teacher Panel
-                admin();
+            // Return to tool management panel
+            default -> toolManagementAdmin();
         }
     }
 
@@ -1414,9 +1521,9 @@ public class Main {
                         JOptionPane.showMessageDialog(null, "No inactive tools exist", "Teacher Panel Panel - View Inactive Tools", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // Return to tool management
-                default ->
-                    toolManagementAdmin();
+
+                // Return back to tool management
+                default -> toolManagementAdmin();
             }
         }
         // Return to view tools panel once completed

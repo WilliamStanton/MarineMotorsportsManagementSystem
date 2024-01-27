@@ -80,43 +80,6 @@ public class Tool extends Student {
     }
 
     /**
-     * The getToolBorrowDate method gets the date of which the tool was taken out
-     * only will check for tools that are currently being borrowed NEED FIX
-     * 
-     * @param toolID the tool id to check
-     * 
-     * @return date the tool was taken out, else null if tool is currently available
-     */
-    public String getToolBorrowDate(int toolID) {
-        // Initialize Variables
-        String borrowDate = "";
-
-        // Check Tool Availability
-        if (toolAvailability(toolID)) {
-            return null;
-        } else {
-            // Attempt to connect to db
-            try (Connection connection = DriverManager.getConnection(databaseURL)) {
-                Statement statement = connection.createStatement(); // Create SQL Statement
-                ResultSet result = statement.executeQuery("SELECT Borrow.Date FROM Borrow WHERE (((Borrow.[Tool ID])=" + toolID + "));"); // Get results for SQL Statement
-
-                // Get Tool Borrow Date
-                while (result.next()) {
-                    borrowDate = result.getString("Date");
-                }
-
-                connection.close(); // Close DB connection
-            } catch (SQLException ex) {
-                // IF cannot connect to DB, print exception
-                ex.printStackTrace();
-            }
-        }
-
-        // Return Tool Borrow Date
-        return borrowDate.replaceAll(" .*", "");
-    }
-
-    /**
      * The toolStatus method checks if a tool is enabled or disabled
      *
      * @param toolID the tool id to check
@@ -184,6 +147,30 @@ public class Tool extends Student {
 
         // Return tool availability
         return availability;
+    }
+
+    /**
+     * The updateToolQuantity method updates the quantity of a specified tool
+     *
+     * @param toolID the tool id to set the quantity
+     * @param quantity the quantity to set for the tool id
+     *
+     * @return true if successful, false if unsuccessful
+     */
+    public boolean updateToolQuantity(int toolID, int quantity) {
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.Quantity = \"" + quantity + "\" WHERE (((Tool.ID)=" + toolID + "));\n"); // Create SQL Statement
+            preparedStatement.executeUpdate(); // execute statement
+            connection.close(); // Close DB connection
+
+            return true;
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        return false;
     }
 
     public int getToolQuantity(int toolID) {
@@ -286,7 +273,7 @@ public class Tool extends Student {
      * @return true if successfully returned, else false
      */
     public boolean forceReturnTools(int toolID) {
-        if (!toolAvailability(toolID)) {
+        if (getToolBorrowerIDS(toolID).size() > 0) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
                 PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Borrow SET Borrow.[Returned] = True WHERE Borrow.[Tool ID] = " + toolID + ";"); // Create SQL Statement
@@ -561,9 +548,6 @@ public class Tool extends Student {
                     if (getToolAvailablityQuantity(result.getInt("ID"), false) > 0) {
                         tools.add(result.getInt("ID"));
                     }
-//                    if (!toolAvailability(result.getInt("ID"))) {
-//                        tools.add(result.getInt("ID"));
-//                    }
                 }
             }
 
