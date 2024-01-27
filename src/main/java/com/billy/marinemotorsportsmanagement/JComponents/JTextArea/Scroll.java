@@ -1,0 +1,16 @@
+package com.billy.marinemotorsportsmanagement.JComponents.JTextArea;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class Scroll extends JScrollPane {
+    public Scroll(JTextArea textArea) {
+        super(textArea);
+        this.setPreferredSize(new Dimension(200, 350));
+    }
+
+    public Scroll(JTextArea textArea, int width, int height) {
+        super(textArea);
+        this.setPreferredSize(new Dimension(width, height));
+    }
+}
