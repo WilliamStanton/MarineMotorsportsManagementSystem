@@ -16,7 +16,7 @@ public class ToolLookup extends JTable {
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(200);
+        tcm.getColumn(0).setPreferredWidth(600);
         tcm.getColumn(1).setPreferredWidth(10);
         tcm.getColumn(2).setPreferredWidth(50);
     }
@@ -30,7 +30,7 @@ public class ToolLookup extends JTable {
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(200);
+        tcm.getColumn(0).setPreferredWidth(600);
         tcm.getColumn(1).setPreferredWidth(10);
         tcm.getColumn(2).setPreferredWidth(50);
     }

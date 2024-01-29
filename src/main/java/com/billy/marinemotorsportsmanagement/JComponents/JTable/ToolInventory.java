@@ -10,15 +10,15 @@ public class ToolInventory extends JTable {
     public ToolInventory(String[][] data) {
         super(data, columnNames);
         this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
-        this.setBounds(30, 40, 500, 500);
+        this.setBounds(30, 40, 800, 500);
         this.setDefaultEditor(Object.class, null);
         this.setRowHeight(32);
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(215);
+        tcm.getColumn(0).setPreferredWidth(550);
         tcm.getColumn(1).setPreferredWidth(10);
-        tcm.getColumn(2).setPreferredWidth(15);
+        tcm.getColumn(2).setPreferredWidth(35);
     }
 
     public ToolInventory(String[][] data, int width, int height) {
@@ -30,8 +30,8 @@ public class ToolInventory extends JTable {
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(215);
+        tcm.getColumn(0).setPreferredWidth(550);
         tcm.getColumn(1).setPreferredWidth(10);
-        tcm.getColumn(2).setPreferredWidth(15);
+        tcm.getColumn(2).setPreferredWidth(35);
     }
 }

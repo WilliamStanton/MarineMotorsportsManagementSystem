@@ -683,7 +683,7 @@ public class Main {
         JTable borrowedTools = new BorrowedTools(unavailableToolData);
 
         // JScrollPane scroll (display JTable with scrollbar)
-        JScrollPane scroll = new Scroll(borrowedTools, 500, 500);
+        JScrollPane scroll = new Scroll(borrowedTools, 800, 500);
 
         // Unavailable Tools Display Array
         Object[] display = {
@@ -875,7 +875,7 @@ public class Main {
     public static void toggleStudentsAdmin() {
         // Toggle Students
         // Select Reactivate or Deactivate or Back
-        String[] toggleOptions = {"Reactivate Student", "Deactivate Student", "Back"};
+        String[] toggleOptions = {"Reactivate Student", "Deactivate Student", "Deactivate all Students", "Back"};
 
         // Student Management Display
         JLabel toggleStudentsTitle = new Title("Toggle Students");
@@ -973,6 +973,53 @@ public class Main {
                 }
                 // Return to toggle students once completed
                 toggleStudentsAdmin();
+            }
+
+            // Deactivate all students
+            case 2 -> {
+                // Display
+                JLabel deactivateAllTitle = new Title("Deactivate all Students?");
+                JLabel deactivateAllDescription = new Description("Warning: this should only be used for a new school year.");
+                Object[] display = {
+                        deactivateAllTitle,
+                        deactivateAllDescription
+                };
+
+                // Get choice
+                int choice = JOptionPane.showConfirmDialog(null, display, "Teacher Panel - Deactivate all Students", JOptionPane.YES_NO_OPTION, -1, null);
+
+                // Deactivate all students
+                if (choice == JOptionPane.YES_OPTION) {
+                    // Display warning
+                    JLabel confirmationTitle = new Title("Are you sure you would like to deactivate all students?");
+                    JLabel confirmDescription = new Description("If used in mistake, you will have to manually reactivate each student.");
+
+                    Object[] confirmationDisplay = {
+                      confirmationTitle,
+                      confirmDescription
+                    };
+
+                    // Get choice
+                    int confirmationChoice = JOptionPane.showConfirmDialog(null, confirmationDisplay, "Teacher Panel - Deactivate all Students", JOptionPane.YES_NO_OPTION, -1, null);
+
+                    // Deactivate all students
+                    if (confirmationChoice == JOptionPane.OK_OPTION) {
+                        if (api.deactivateAllStudents()) {
+                            JOptionPane.showMessageDialog(null, "All students deactivated successfully.", "Teacher Panel - Deactivate all Students", -1, null);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unknown error, students were not deactivated.", "Teacher Panel - Deactivate all Students", -1, null);
+                        }
+                        toggleStudentsAdmin();
+                    }
+                    // Return to toggle students panel
+                    else if (confirmationChoice == JOptionPane.NO_OPTION) {
+                        toggleStudentsAdmin();
+                    }
+
+                } // Return to toggle students panel
+                else if (choice == JOptionPane.NO_OPTION){
+                    toggleStudentsAdmin();
+                }
             }
 
             // Return back to Student Management
@@ -1199,12 +1246,17 @@ public class Main {
 
                     if (btn == 0) {
                         // If yes, change quantity
-                        if ((!toolID.getText().isBlank()) && (!quantity.getText().isBlank())) {
+
+                        // Parse Tool ID (remove MMS-)
+                        String effectedTool = toolID.getText();
+                        effectedTool = effectedTool.replaceAll("[^0-9]+", "");
+                        int realToolID = Integer.parseInt(effectedTool);
+                        if ((!toolID.getText().isBlank()) && (!quantity.getText().isBlank()) && (api.getToolName(realToolID) != null)) {
                             // If quantity changed
-                            if (Integer.parseInt(quantity.getText()) > 0 && api.getToolName(Integer.parseInt(toolID.getText())) != null) {
-                                boolean result = api.updateToolQuantity(Integer.parseInt(toolID.getText()), Integer.parseInt(quantity.getText()));
+                            if (Integer.parseInt(quantity.getText()) > 0) {
+                                boolean result = api.updateToolQuantity(realToolID, Integer.parseInt(quantity.getText()));
                                 if (result) {
-                                    String successAddMessage = "Tool quantity updated: " + api.getToolName(Integer.parseInt(toolID.getText())) + " (ID: " + toolID.getText() + "), Quantity: " + api.getToolQuantity(Integer.parseInt(toolID.getText()));
+                                    String successAddMessage = "Tool quantity updated: " + api.getToolName(realToolID) + " (ID: " + realToolID + "), Quantity: " + api.getToolQuantity(realToolID);
                                     JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
                                 } // Else if tool not added,
                                 else {
@@ -1212,7 +1264,7 @@ public class Main {
                                 }
                             } // Quantity less than 1 or tool id doesn't exist
                             else {
-                                if (api.getToolName(Integer.parseInt(toolID.getText())) == null) {
+                                if (api.getToolName(realToolID) == null) {
                                     JOptionPane.showMessageDialog(null, "Tool ID doesn't exist", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
                                 } else {
                                     JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, quantity must be greater than 0", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
@@ -1441,7 +1493,7 @@ public class Main {
                         JTable toolsActiveTable = new ToolInventory(activeToolData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(toolsActiveTable, 500, 500);
+                        JScrollPane scroll = new Scroll(toolsActiveTable, 800, 500);
 
                         // Active Tools Display
                         Object[] enabledToolsDisplay = {
@@ -1469,7 +1521,7 @@ public class Main {
                         JTable toolsInactiveTable = new ToolInventory(inactiveToolData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(toolsInactiveTable, 500, 500);
+                        JScrollPane scroll = new Scroll(toolsInactiveTable, 800, 500);
 
                         // Inactive Tools Display
                         Object[] inactiveToolsDisplay = {

@@ -6,17 +6,17 @@ import java.awt.*;
 
 public class BorrowedTools extends JTable {
 
-    private static final String[] columnNames = { "Name", "Avail.", "Unavail.", "ID"};
+    private static final String[] columnNames = { "Name", "IN", "OUT", "ID"};
     public BorrowedTools(String[][] data) {
         super(data, columnNames);
         this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
-        this.setBounds(30, 40, 500, 500);
+        this.setBounds(30, 40, 800, 500);
         this.setDefaultEditor(Object.class, null);
         this.setRowHeight(32);
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(200);
+        tcm.getColumn(0).setPreferredWidth(600);
         tcm.getColumn(1).setPreferredWidth(25);
         tcm.getColumn(2).setPreferredWidth(30);
         tcm.getColumn(3).setPreferredWidth(20);
@@ -31,7 +31,7 @@ public class BorrowedTools extends JTable {
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
-        tcm.getColumn(0).setPreferredWidth(215);
+        tcm.getColumn(0).setPreferredWidth(600);
         tcm.getColumn(1).setPreferredWidth(15);
         tcm.getColumn(2).setPreferredWidth(15);
         tcm.getColumn(3).setPreferredWidth(15);
