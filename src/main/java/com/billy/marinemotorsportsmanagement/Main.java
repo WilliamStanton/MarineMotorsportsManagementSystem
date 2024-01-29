@@ -1,9 +1,18 @@
 package com.billy.marinemotorsportsmanagement;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
+import com.billy.marinemotorsportsmanagement.JComponents.JButton.Button;
+import com.billy.marinemotorsportsmanagement.JComponents.JButton.ButtonArray;
+import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Description;
+import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Field;
+import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Title;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.BorrowedTools;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.StudentRoster;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolInventory;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolLookup;
+import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.Scroll;
+import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.TextArea;
+
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -11,6 +20,8 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.ColorUIResource;
+import javax.swing.UIManager.*;
 
 /**
  * This Main Class operates the Marine Motorsports Management Program
@@ -53,6 +64,7 @@ public class Main {
      * loaded
      */
     public static void uiConfig(boolean admin) {
+
         // JOptionPane
         // Fonts
         UIManager.put("OptionPane.messageForeground", Color.white);
@@ -71,6 +83,7 @@ public class Main {
         UIManager.put("OptionPane.okButtonText", "Continue");
         UIManager.put("Button.background", new Color(97, 97, 114));
         UIManager.put("Button.foreground", Color.white);
+        UIManager.put("Button.focus", new ColorUIResource(new Color(0, 0, 0, 0)));
 
         // Text Field
         // Fonts
@@ -93,18 +106,28 @@ public class Main {
      */
     public static void mainMenu() {
         // Configure UI (default, student)
-        uiConfig(false);
+         uiConfig(false);
 
         // Initialize menu options
         String[] options = {"Tool Master", "Teacher"};
-        int selection = JOptionPane.showOptionDialog(null, "Welcome to the Marine Motorsports Management System\nPlease select who you are:", "Marine Motorsports Management System", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+
+        // Login Selection Display
+        JLabel title = new Title("Welcome to the Marine Motorsports Management System");
+        JLabel description = new Description("Who are you?", true);
+
+        Object[] loginSelectionTitle = {
+            title,
+            description
+        };
+
+        int selection = JOptionPane.showOptionDialog(null, loginSelectionTitle, "Marine Motorsports Management System", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             // load tool master panel
             case 0:
                 toolMaster(null);
                 break;
 
-            // load admin panel
+            // load Teacher Panel
             case 1:
                 // Configure UI (teacher)
                 uiConfig(true);
@@ -115,21 +138,15 @@ public class Main {
             default:
                 // Login Field
                 // JLabel exitMessage
-                JLabel exitMessage = new JLabel("Please enter admininistrator credentials to exit the application.");
-                exitMessage.setFont(new Font("Segoe UI", Font.BOLD, 28));
-                exitMessage.setForeground(Color.white);
+                JLabel exitMessage = new Title("Please enter admininistrator credentials to exit the application.");
 
                 // JTextField & JLabel Username (Username field for login)
                 JTextField username = new JTextField();
-                JLabel usernameTitle = new JLabel("Username");
-                usernameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-                usernameTitle.setForeground(Color.white);
+                JLabel usernameTitle = new Field("Username");
 
                 // JPasswordField & JLabel Password (Password field for login)
                 JPasswordField password = new JPasswordField();
-                JLabel passwordTitle = new JLabel("Password");
-                passwordTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-                passwordTitle.setForeground(Color.white);
+                JLabel passwordTitle = new Field("Password");
 
                 // Display Array
                 Object[] loginField = {
@@ -151,7 +168,7 @@ public class Main {
                         mainMenu();
                     } // Else, login was incorrect
                     else {
-                        JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Teacher Login", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
         }
@@ -167,30 +184,41 @@ public class Main {
         // Select Session
         if (session == null) {
             String[] sessions = {"AM", "PM", "Back"};
-            int sessionChoice = JOptionPane.showOptionDialog(null, "Tool Master - Select the current session", "Tool Master Panel - Select Session", 0, JOptionPane.PLAIN_MESSAGE, null, sessions, sessions[0]);
+            // Session Choice Display
+            JLabel sessionTitle = new Title("Tool Master");
+            JLabel sessionDescription = new Description("Select the current session");
+            Object[] display = {
+                    sessionTitle,
+                    sessionDescription
+            };
+
+            // Get selection
+            int sessionChoice = JOptionPane.showOptionDialog(null, display, "Tool Master Panel - Select Session", 0, JOptionPane.PLAIN_MESSAGE, null, sessions, sessions[0]);
 
             switch (sessionChoice) {
-                case 0 ->
-                    session = "AM";
-                case 1 ->
-                    session = "PM";
-                default ->
-                    mainMenu();
+                case 0 -> session = "AM";
+                case 1 -> session = "PM";
+                default -> mainMenu();
             }
         }
 
         // Initialize menu options
-        String[] options = {"Scan Tools", "Tool Lookup", "All Borrowed Tools", "Log out of " + session + " Session"};
-        int selection = JOptionPane.showOptionDialog(null, "Tool Master - Current Session: " + session + "\nWhat would you like to do?", "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        String[] options = {"Scan Tools", "Tool Lookup", "View Borrowed Tools", "Log out of " + session + " Session"};
+
+        // Tool Master selection display
+        JLabel toolMasterTitle = new Title("Tool Master | " + session + " Session");
+        JLabel toolMasterDescription = new Description("What would you like to do?");
+        Object[] toolMasterSelection = {
+                toolMasterTitle,
+                toolMasterDescription
+        };
+
+        int selection = JOptionPane.showOptionDialog(null, toolMasterSelection, "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
-            case 0 ->
-                quickScan(session);
-            case 1 ->
-                toolLookup(session);
-            case 2 ->
-                unavailableTools(session);
-            default ->
-                mainMenu();
+            case 0 -> quickScan(session);
+            case 1 -> toolLookup(session);
+            case 2 -> borrowedTools(session);
+            default -> mainMenu();
         }
     }
 
@@ -264,9 +292,8 @@ public class Main {
             JPanel studentPanel = new JPanel(new GridLayout(6, 5, 6, 6));
 
             // JLabel Student Panel Title (display title)
-            JLabel studentPanelTitle = new JLabel("Select a Student - " + session + " Session");
-            studentPanelTitle.setFont(new Font("Segoe UI", Font.BOLD, 32));
-            studentPanelTitle.setForeground(Color.white);
+            JLabel studentPanelTitle = new Title("Scan Tools");
+            JLabel studentPanelDesc = new Description("Please select a Student | " + session + " Session");
 
             // Chosen Student ActionListener
             ActionListener chooseStudent = (ActionEvent ae) -> {
@@ -279,9 +306,8 @@ public class Main {
             // Add all buttons
             JButton[] buttonArray = new JButton[studentList.length];
             for (int i = 0; i < studentList.length; i++) {
-                buttonArray[i] = new JButton(studentList[i]);
+                buttonArray[i] = new ButtonArray(studentList[i]);
                 buttonArray[i].putClientProperty("index", i);
-                buttonArray[i].setFont(new Font("Arial", Font.PLAIN, 24));
                 buttonArray[i].addActionListener(chooseStudent);
                 studentPanel.add(buttonArray[i]);
             }
@@ -289,7 +315,9 @@ public class Main {
             // Choose Student Display Array
             Object[] chooseStudentDisplay = {
                 studentPanelTitle,
-                studentPanel,};
+                studentPanelDesc,
+                studentPanel
+            };
 
             // Display Student Selection & Handle Exit
             int exit = JOptionPane.showOptionDialog(null, chooseStudentDisplay, "Scan Tools", 0, -1, null, new String[]{"Back"}, 0);
@@ -304,25 +332,16 @@ public class Main {
 
             // Initialize Tool Scan GUI
             // JLabel Scan Title (display user tools being scanned for)
-            JLabel scanTitle = new JLabel("Scanning tools for: " + api.getStudentName(studentID));
-            scanTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
-            scanTitle.setForeground(Color.white);
+            JLabel scanTitle = new Title("Scanning tools for: " + api.getStudentName(studentID));
 
             // JLabel Scan Stats (borrow/return count)
-            JLabel scanStats = new JLabel("Tools Borrowed: 0 | Tools Returned: 0");
-            scanStats.setFont(new Font("Segoe UI", Font.PLAIN, 28));
-            scanStats.setForeground(Color.white);
+            JLabel scanStats = new Description("Tools Borrowed: " + out + " | Tools Returned: " + in);
 
             // JTextArea Tools Scanned (display tools scanned in/out)
-            JTextArea toolsScanned = new JTextArea();
-            toolsScanned.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-            toolsScanned.setLineWrap(true);
-            toolsScanned.setWrapStyleWord(true);
-            toolsScanned.setEditable(false);
+            JTextArea toolsScanned = new TextArea();
 
             // JScrollPane scroll (display JTextArea with scrollbar)
-            JScrollPane scroll = new JScrollPane(toolsScanned);
-            scroll.setPreferredSize(new Dimension(200, 350));
+            JScrollPane scroll = new Scroll(toolsScanned);
 
             // JTextField tool (Text box to read scanned tool)
             JTextField tool = new JTextField() {
@@ -353,17 +372,10 @@ public class Main {
                             if (api.toolStatus(toolID)) {
                                 // If tool isn't available, return tool
                                 if (!api.toolAvailability(toolID)) {
-                                    // Return success
-                                    if (api.returnTool(toolID)) {
-                                        toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                        in++;
-                                    } // Return error
-                                    else {
-                                        toolsScanned.append("Return Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                                        error = true;
-                                    }
+                                    toolsScanned.append("Borrow Error, Tool Unavailable: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                    error = true;
                                 } // Else if tool is available, borrow tool
-                                else if (api.toolAvailability(toolID)) {
+                                else {
                                     // Borrow success
                                     if (api.borrowTool(studentID, toolID)) {
                                         toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
@@ -399,8 +411,77 @@ public class Main {
             });
 
             // JButton Finish (Finish scanning button)
-            JButton finish = new JButton("Finish Scan");
-            finish.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            JButton returnTools = new Button("Go Return Tools");
+            JButton finish = new Button("Finish Scan");
+
+            // Create Action Listener for exiting return tools
+            JButton returnBtn = new Button("Back to Scanning");
+            ActionListener closeReturn = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent evt) {
+                    scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
+                    Window w = SwingUtilities.getWindowAncestor(returnBtn);
+                    if (w != null) {
+                        w.dispose();
+                    }
+                }
+            };
+
+            returnBtn.addActionListener(closeReturn);
+
+            // Create Action Listener for return tools button
+            ActionListener returnToolsEvent = new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    // JPanel Return Tool Panel (displays all tools as buttons)
+                    JPanel returnToolPanel = new JPanel(new GridLayout(6, 5, 6, 6));
+
+                    // Title
+                    JLabel title = new Title("Return Tools for " + api.getStudentName(studentID));
+                    JLabel description = new Description("");
+                    var toolCount = api.getStudentToolIDList(studentID).size();
+                    if (toolCount > 1) {
+                         description.setText("Click tool to return | Borrowing " + toolCount + " tools");
+                    } else if (toolCount == 0){
+                        description.setText("This student currently has no tools out!");
+                    } else {
+                        description.setText("Borrowing one tool");
+                    }
+
+                    // Chosen Tool ActionListener
+                    ActionListener chooseTool = (ActionEvent ae2) -> {
+                        // Get index
+                        JButton btn = (JButton) ae2.getSource();
+                        int toolID = (int) btn.getClientProperty("index");
+                        boolean success = api.returnTool(toolID, studentID);
+                        if (success) {
+                            toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                            in++;
+                            returnBtn.doClick();
+                            returnTools.doClick();
+                        }
+                    };
+
+                    // Add all tools as buttons
+                    ArrayList<Integer> toolIDList = api.getStudentToolIDList(studentID);
+                    JButton[] buttonArray = new ButtonArray[toolIDList.size()];
+                    for (int i = 0; i < buttonArray.length; i++) {
+                        buttonArray[i] = new ButtonArray(api.getToolName(toolIDList.get(i)));
+                        buttonArray[i].putClientProperty("index", toolIDList.get(i));
+                        buttonArray[i].addActionListener(chooseTool);
+                        returnToolPanel.add(buttonArray[i]);
+                    }
+
+                    Object[] returnToolsDisplay = {
+                        title, description, returnToolPanel, returnBtn
+                    };
+
+                    // Display Return Tools
+                    JOptionPane.showOptionDialog(null, returnToolsDisplay, "Return Tools", 0, -1, null, new Object[]{}, null);
+                }
+            };
+            returnTools.addActionListener(returnToolsEvent);
 
             // Create Action Listener for finish scan button
             ActionListener finishEvent = new ActionListener() {
@@ -410,12 +491,8 @@ public class Main {
                     if (error) {
                         // Ask user if they want to continue scanning or exit
                         // JLabel Error Titles (Title containing info/student with errors)
-                        JLabel errorTitle = new JLabel("One or more errors occured scanning tools for " + api.getStudentName(studentID));
-                        JLabel errorTitle2 = new JLabel("\nPlease continue if all the tools were scanned, otherwise go back to scanning");
-                        errorTitle.setFont(new Font("Segoe UI", Font.BOLD, 34));
-                        errorTitle.setForeground(Color.white);
-                        errorTitle2.setFont(new Font("Segoe UI", Font.PLAIN, 24));
-                        errorTitle2.setForeground(Color.white);
+                        JLabel errorTitle = new Title("One or more errors occured scanning tools for " + api.getStudentName(studentID));
+                        JLabel errorTitle2 = new Description("\nPlease continue if all the tools were scanned, otherwise go back to scanning");
 
                         // Error Display Array
                         Object[] errorDisplay = {
@@ -447,6 +524,7 @@ public class Main {
                 scanStats, // Scan Stats (borrow/return count)
                 scroll, // Tools Scanned (display tools scanned in/out)
                 tool, // Tool (Text box to read scanned tool)
+                returnTools, // Return Tools (easily return tools for selected student)
                 finish // Finish (Finish scanning button)
             };
 
@@ -466,16 +544,45 @@ public class Main {
         String toolTemp = "";
         int toolID = 0;
 
+        // JLabel Tool Lookup Title
+        JLabel toolLookupTitle = new Title();
+
+        // JLabel Tool Inventory Title
+        JLabel toolInventoryTitle = new Description();
+
+        // JTextArea Text Area (display specified tool data)
+        JTable toolBorrowers = new JTable();
+
+        // JScrollPane scroll (display JTextArea with scrollbar)
+        JScrollPane scroll = new Scroll(toolBorrowers, 500, 500);
+
+        // (Optional) error message
+        JLabel toolLookupError = new Title("");
+
+        // JOptionPane display array
+        Object[] display = {
+                toolLookupError
+        };
+
         // Get Tool ID
         while (toolTemp.isEmpty()) {
-            toolTemp = JOptionPane.showInputDialog(null, "Please enter tool ID to check its status", "Tool Status Lookup", -1);
+            // Tool Lookup Title
+            JLabel toolLookupDescription = new Description("Scan tool or enter tool ID to check its availability");
+            toolLookupTitle.setText("Tool Lookup");
+            Object[] toolLookupDisplay = {
+                toolLookupTitle,
+                toolLookupDescription,
+            };
+
+
+            toolTemp = JOptionPane.showInputDialog(null, toolLookupDisplay, "Tool Lookup", -1);
             // Check if back
             if (toolTemp == null) {
                 // Return to tool master
                 toolMaster(session);
             }
         }
-        
+
         // Check if input contains tool id
         if (toolTemp.replaceAll("\\D", "").matches("\\d+")) {
             toolID = Integer.parseInt(toolTemp.replaceAll("\\D", ""));
@@ -487,190 +594,178 @@ public class Main {
 
         // Check if tool is enabled
         if (api.toolStatus(toolID)) {
-            // Check tool availability
-            if (api.toolAvailability(toolID)) {
-                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow.", "Tool Status Lookup", -1);
-            } // Else tool is currently unavailable
-            else {
-                // Get Tool Name + Borrower Name + Session
-                JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently unavailable to borrow.\nCurrent Borrower: " + api.getStudentName(api.getToolBorrowerID(toolID)) + "\nBorrower Session: " + api.getStudentSession(api.getToolBorrowerID(toolID)) + "\nBorrow Date: " + api.getToolBorrowDate(toolID), "Tool Status Lookup", -1);
+            // Check if there is *any* of the tool out, if so, build list of names
+            var borrowerIds = api.getToolBorrowerIDS(toolID);
+            String[][] borrowerData = new String[borrowerIds.size()][3];
+            if (borrowerIds.size() > 0) {
+                for (int i = 0; i < borrowerIds.size(); i++) {
+                    borrowerData[i][0] = api.getToolName(toolID);
+                    borrowerData[i][1] = String.valueOf(toolID);
+                    borrowerData[i][2] = String.valueOf(api.getStudentName(borrowerIds.get(i)));
+                }
+                scroll = new Scroll(new ToolLookup(borrowerData, 500, 500));
             }
-        } // Else tool is currently disabled
+            if (api.toolAvailability(toolID) && borrowerIds.size() > 0) {
+                // Set display
+                toolLookupTitle.setText(api.getToolName(toolID) + " is currently available to borrow");
+                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+
+                display = new Object[]{
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                        scroll
+                };
+            } else if (api.toolAvailability(toolID) && borrowerIds.isEmpty()) {
+                toolLookupTitle.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow");
+                toolInventoryTitle.setText("Borrowers: 0 | Inventory: " + api.getToolQuantity(toolID));
+
+                display = new Object[]{
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                };
+            }
+            else {
+                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+                    display = new Object[] {
+                            toolLookupTitle,
+                            toolInventoryTitle,
+                            scroll
+                    };
+                toolLookupTitle.setText(api.getToolName(toolID) + " is currently unavailable to borrow");
+            }
+        }
         else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
-            JOptionPane.showMessageDialog(null, api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled", "Tool ", -1);
+            // Set error
+            toolLookupError.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled");
         } // Else tool does not exist
         else {
-            JOptionPane.showMessageDialog(null, "The tool by (ID: " + toolID + ") does not exist", "Tool ", -1);
+            // Set error
+            toolLookupError.setText("The tool by (ID: " + toolID + ") does not exist");
         }
+
+        JOptionPane.showMessageDialog(null, display, "Tool Lookup", -1);
 
         // Return to tool master
         toolMaster(session);
     }
 
     /**
-     * The unavailableTools method provides the methods for viewing the various
+     * The borrowedTools method provides the methods for viewing the various
      * unavailable tool reports
      *
      * @param session current session (AM/PM)
      */
-    public static void unavailableTools(String session) {
+    public static void borrowedTools(String session) {
         // Check if any unavailable tools
         if (api.toolIDList(true, false).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No borrowed tools found", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "All tools are currently available in the " + session + " Session. ", "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE, null);
             toolMaster(session);
         }
 
-        // Load all Unavailable Tools
-        // Get all tool ids
+        // Get all unavailable tool ids
         ArrayList<Integer> allToolIDSUnavailable = api.toolIDList(true, false);
+        String[][] unavailableToolData = new String[allToolIDSUnavailable.size()][4];
 
-        // Get all tool names
-        ArrayList<String> allToolNamesUnavailable = new ArrayList<>();
+        // Build list of AM Class borrowed tools
         for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-            allToolNamesUnavailable.add(api.getToolName(allToolIDSUnavailable.get(i)));
+            unavailableToolData[i][0] = api.getToolName(allToolIDSUnavailable.get(i));
+            unavailableToolData[i][1] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i) , true));
+            unavailableToolData[i][2] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i) , false));
+            unavailableToolData[i][3] = String.valueOf(allToolIDSUnavailable.get(i));
         }
 
-        // Get all borrower names
-        ArrayList<String> allBorrowerNamesUnavailable = new ArrayList<>();
-        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-            allBorrowerNamesUnavailable.add(api.getStudentName(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
-        }
+        // JLabel Title
+        JLabel borrowedTitle = new Title("Borrowed Tools");
+        JLabel borrowedDescription = new Description(allToolIDSUnavailable.size() + " tools are currently being borrowed");
 
-        // Get all borrower sessions
-        ArrayList<String> allBorrowerSessionsUnavailable = new ArrayList<>();
-        for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-            allBorrowerSessionsUnavailable.add(api.getStudentSession(api.getToolBorrowerID(allToolIDSUnavailable.get(i))));
-        }
+        // JTable (display all borrowed tools)
+        JTable borrowedTools = new BorrowedTools(unavailableToolData);
 
-        // Init unavailable tool vars
-        String unavailableTools = "";
-        int toolsOut = 0;
-        switch (session) {
-            // AM Class - Unavailable Tools
-            case "AM" -> {
-                // Build list of AM Class unavailable tools
-                for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-                    if (allBorrowerSessionsUnavailable.get(i).equals("AM")) {
-                        unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
-                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
-
-                        // Increment tool out counter
-                        toolsOut++;
-                    }
-                }
-            }
-
-            // PM Class - Unavailable Tools
-            case "PM" -> {
-                // Build list of PM Class unavailable tools
-                for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
-                    if (allBorrowerSessionsUnavailable.get(i).equals("PM")) {
-                        unavailableTools += i + 1 + ") Tool Name: " + allToolNamesUnavailable.get(i)
-                                + "\n     - Tool ID: " + allToolIDSUnavailable.get(i)
-                                + "\n     - Borrower: " + allBorrowerNamesUnavailable.get(i)
-                                + "\n     - Borrow Date: " + api.getToolBorrowDate(allToolIDSUnavailable.get(i)) + "\n\n";
-
-                        // Increment tool out counter
-                        toolsOut++;
-                    }
-                }
-            }
-
-            // Back to Tool Master Panel
-            default ->
-                toolMaster(session);
-        }
-
-        // Display Results
-        // JLabel Unavailable Title (display amount of tools unavailable + session)
-        JLabel unavailableTitle = new JLabel("(" + toolsOut + ")" + " Unavailable Tools - " + session + " Session\n\n");
-        unavailableTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        unavailableTitle.setForeground(Color.white);
-
-        // JTextArea Text Area (display all unavailable tools)
-        JTextArea textArea = new JTextArea(unavailableTools);
-        textArea.setFont(new Font("Segoe UI", Font.PLAIN, 24));
-        textArea.setLineWrap(true);
-        textArea.setWrapStyleWord(true);
-        textArea.setEditable(false);
-
-        // Check if no unavailable tools, and display to user if so in Text Area
-        if (unavailableTools.isEmpty()) {
-            textArea.setText("All tools are currently available for " + session + " Session");
-        }
-
-        // JScrollPane scroll (display JTextArea with scrollbar)
-        JScrollPane scroll = new JScrollPane(textArea);
-        scroll.setPreferredSize(new Dimension(500, 500));
+        // JScrollPane scroll (display JTable with scrollbar)
+        JScrollPane scroll = new Scroll(borrowedTools, 800, 500);
 
         // Unavailable Tools Display Array
         Object[] display = {
-            unavailableTitle, // Unavailable Title (display amount of tools unavailable + session)
-            scroll // Text Area (display all unavailable tools)
+                borrowedTitle, // Borrowers Title (display amount of tools unavailable + session)
+                borrowedDescription,
+                scroll // Text Area (display all unavailable tools)
         };
 
         // Display Unavailable Tools
         JOptionPane.showMessageDialog(null, display, "Tool Master Panel - Tool Report", JOptionPane.PLAIN_MESSAGE);
 
-        // Ensure return to Tool Master Panel
+        // Ensure return back to Tool Master Panel
         toolMaster(session);
     }
 
     /**
      * The admin method controls authentication and various different admin
-     * functions for the admin panel
+     * functions for the Teacher Panel
      */
     public static void admin() {
         // Login Field
         // JLabel Login Title (self-explanatory)
-        JLabel loginTitle = new JLabel("Please enter your credentials");
-        loginTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        loginTitle.setForeground(Color.white);
+        JLabel loginTitle = new Title("Teacher Login");
+        JLabel loginDesc = new Description("Please enter your login credentials");
 
         // JTextField & JLabel Username (Username field for login)
         JTextField username = new JTextField();
-        JLabel usernameTitle = new JLabel("Username");
-        usernameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-        usernameTitle.setForeground(Color.white);
+        JLabel usernameTitle = new Field("Username");
 
         // JPasswordField & JLabel Password (Password field for login)
         JPasswordField password = new JPasswordField();
-        JLabel passwordTitle = new JLabel("Password");
-        passwordTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-        passwordTitle.setForeground(Color.white);
+        JLabel passwordTitle = new Field("Password");
 
         // Login Field Display Array
         Object[] loginField = {
             loginTitle, // Login Title (self-explanatory)
+            loginDesc, // loginDesc,
             usernameTitle, username, // Username (Username field for login)
             passwordTitle, password // Password (Password field for login)
         };
 
         // Attempt login till session status is active
+        // Authentication Display
+        JLabel authTitle = new Title();
+        JLabel authDesc = new Description();
+
+        Object[] display = {
+          authTitle,
+          authDesc
+        };
+
         while (!api.sessionStatus()) {
             // Display Login Dialog
-            int option = JOptionPane.showConfirmDialog(null, loginField, "Admin Login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            int option = JOptionPane.showConfirmDialog(null, loginField, "Teacher Login", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
             // If Ok, check login
             if (option == JOptionPane.OK_OPTION && api.login(username.getText(), password.getText())) {
-                // Display Success Message
-                JOptionPane.showMessageDialog(null, "Welcome, Login Successful", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
+
             } // If no, exit to menu
             else if (option == JOptionPane.CANCEL_OPTION) {
                 mainMenu();
             } // Else, login was incorrect
             else {
                 // Display Invalid Credentials Message
-                JOptionPane.showMessageDialog(null, "Invalid credentials, please try again", "Admin Login", JOptionPane.PLAIN_MESSAGE, null);
+                authTitle.setText("Login Error");
+                authDesc.setText("Invalid credentials, please try again");
+                JOptionPane.showMessageDialog(null, display, "Teacher Login", JOptionPane.PLAIN_MESSAGE, null);
             }
         }
 
         // Initialize Options
-        String[] options = {"Student Management", "Tool Management", "Logout of Admin"};
-        int selection = JOptionPane.showOptionDialog(null, "Hi, Admin!\nWhat would you like to do today?", "Admin Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        String[] options = {"Student Management", "Tool Management", "Logout"};
+
+        // Display Title
+        JLabel adminTitle = new Title("Welcome, Mr. Pickerell");
+        JLabel adminDesc = new Description("What would you like to do today?");
+        Object[] adminDisplay = {
+                adminTitle,
+                adminDesc
+        };
+
+        int selection = JOptionPane.showOptionDialog(null, adminDisplay, "Teacher Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             // Manage Students
             case 0 ->
@@ -692,27 +787,31 @@ public class Main {
      */
     public static void studentManagementAdmin() {
         // Select Add or Remove or Back
-        String[] studentOptions = {"Add Student", "Disable Student", "Re-enable Student", "View Students", "Back"};
-        int studentSelection = JOptionPane.showOptionDialog(null, "Please select an action", "Admin Panel - Student Management", 0, JOptionPane.PLAIN_MESSAGE, null, studentOptions, studentOptions[0]);
+        String[] studentOptions = {"Add Student", "Toggle Students", "Student Roster", "Back"};
+
+        // Student Management Display
+        JLabel studentManagementTitle = new Title("Student Management");
+        JLabel studentManagementDescription = new Description("Please select an action");
+
+        Object[] studentManagementDisplay = {
+                studentManagementTitle,
+                studentManagementDescription
+        };
+
+        int studentSelection = JOptionPane.showOptionDialog(null, studentManagementDisplay, "Teacher Panel - Student Management", 0, JOptionPane.PLAIN_MESSAGE, null, studentOptions, studentOptions[0]);
         switch (studentSelection) {
             case 0 -> {
                 // Add Student Field
                 // JLabel Add Student Title (Title)
-                JLabel addStudentTitle = new JLabel("Add Student");
-                addStudentTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
-                addStudentTitle.setForeground(Color.white);
+                JLabel addStudentTitle = new Title("Add Student");
 
                 // JTextField & JLabel Full Name (Text box to enter Full Student Name)
                 JTextField fullName = new JTextField();
-                JLabel fullNameTitle = new JLabel("Full Name");
-                fullNameTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-                fullNameTitle.setForeground(Color.white);
+                JLabel fullNameTitle = new Field("Full Name", 26);
 
                 // JTextField & JLabel Student Session (Text box to enter Student Session)
                 JTextField studentSession = new JTextField();
-                JLabel studentSessionTitle = new JLabel("Session (AM or PM)");
-                studentSessionTitle.setFont(new Font("Segoe UI", Font.PLAIN, 26));
-                studentSessionTitle.setForeground(Color.white);
+                JLabel studentSessionTitle = new Field("Session (AM or PM)", 26);
 
                 // Add Student Field Display Array
                 Object[] addStudentField = {
@@ -722,7 +821,7 @@ public class Main {
                 };
 
                 // Display Add Student Field
-                int addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Admin Panel - Add Student", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                int addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Teacher Panel - Add Student", JOptionPane.OK_CANCEL_OPTION, -1, null);
 
                 // If Ok, attempt student creation
                 if (addStudentInfo == JOptionPane.OK_OPTION) {
@@ -735,13 +834,13 @@ public class Main {
                     else {
                         while (!added) {
                             JOptionPane.showMessageDialog(null, "Student has not been added, please ensure you enter a valid session.", "Add Student", JOptionPane.PLAIN_MESSAGE, null);
-                            addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Admin Panel - Add Student", JOptionPane.OK_CANCEL_OPTION);
+                            addStudentInfo = JOptionPane.showConfirmDialog(null, addStudentField, "Teacher Panel - Add Student", JOptionPane.OK_CANCEL_OPTION, -1, null);
                             // If yes, continue trying to add student
                             if (addStudentInfo == JOptionPane.YES_OPTION) {
                                 if (api.addStudent(fullName.getText(), studentSession.getText())) {
                                     added = true;
                                     String successAddMessage = "Student successfully added:\n\n" + "Name: " + fullName.getText() + "\nSession: " + studentSession.getText();
-                                    JOptionPane.showMessageDialog(null, successAddMessage, "Admin Panel - Add Student", JOptionPane.PLAIN_MESSAGE, null);
+                                    JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Add Student", JOptionPane.PLAIN_MESSAGE, null);
                                 }
                             } // If no, exit loop and return to menu
                             else {
@@ -759,49 +858,39 @@ public class Main {
             }
 
             case 1 -> {
-                // Disable student
-                // if any students are enabled
-                if (!api.studentNameList(true).isEmpty()) {
-                    // Get all students names
-                    ArrayList<String> studentNames = api.studentNameList(true);
-                    // Get all student ids
-                    ArrayList<Integer> studentIds = api.studentIDList(true);
-
-                    // Combine names with ids
-                    ArrayList<String> tempArray = new ArrayList<>();
-                    for (int i = 0; i < studentNames.size(); i++) {
-                        tempArray.add(studentNames.get(i) + ", ID: " + studentIds.get(i));
-                    }
-
-                    // Arraylist -> Array
-                    String[] studentList = new String[tempArray.size()];
-                    studentList = tempArray.toArray(studentList);
-
-                    // Select and disable student
-                    String studentToDisable = (String) JOptionPane.showInputDialog(null, "Select a Student", "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
-                    // If yes
-                    if (studentToDisable != null) {
-                        // Strip String to only ID
-                        String studentID = studentToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
-                        if (api.disableStudent(Integer.parseInt(studentID))) {
-                            String successRemoveMessage = "Student successfully disabled: " + studentToDisable;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Student has not been disabled. Error.", "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
-                        }
-                    } // If No, return to student management panel
-                    else {
-                        studentManagementAdmin();
-                    }
-                } // if no enabled students
-                else {
-                    JOptionPane.showMessageDialog(null, "There are no students to disable.", "Admin Panel - Disable Student", JOptionPane.PLAIN_MESSAGE, null);
-                }
-                // Return to student management panel once completed
-                studentManagementAdmin();
+                toggleStudentsAdmin();
             }
-            case 2 -> {
-                // if any students are disabled
+
+            case 2 ->
+                studentRosterAdmin();
+
+            // Return back to Teacher Panel
+            default -> admin();
+        }
+    }
+
+    /**
+     * The toggleStudentsAdmin method allows for the admin to activate/deactivate students
+     */
+    public static void toggleStudentsAdmin() {
+        // Toggle Students
+        // Select Reactivate or Deactivate or Back
+        String[] toggleOptions = {"Reactivate Student", "Deactivate Student", "Deactivate all Students", "Back"};
+
+        // Student Management Display
+        JLabel toggleStudentsTitle = new Title("Toggle Students");
+        JLabel toggleStudentsDescription = new Description("Please select an action");
+
+        Object[] toggleStudentsDisplay = {
+                toggleStudentsTitle,
+                toggleStudentsDescription
+        };
+
+        int toggleStudentsSelection = JOptionPane.showOptionDialog(null, toggleStudentsDisplay, "Teacher Panel - Toggle Students", 0, JOptionPane.PLAIN_MESSAGE, null, toggleOptions, toggleOptions[0]);
+
+        switch(toggleStudentsSelection) {
+            case 0 -> {
+                // if any students are deactivated
                 if (!api.studentNameList(false).isEmpty()) {
                     // Get all students names
                     ArrayList<String> studentNames = api.studentNameList(false);
@@ -818,203 +907,251 @@ public class Main {
                     String[] studentList = new String[tempArray.size()];
                     studentList = tempArray.toArray(studentList);
 
-                    // Select and re-enable student
-                    String studentToDisable = (String) JOptionPane.showInputDialog(null, "Select a Student", "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
+                    // Select and reactivate student
+                    String studentToDisable = (String) JOptionPane.showInputDialog(null, "Reactivate Student", "Teacher Panel - Reactivate Student", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
 
                     // If yes
                     if (studentToDisable != null) {
                         // Strip String to only ID
                         String studentID = studentToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
                         if (api.enableStudent(Integer.parseInt(studentID))) {
-                            String successRemoveMessage = "Student successfully re-enabled: " + studentToDisable;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
+                            String successRemoveMessage = "Student successfully reactivated: " + studentToDisable;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Reactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Student has not been re-enabled. Error.", "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Error, student has not been reactivated.", "Teacher Panel - Reactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                         }
-                    } // If No, return to student management panel
+                    } // If No, return to toggle students
                     else {
-                        studentManagementAdmin();
+                        toggleStudentsAdmin();
                     }
-                } // if no disabled students
+                } // if no deactivated students
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no students to re-enable.", "Admin Panel - Re-enable Student", JOptionPane.PLAIN_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no students to reactivate.", "Teacher Panel - Reactivate Student", JOptionPane.PLAIN_MESSAGE, null);
                 }
-                // Return to student management panel once completed
-                studentManagementAdmin();
+                // Return to toggle students once completed
+                toggleStudentsAdmin();
             }
-            case 3 ->
-                viewStudentsAdmin();
 
-            default -> // Return back to admin panel
-                admin();
+            case 1 -> {
+                // Deactivate student
+                // if any students are deactivated
+                if (!api.studentNameList(true).isEmpty()) {
+                    // Get all students names
+                    ArrayList<String> studentNames = api.studentNameList(true);
+                    // Get all student ids
+                    ArrayList<Integer> studentIds = api.studentIDList(true);
+
+                    // Combine names with ids
+                    ArrayList<String> tempArray = new ArrayList<>();
+                    for (int i = 0; i < studentNames.size(); i++) {
+                        tempArray.add(studentNames.get(i) + ", ID: " + studentIds.get(i));
+                    }
+
+                    // Arraylist -> Array
+                    String[] studentList = new String[tempArray.size()];
+                    studentList = tempArray.toArray(studentList);
+
+                    // Select and deactivate student
+                    String studentToDisable = (String) JOptionPane.showInputDialog(null, "Deactivate Student", "Teacher Panel - Deactivate Student", JOptionPane.PLAIN_MESSAGE, null, studentList, studentList[0]);
+                    // If yes
+                    if (studentToDisable != null) {
+                        // Strip String to only ID
+                        String studentID = studentToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+                        if (api.disableStudent(Integer.parseInt(studentID))) {
+                            String successRemoveMessage = "Student successfully disabled: " + studentToDisable;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Deactivate Student", JOptionPane.PLAIN_MESSAGE, null);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Error, student has not been deactivated.", "Teacher Panel - Deactivate Student", JOptionPane.PLAIN_MESSAGE, null);
+                        }
+                    } // Return to toggle students once completed
+                    else {
+                        toggleStudentsAdmin();
+                    }
+                } // if no inactive students
+                else {
+                    JOptionPane.showMessageDialog(null, "There are no students to deactivate.", "Teacher Panel - Deactivate Student", JOptionPane.PLAIN_MESSAGE, null);
+                }
+                // Return to toggle students once completed
+                toggleStudentsAdmin();
+            }
+
+            // Deactivate all students
+            case 2 -> {
+                // Display
+                JLabel deactivateAllTitle = new Title("Deactivate all Students?");
+                JLabel deactivateAllDescription = new Description("Warning: this should only be used for a new school year.");
+                Object[] display = {
+                        deactivateAllTitle,
+                        deactivateAllDescription
+                };
+
+                // Get choice
+                int choice = JOptionPane.showConfirmDialog(null, display, "Teacher Panel - Deactivate all Students", JOptionPane.YES_NO_OPTION, -1, null);
+
+                // Deactivate all students
+                if (choice == JOptionPane.YES_OPTION) {
+                    // Display warning
+                    JLabel confirmationTitle = new Title("Are you sure you would like to deactivate all students?");
+                    JLabel confirmDescription = new Description("If used in mistake, you will have to manually reactivate each student.");
+
+                    Object[] confirmationDisplay = {
+                      confirmationTitle,
+                      confirmDescription
+                    };
+
+                    // Get choice
+                    int confirmationChoice = JOptionPane.showConfirmDialog(null, confirmationDisplay, "Teacher Panel - Deactivate all Students", JOptionPane.YES_NO_OPTION, -1, null);
+
+                    // Deactivate all students
+                    if (confirmationChoice == JOptionPane.OK_OPTION) {
+                        if (api.deactivateAllStudents()) {
+                            JOptionPane.showMessageDialog(null, "All students deactivated successfully.", "Teacher Panel - Deactivate all Students", -1, null);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Unknown error, students were not deactivated.", "Teacher Panel - Deactivate all Students", -1, null);
+                        }
+                        toggleStudentsAdmin();
+                    }
+                    // Return to toggle students panel
+                    else if (confirmationChoice == JOptionPane.NO_OPTION) {
+                        toggleStudentsAdmin();
+                    }
+
+                } // Return to toggle students panel
+                else if (choice == JOptionPane.NO_OPTION){
+                    toggleStudentsAdmin();
+                }
+            }
+
+            // Return back to Student Management
+            default -> studentManagementAdmin();
         }
     }
 
     /**
-     * The viewStudentsAdmin method shows disabled/enabled, and all students
+     * The studentRosterAdmin method shows active/inactive students
      * used only in the admin method
-     *
-     * @param api
      */
-    public static void viewStudentsAdmin() {
+    public static void studentRosterAdmin() {
         // Check if any student available to borrow
         if (api.studentIDList(false).isEmpty() && api.studentIDList(true).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No Students exist", "Admin Panel - View Students", JOptionPane.PLAIN_MESSAGE, null);
-            toolManagementAdmin();
+            JOptionPane.showMessageDialog(null, "No Students exist", "Teacher Panel - Student Roster", JOptionPane.PLAIN_MESSAGE, null);
+            studentManagementAdmin();
         } // Else continue 
         else {
             // Initialize flags & arrays
-            boolean disabledStudents = false;
-            boolean enabledStudents = false;
-            String enabledStudentsString = "";
-            String disabledStudentsString = "";
+            // Build Active Students
+            boolean activeStudents = false;
+            ArrayList<Integer> activeStudentIDList = api.studentIDList(true);
+            String[][] activeStudentData = new String[activeStudentIDList.size()][3];
 
-            // Check disabled students
-            if (!api.studentNameList(false).isEmpty()) {
+            // Build Inactive Students
+            boolean inactiveStudents = false;
+            ArrayList<Integer> inactiveStudentIDList = api.studentIDList(false);
+            String[][] inactiveStudentData = new String[inactiveStudentIDList.size()][3];
+
+            // Check inactive students
+            if (!inactiveStudentIDList.isEmpty()) {
                 // Update flag
-                disabledStudents = true;
+                inactiveStudents = true;
 
-                // Build disabled students
-                // Get disabled student list
-                ArrayList<String> disabledStudentNameList = api.studentNameList(false);
-                ArrayList<Integer> disabledStudentIDList = api.studentIDList(false);
-
-                // Combine names with ids
-                for (int i = 0; i < disabledStudentNameList.size(); i++) {
-                    disabledStudentsString += (disabledStudentNameList.get(i) + ", ID: " + disabledStudentIDList.get(i) + ", Session: " + api.getStudentSession(disabledStudentIDList.get(i)) + ", Status: Disabled" + "\n");
+                // Get inactive student list
+                for (int i = 0; i < inactiveStudentIDList.size(); i++) {
+                    inactiveStudentData[i][0] = api.getStudentName(inactiveStudentIDList.get(i));
+                    inactiveStudentData[i][1] = String.valueOf(inactiveStudentIDList.get(i));
+                    inactiveStudentData[i][2] = api.getStudentSession(inactiveStudentIDList.get(i));
                 }
             }
 
-            // Check enabled students
-            if (!api.studentNameList(true).isEmpty()) {
+            // Check active students
+            if (!activeStudentIDList.isEmpty()) {
                 // Update flag
-                enabledStudents = true;
+                activeStudents = true;
 
-                // Build enabled students
-                // Get enabled student list
-                ArrayList<String> enabledStudentNameList = api.studentNameList(true);
-                ArrayList<Integer> enabledStudentIDList = api.studentIDList(true);
-
-                // Combine names with ids
-                for (int i = 0; i < enabledStudentNameList.size(); i++) {
-                    enabledStudentsString += (enabledStudentNameList.get(i) + ", ID: " + enabledStudentIDList.get(i) + ", Session: " + api.getStudentSession(enabledStudentIDList.get(i)) + ", Status: Enabled") + "\n";
+                // Get active student list
+                for (int i = 0; i < activeStudentIDList.size(); i++) {
+                    activeStudentData[i][0] = api.getStudentName(activeStudentIDList.get(i));
+                    activeStudentData[i][1] = String.valueOf(activeStudentIDList.get(i));
+                    activeStudentData[i][2] = api.getStudentSession(activeStudentIDList.get(i));
                 }
             }
 
             // Initialize Options
-            String[] viewStudentOptions = {"View Enabled Students", "View Disabled Students", "View all Students", "Back"};
-            int viewStudentSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Students", 0, JOptionPane.PLAIN_MESSAGE, null, viewStudentOptions, viewStudentOptions[0]);
-            switch (viewStudentSelection) {
-                // View Enabled Students
-                case 0 -> {
-                    // Check if enabled Students found
-                    if (enabledStudents) {
-                        // JLabel View Enabled Students Title (Title)
-                        JLabel viewEnabledStudents = new JLabel("View Enabled Students");
-                        viewEnabledStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
-                        viewEnabledStudents.setForeground(Color.white);
+            String[] viewStudentOptions = {"Active Students", "Inactive Students", "Back"};
 
-                        // JTextArea Students Enabled (display enabled students)
-                        JTextArea studentsEnabled = new JTextArea(enabledStudentsString);
-                        studentsEnabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                        studentsEnabled.setLineWrap(true);
-                        studentsEnabled.setWrapStyleWord(true);
-                        studentsEnabled.setEditable(false);
+            // Student Roster Display
+            JLabel studentRosterTitle = new Title("Student Roster");
+            JLabel studentRosterDescription = new Description("Please select an option");
+            Object[] studentRosterDisplay = {
+                    studentRosterTitle,
+                    studentRosterDescription
+            };
+
+            int viewStudentSelection = (int) JOptionPane.showOptionDialog(null, studentRosterDisplay, "Teacher Panel - Student Roster", 0, JOptionPane.PLAIN_MESSAGE, null, viewStudentOptions, viewStudentOptions[0]);
+            switch (viewStudentSelection) {
+                case 0 -> {
+                    // View Active Students
+                    // Check if Active Students found
+                    if (activeStudents) {
+                        // JLabel View Active Students Title (Title)
+                        JLabel viewActiveStudentsTitle = new Title("Student Roster");
+                        JLabel viewActiveStudentsDescription = new Description(api.studentIDList(true).size() + " Active Students");
+
+                        // JTable (display active students)
+                        JTable activeStudentsList = new StudentRoster(activeStudentData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new JScrollPane(studentsEnabled);
-                        scroll.setPreferredSize(new Dimension(500, 500));
+                        JScrollPane scroll = new Scroll(activeStudentsList, 500, 500);
 
-                        // View Enabled Students Array
+                        // View active Students Array
                         Object[] display = {
-                            viewEnabledStudents, // View Enabled Students Title (Title)
-                            scroll // Students Enabled (display enabled students)
+                                viewActiveStudentsTitle,
+                                viewActiveStudentsDescription,
+                                scroll // Students Enabled (display enabled students)
                         };
 
-                        // Display Enabled Students
-                        JOptionPane.showMessageDialog(null, display, "Admin Panel - View Enabled Students", JOptionPane.PLAIN_MESSAGE, null);
-                    } // Else no enabled Students found
+                        // Display Active Students
+                        JOptionPane.showMessageDialog(null, display, "Teacher Panel - View Active Students", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no active Students found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Enabled Students exist", "Admin Panel - View Enabled Students", JOptionPane.PLAIN_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No active students exist", "Teacher Panel - View Active Students", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // View Disabled Students
+                // View Inactive Students
                 case 1 -> {
-                    // Check if Disabled Students found
-                    if (disabledStudents) {
-                        // JLabel View Disabled Students Title (Title)
-                        JLabel viewDisabledStudents = new JLabel("View Disabled Students");
-                        viewDisabledStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
-                        viewDisabledStudents.setForeground(Color.white);
+                    // Check if Inactive Students found
+                    if (inactiveStudents) {
+                        // JLabel View inactive Students Title (Title)
+                        JLabel viewInactiveStudentsTitle = new Title("Student Roster");
+                        JLabel viewInactiveStudentsDescription = new Description(api.studentIDList(false).size() + " Inactive Students");
 
-                        // JTextArea Students Disabled (display disabled students)
-                        JTextArea studentsDisabled = new JTextArea(disabledStudentsString);
-                        studentsDisabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                        studentsDisabled.setLineWrap(true);
-                        studentsDisabled.setWrapStyleWord(true);
-                        studentsDisabled.setEditable(false);
+                        // JTable (display active students)
+                        JTable inactiveStudentsList = new StudentRoster(inactiveStudentData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new JScrollPane(studentsDisabled);
-                        scroll.setPreferredSize(new Dimension(500, 500));
+                        JScrollPane scroll = new Scroll(inactiveStudentsList, 500, 500);
 
                         // View Disabled Students Array
                         Object[] display = {
-                            viewDisabledStudents, // Students Disabled (display disabled students)
-                            scroll // scroll (display JTextArea with scrollbar)
+                                viewInactiveStudentsTitle,
+                                viewInactiveStudentsDescription,
+                                scroll // scroll (display JTextArea with scrollbar)
                         };
 
-                        // Display Disabled Students
-                        JOptionPane.showMessageDialog(null, display, "Admin Panel - View Disabled Students", JOptionPane.PLAIN_MESSAGE, null);
-                    } // Else no disabled students found
+                        // Display Inactive Students
+                        JOptionPane.showMessageDialog(null, display, "Teacher Panel - View Inactive Students", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no inactive students found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Disabled Students exist", "Admin Panel Panel - View Disabled Students", JOptionPane.PLAIN_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No inactive students exist", "Teacher Panel Panel - View Inactive Students", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // View All students
-                case 2 -> {
-                    // Check if Disabled or Enabled Students found
-                    if (disabledStudents || enabledStudents) {
-                        // Combine Disabled + Enabled
-                        String fullStudentString = enabledStudentsString + disabledStudentsString;
 
-                        // JLabel View All Students Title (Title)
-                        JLabel viewAllStudents = new JLabel("View All Students");
-                        viewAllStudents.setFont(new Font("Segoe UI", Font.BOLD, 28));
-                        viewAllStudents.setForeground(Color.white);
-
-                        // JTextArea All Students (display all students)
-                        JTextArea allStudents = new JTextArea(fullStudentString);
-                        allStudents.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                        allStudents.setLineWrap(true);
-                        allStudents.setWrapStyleWord(true);
-                        allStudents.setEditable(false);
-
-                        // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new JScrollPane(allStudents);
-                        scroll.setPreferredSize(new Dimension(500, 500));
-
-                        // View All Students Array
-                        Object[] display = {
-                            viewAllStudents,
-                            scroll
-                        };
-
-                        // Display All Students
-                        JOptionPane.showMessageDialog(null, display, "Admin Panel - View All Students", JOptionPane.PLAIN_MESSAGE, null);
-                    } // Else no students exist (at all)
-                    else {
-                        JOptionPane.showMessageDialog(null, "No Students exist", "Tool Master Panel - View All Students", JOptionPane.PLAIN_MESSAGE, null);
-                    }
-                }
-                // Return to Student management
-                default ->
-                    studentManagementAdmin();
+                // Return back to Student management
+                default -> studentManagementAdmin();
             }
         }
-        // Return to view students panel once completed
-        viewStudentsAdmin();
+        // Return to student roster panel once completed
+        studentRosterAdmin();
     }
 
     /**
@@ -1023,81 +1160,163 @@ public class Main {
      */
     public static void toolManagementAdmin() {
         // Select Add or Remove or Back
-        String[] toolOptions = {"Add tool", "Disable tool", "Re-enable Tool", "View Tools", "Back"};
-        int toolSelection = JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - Tool Management", 0, JOptionPane.PLAIN_MESSAGE, null, toolOptions, toolOptions[0]);
+        String[] toolOptions = {"Add Tool", "Update Quantity", "Toggle Tools", "Tool Inventory", "Back"};
+
+        // Tool Management Display
+        JLabel toolManagementTitle = new Title("Tool Management");
+        JLabel toolManagementDescription = new Description("Please select an action");
+        Object[] toolManagementDisplay = {
+            toolManagementTitle,
+            toolManagementDescription
+        };
+
+        int toolSelection = JOptionPane.showOptionDialog(null, toolManagementDisplay, "Teacher Panel - Tool Management", 0, JOptionPane.PLAIN_MESSAGE, null, toolOptions, toolOptions[0]);
         switch (toolSelection) {
             case 0 -> {
                 // Add a tool
-                String toolName = JOptionPane.showInputDialog(null, "Enter a name for the new tool", "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
-                // If yes, add 
-                if (toolName != null) {
-                    // If tool added
-                    int toolID = api.createTool(toolName);
-                    if (toolID != 0) {
-                        String successAddMessage = "Tool successfully added: " + toolName + ", ID: " + toolID;
-                        JOptionPane.showMessageDialog(null, successAddMessage, "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
-                    } // Else if tool not added,
-                    else {
-                        JOptionPane.showMessageDialog(null, "Tool has not been added, error.", "Admin Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
+                JLabel title = new Title("Add Tool");
+                JLabel toolNameTitle = new Field("Tool Name");
+                JTextField toolName = new JTextField();
+                JLabel toolQuantityTitle = new Field("Tool Quantity");
+                JTextField toolQuantity = new JTextField();
+
+                Object[] display = {
+                    title,
+                    toolNameTitle,
+                    toolName,
+                    toolQuantityTitle,
+                    toolQuantity
+                };
+
+                while (toolName.getText().isBlank() && toolQuantity.getText().isBlank()) {
+                    int btn = JOptionPane.showOptionDialog(null, display, "Teacher Panel - Add Tool", 0, -1, null, new String[]{"Add Tool", "Back"}, 0);
+
+                    if (btn == 0) {
+                        // If yes, add
+                        if ((!toolName.getText().isBlank()) && (!toolQuantity.getText().isBlank())) {
+                            // If tool added
+                            if (Integer.parseInt(toolQuantity.getText()) > 0) {
+                                int toolID = api.createTool(toolName.getText(), Integer.parseInt(toolQuantity.getText()));
+                                if (toolID != 0) {
+                                    String successAddMessage = "Tool added to inventory: " + toolName.getText() + ", ID: " + toolID;
+                                    JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
+                                } // Else if tool not added,
+                                else {
+                                    JOptionPane.showMessageDialog(null, "Error adding tool to inventory.", "Teacher Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
+                                }
+                            } // Quantity less than 1
+                            else {
+                                JOptionPane.showMessageDialog(null, "Tool has not been added, quantity must be greater than 0.", "Teacher Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
+                            }
+
+                            // If no, return to Teacher Panel
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Tool has not been added, one or more fields were not completed.", "Teacher Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
+                            toolManagementAdmin();
+                        }
                     }
-                    // If no, return to admin panel
-                } else {
-                    toolManagementAdmin();
+                    else {
+                        break;
+                    }
                 }
 
                 // Return to tool management once completed
                 toolManagementAdmin();
             }
 
-            case 1 -> {
-                // Disable a tool
-                // Get enabled tool list
-                if (!api.toolNameList(true).isEmpty()) {
-                    ArrayList<String> toolNameList = api.toolNameList(true);
-                    ArrayList<Integer> toolIDList = api.toolIDList(true);
+            // Update Quantity
+            case 1 ->  {
+                // Update Quantity Display
+                JLabel updateQuantityTitle = new Title("Update Quantity");
+                JLabel updateQuantityToolField = new Field("Tool ID");
+                JTextField toolID = new JTextField();
+                JLabel updateQuantityField = new Field("New Quantity");
+                JTextField quantity = new JTextField();
 
-                    // Combine names with ids
-                    ArrayList<String> tempArray = new ArrayList<>();
-                    for (int i = 0; i < toolNameList.size(); i++) {
-                        tempArray.add(toolNameList.get(i) + ", ID: " + toolIDList.get(i));
-                    }
+                Object[] display = {
+                  updateQuantityTitle,
+                  updateQuantityToolField,
+                  toolID,
+                  updateQuantityField,
+                  quantity
+                };
 
-                    // Arraylist -> Array
-                    String[] toolList = new String[tempArray.size()];
-                    toolList = tempArray.toArray(toolList);
+                while (toolID.getText().isBlank() && quantity.getText().isBlank()) {
+                    int btn = JOptionPane.showOptionDialog(null, display, "Teacher Panel - Update Quantity", 0, -1, null, new String[]{"Update Quantity", "Back"}, 0);
 
-                    // Select and Disable tool
-                    String toolToDisable = (String) JOptionPane.showInputDialog(null, "Disable Tool", "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null, toolList, toolList[0]);
-                    // If yes
-                    if (toolToDisable != null) {
-                        // Strip String to only ID
-                        String toolID = toolToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
-                        if (api.disableTool(Integer.parseInt(toolID))) {
-                            String successRemoveMessage = "Tool successfully disabled: " + toolToDisable;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null);
+                    if (btn == 0) {
+                        // If yes, change quantity
+
+                        // Parse Tool ID (remove MMS-)
+                        String effectedTool = toolID.getText();
+                        effectedTool = effectedTool.replaceAll("[^0-9]+", "");
+                        int realToolID = Integer.parseInt(effectedTool);
+                        if ((!toolID.getText().isBlank()) && (!quantity.getText().isBlank()) && (api.getToolName(realToolID) != null)) {
+                            // If quantity changed
+                            if (Integer.parseInt(quantity.getText()) > 0) {
+                                boolean result = api.updateToolQuantity(realToolID, Integer.parseInt(quantity.getText()));
+                                if (result) {
+                                    String successAddMessage = "Tool quantity updated: " + api.getToolName(realToolID) + " (ID: " + realToolID + "), Quantity: " + api.getToolQuantity(realToolID);
+                                    JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                } // Else if tool not added,
+                                else {
+                                    JOptionPane.showMessageDialog(null, "Error updating tool quantity.", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                }
+                            } // Quantity less than 1 or tool id doesn't exist
+                            else {
+                                if (api.getToolName(realToolID) == null) {
+                                    JOptionPane.showMessageDialog(null, "Tool ID doesn't exist", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                } else {
+                                    JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, quantity must be greater than 0", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                                }
+                            }
+
+                            // If no, return to Teacher Panel
                         } else {
-                            JOptionPane.showMessageDialog(null, "Tool has not been disabled. Error.", "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, one or more fields were not completed.", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                            toolManagementAdmin();
                         }
-
-                        // Return to tool management once completed
-                        toolManagementAdmin();
-                        break;
-                    } // If No, return to tool management
+                    }
                     else {
                         toolManagementAdmin();
                     }
-                } // if no enabled tools
-                else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to disable.", "Admin Panel - Disable Tool", JOptionPane.PLAIN_MESSAGE, null);
-                }
 
-                // Return to tool management panel once completed
-                toolManagementAdmin();
+                    // Return back to tool management
+                    toolManagementAdmin();
+                }
             }
 
-            // Re-enable tools
-            case 2 -> {
-                // Get disabled tool list
+            // Toggle tools
+            case 2 -> toggleToolsAdmin();
+
+            // Tool Inventory
+            case 3 -> toolInventoryAdmin();
+
+            // Back to Teacher Panel
+            default -> admin();
+        }
+    }
+
+    public static void toggleToolsAdmin() {
+        // Toggle Tools
+        // Select Reactivate or Deactivate or Back
+        String[] toggleOptions = {"Reactivate Tool", "Deactivate Tool", "Back"};
+
+        // Tool Management Display
+        JLabel toggleToolsTitle = new Title("Toggle Tools");
+        JLabel toggleToolsDescription = new Description("Please select an action");
+
+        Object[] toggleToolsDisplay = {
+                toggleToolsTitle,
+                toggleToolsDescription
+        };
+
+        int toggleToolsSelection = JOptionPane.showOptionDialog(null, toggleToolsDisplay, "Teacher Panel - Toggle Tools", 0, JOptionPane.PLAIN_MESSAGE, null, toggleOptions, toggleOptions[0]);
+
+        switch(toggleToolsSelection) {
+            case 0 -> {
+                // Reactivate tools
+                // Get deactivated tool list
                 if (!api.toolNameList(false).isEmpty()) {
                     ArrayList<String> toolNameList = api.toolNameList(false);
                     ArrayList<Integer> toolIDList = api.toolIDList(false);
@@ -1112,174 +1331,218 @@ public class Main {
                     String[] toolList = new String[tempArray.size()];
                     toolList = tempArray.toArray(toolList);
 
-                    // Select and re-enable tool
-                    String toolToDisable = (String) JOptionPane.showInputDialog(null, "Re-enable Tool", "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null, toolList, toolList[0]);
+                    // Select and reactivate tool
+                    String toolToReactivate = (String) JOptionPane.showInputDialog(null, "Reactivate Tool", "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null, toolList, toolList[0]);
                     // If yes
-                    if (toolToDisable != null) {
+                    if (toolToReactivate != null) {
                         // Strip String to only ID
-                        String toolID = toolToDisable.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+                        String toolID = toolToReactivate.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
                         if (api.enableTool(Integer.parseInt(toolID))) {
-                            String successRemoveMessage = "Tool successfully re-enabled: " + toolToDisable;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null);
+                            String successRemoveMessage = "Tool successfully reactivated: " + toolToReactivate;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
                         } else {
-                            JOptionPane.showMessageDialog(null, "Tool has not been re-enabled. Error.", "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null);
+                            JOptionPane.showMessageDialog(null, "Error, tool has not been reactivated.", "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
                         }
 
                         // Return to tool management once completed
-                        toolManagementAdmin();
+                        toggleToolsAdmin();
                         break;
                     } // If no, return to tool management
                     else {
-                        toolManagementAdmin();
+                        toggleToolsAdmin();
                     }
                 } // If no enabled tools
                 else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to re-enable.", "Admin Panel - Re-enable Tool", JOptionPane.PLAIN_MESSAGE, null);
+                    JOptionPane.showMessageDialog(null, "There are no tools to reactivate.", "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
                 }
 
                 // Return to tool management panel once completed
-                toolManagementAdmin();
+                toggleToolsAdmin();
             }
 
-            // View tools
-            case 3 ->
-                viewToolsAdmin();
+            case 1 -> {
+                // Deactivate a tool
+                // Get activated tool list
+                if (!api.toolNameList(true).isEmpty()) {
+                    ArrayList<String> toolNameList = api.toolNameList(true);
+                    ArrayList<Integer> toolIDList = api.toolIDList(true);
 
-            default -> // Back to admin panel
-                admin();
+                    // Combine names with ids
+                    ArrayList<String> tempArray = new ArrayList<>();
+                    for (int i = 0; i < toolNameList.size(); i++) {
+                        tempArray.add(toolNameList.get(i) + ", ID: " + toolIDList.get(i));
+                    }
+
+                    // Arraylist -> Array
+                    String[] toolList = new String[tempArray.size()];
+                    toolList = tempArray.toArray(toolList);
+
+                    // Select and Deactivate tool
+                    String toolToDeactivate = (String) JOptionPane.showInputDialog(null, "Deactivate Tool", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null, toolList, toolList[0]);
+                    // If yes
+                    if (toolToDeactivate != null) {
+                        // Strip String to only ID
+                        String toolID = toolToDeactivate.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
+
+                        // Deactivate tool
+                        if (api.disableTool(Integer.parseInt(toolID))) {
+                            // Return all the tools if they are being borrowed
+                            if (api.getToolBorrowerIDS(Integer.parseInt(toolID)).size() > 0) {
+                                api.forceReturnTools((Integer.parseInt(toolID)));
+                            }
+
+                            String successRemoveMessage = "Tool successfully deactivated: " + toolToDeactivate;
+                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Error, tool has not been deactivated", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
+                        }
+
+                        // Return to toggle tools once completed
+                        toggleToolsAdmin();
+                        break;
+                    } // If No, return to toggle tools panel
+                    else {
+                        toggleToolsAdmin();
+                    }
+                } // if no activated tools
+                else {
+                    JOptionPane.showMessageDialog(null, "There are no tools to deactivate.", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
+                }
+
+                // Return to toggle tools once completed
+                toggleToolsAdmin();
+            }
+
+            // Return to tool management panel
+            default -> toolManagementAdmin();
         }
     }
 
     /**
-     * The viewToolsAdmin method shows disabled/enabled tools, and all tools
+     * The toolInventoryAdmin method shows disabled/enabled tools, and all tools
      * used only in the admin method
      */
-    public static void viewToolsAdmin() {
+    public static void toolInventoryAdmin() {
         // Check if any tools available to borrow
         if (api.toolIDList(false).isEmpty() && api.toolIDList(true).isEmpty()) {
             // Back to tool master if no tools found
-            JOptionPane.showMessageDialog(null, "No Tools exist", "Admin Panel - View Tools", JOptionPane.PLAIN_MESSAGE, null);
+            JOptionPane.showMessageDialog(null, "No tools exist", "Teacher Panel - View Tools", JOptionPane.PLAIN_MESSAGE, null);
             toolManagementAdmin();
         } // Else continue 
         else {
             // Initialize flags & arrays
-            boolean disabledTools = false;
-            boolean enabledTools = false;
-            String enabledToolsString = "";
-            String disabledToolsString = "";
+            boolean inactiveTools = false;
+            boolean activeTools = false;
 
-            // Check Disabled Tools
-            if (!api.toolNameList(false).isEmpty()) {
+            // Inactive Tools
+            ArrayList<Integer> inactiveToolIDList = api.toolIDList(false);
+            String[][] inactiveToolData = new String[inactiveToolIDList.size()][3];
+
+            // Active Tools
+            ArrayList<Integer> activeToolIDList = api.toolIDList(true);
+            String[][] activeToolData = new String[activeToolIDList.size()][3];
+
+            // Check Inactive Tools
+            if (!inactiveToolIDList.isEmpty()) {
                 // Update flag
-                disabledTools = true;
+                inactiveTools = true;
 
-                // Build Disabled tools
-                // Get disabled tool list
-                ArrayList<String> disabledToolNameList = api.toolNameList(false);
-                ArrayList<Integer> disabledToolIDList = api.toolIDList(false);
-
-                // Combine names with ids
-                for (int i = 0; i < disabledToolNameList.size(); i++) {
-                    disabledToolsString += (disabledToolNameList.get(i) + ", ID: " + disabledToolIDList.get(i) + ", Status: Disabled" + "\n");
+                // Build data
+                for (int i = 0; i < inactiveToolData.length; i++) {
+                    inactiveToolData[i][0] = api.getToolName(inactiveToolIDList.get(i));
+                    inactiveToolData[i][1] = String.valueOf(inactiveToolIDList.get(i));
+                    inactiveToolData[i][2] = String.valueOf(api.getToolQuantity(inactiveToolIDList.get(i)));
                 }
             }
 
-            // Check Enabled tools
-            if (!api.toolNameList(true).isEmpty()) {
+            // Check Active tools
+            if (!activeToolIDList.isEmpty()) {
                 // Update flag
-                enabledTools = true;
+                activeTools = true;
 
-                // Build enabled tools
-                // Get enabled tool list
-                ArrayList<String> enabledToolNameList = api.toolNameList(true);
-                ArrayList<Integer> enabledToolIDList = api.toolIDList(true);
-
-                // Combine names with ids
-                for (int i = 0; i < enabledToolNameList.size(); i++) {
-                    enabledToolsString += (enabledToolNameList.get(i) + ", ID: " + enabledToolIDList.get(i) + ", Status: Enabled" + "\n");
+                // Build data
+                for (int i = 0; i < activeToolData.length; i++) {
+                    activeToolData[i][0] = api.getToolName(activeToolIDList.get(i));
+                    activeToolData[i][1] = String.valueOf(activeToolIDList.get(i));
+                    activeToolData[i][2] = String.valueOf(api.getToolQuantity(activeToolIDList.get(i)));
                 }
             }
 
             // Initialize Options
-            String[] viewToolOptions = {"View Enabled Tools", "View Disabled Tools", "View all Tools", "Back"};
-            int viewToolSelection = (int) JOptionPane.showOptionDialog(null, "Please select an option", "Admin Panel - View Tools", 0, JOptionPane.PLAIN_MESSAGE, null, viewToolOptions, viewToolOptions[0]);
-            switch (viewToolSelection) {
-                // View Enabled Tools
+            String[] toolInventoryOptions = {"Active Tools", "Inactive Tools", "Back"};
+
+            // Tool Inventory Display
+            JLabel toolInventoryTitle = new Title("Tool Inventory");
+            JLabel toolInventoryDescription = new Description("Please select an option");
+            Object[] toolInventoryDisplay = {
+                    toolInventoryTitle,
+                    toolInventoryDescription
+            };
+
+            int toolInventorySelection = (int) JOptionPane.showOptionDialog(null, toolInventoryDisplay, "Teacher Panel - Tool Inventory", 0, JOptionPane.PLAIN_MESSAGE, null, toolInventoryOptions, toolInventoryOptions[0]);
+            switch (toolInventorySelection) {
+                // View Active Tools
                 case 0 -> {
-                    // Check if enabled tools found
-                    if (enabledTools) {
-                        // JTextArea Enabled Tools (display all enabled tools)
-                        JTextArea toolsEnabled = new JTextArea(enabledToolsString);
-                        toolsEnabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                        toolsEnabled.setLineWrap(true);
-                        toolsEnabled.setWrapStyleWord(true);
-                        toolsEnabled.setEditable(false);
+                    // Check if active tools found
+                    if (activeTools) {
+                        // JLabel Active Tools
+                        JLabel toolsActiveTitle = new Title("Tool Inventory");
+                        JLabel toolsActiveDescription = new Description(api.toolNameList(true).size() + " Active Tools");
+
+                        // JTextArea Active Tools (display all enabled tools)
+                        JTable toolsActiveTable = new ToolInventory(activeToolData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new JScrollPane(toolsEnabled);
-                        scroll.setPreferredSize(new Dimension(500, 500));
+                        JScrollPane scroll = new Scroll(toolsActiveTable, 800, 500);
 
-                        // Display Enabled Tools
-                        JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View Enabled Tools", JOptionPane.PLAIN_MESSAGE, null);
-                    } // Else no enabled tools found
+                        // Active Tools Display
+                        Object[] enabledToolsDisplay = {
+                          toolsActiveTitle,
+                          toolsActiveDescription,
+                          scroll
+                        };
+
+                        // Display Active Tools
+                        JOptionPane.showMessageDialog(null, enabledToolsDisplay, "Teacher Panel - View Active Tools", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no Active tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Enabled Tools exist", "Admin Panel - View Enabled Tools", JOptionPane.PLAIN_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No active tools exist", "Teacher Panel - View Active Tools", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // View Disabled Tools
+                // View Inactive Tools
                 case 1 -> {
-                    // Check if Disabled Tools found
-                    if (disabledTools) {
-                        // JTextArea Disabled Tools (display all disabled tools)
-                        JTextArea toolsDisabled = new JTextArea(disabledToolsString);
-                        toolsDisabled.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                        toolsDisabled.setLineWrap(true);
-                        toolsDisabled.setWrapStyleWord(true);
-                        toolsDisabled.setEditable(false);
+                    // Check if Inactive Tools found
+                    if (inactiveTools) {
+                        // JLabel Inactive Tools
+                        JLabel toolsInactiveTitle = new Title("Tool Inventory");
+                        JLabel toolsInactiveDescription = new Description(api.toolNameList(false).size() + " Inactive Tools");
+
+                        // JTextArea Active Tools (display all enabled tools)
+                        JTable toolsInactiveTable = new ToolInventory(inactiveToolData);
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new JScrollPane(toolsDisabled);
-                        scroll.setPreferredSize(new Dimension(500, 500));
+                        JScrollPane scroll = new Scroll(toolsInactiveTable, 800, 500);
 
-                        /// Display Disabled Tools
-                        JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View Disabled Tools", JOptionPane.PLAIN_MESSAGE, null);
-                    } // else no disabled tools found
+                        // Inactive Tools Display
+                        Object[] inactiveToolsDisplay = {
+                                toolsInactiveTitle,
+                                toolsInactiveDescription,
+                                scroll
+                        };
+
+                        /// Display Inactive Tools
+                        JOptionPane.showMessageDialog(null, inactiveToolsDisplay, "Teacher Panel - View Inactive Tools", JOptionPane.PLAIN_MESSAGE, null);
+                    } // else no Inactive tools found
                     else {
-                        JOptionPane.showMessageDialog(null, "No Disabled Tools exist", "Admin Panel Panel - View Disabled Tools", JOptionPane.PLAIN_MESSAGE, null);
+                        JOptionPane.showMessageDialog(null, "No inactive tools exist", "Teacher Panel Panel - View Inactive Tools", JOptionPane.PLAIN_MESSAGE, null);
                     }
                 }
-                // View All Tools
-                case 2 -> {
-                    // check if disabled or enabled tools found
-                    if (disabledTools || enabledTools) {
-                        // Combine both disabled + enabled
-                        String allTools = enabledToolsString + disabledToolsString;
 
-                        // JTextArea toolsAll (display all tools)
-                        JTextArea toolsAll = new JTextArea(allTools);
-                        toolsAll.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-                        toolsAll.setLineWrap(true);
-                        toolsAll.setWrapStyleWord(true);
-                        toolsAll.setEditable(false);
-
-                        // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new JScrollPane(toolsAll);
-                        scroll.setPreferredSize(new Dimension(500, 500));
-
-                        // Display All Tools
-                        JOptionPane.showMessageDialog(null, scroll, "Admin Panel - View All Tools", JOptionPane.PLAIN_MESSAGE, null);
-
-                    } // Else no Disabled or Enabled Tools found
-                    else {
-                        JOptionPane.showMessageDialog(null, "No Tools exist", "Tool Master Panel - View All Tools", JOptionPane.PLAIN_MESSAGE, null);
-                    }
-                }
-                // Return to tool management
-                default ->
-                    toolManagementAdmin();
+                // Return back to tool management
+                default -> toolManagementAdmin();
             }
         }
         // Return to view tools panel once completed
-        viewToolsAdmin();
+        toolInventoryAdmin();
     }
 }

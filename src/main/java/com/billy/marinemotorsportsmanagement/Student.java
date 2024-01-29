@@ -135,6 +135,29 @@ public class Student extends Management {
         return session;
     }
 
+    public ArrayList<Integer> getStudentToolIDList(int studentID) {
+        // Initialize Variables
+        ArrayList<Integer> toolIDList = new ArrayList<>();
+
+        // Attempt to connect to db
+        try ( Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT Borrow.[Tool ID] FROM Tool INNER JOIN (Student INNER JOIN Borrow ON Student.ID = Borrow.[Student ID]) ON Tool.ID = Borrow.[Tool ID] WHERE (((Borrow.[Student ID])=" + studentID + ") AND ((Borrow.Returned)=False));"); // Get results for SQL Statement
+            // If tools found, add to list
+            while (result.next()) {
+                toolIDList.add(result.getInt("Tool ID"));
+            }
+
+            connection.close(); // Close DB connection
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // Return Student Session, otherwise null
+        return toolIDList;
+    }
+
     /**
      * The studentStatus method checks if a student is inactive or active
      *
@@ -172,11 +195,11 @@ public class Student extends Management {
     }
 
     /**
-     * The disableStudent method disables a student by marking it as inactive
+     * The disableStudent method deactivates a student
      *
-     * @param studentID the student ID to disable
+     * @param studentID the student ID to deactivate
      * 
-     * @return true if successfully disabled, else false
+     * @return true if successfully deactivated, else false
      */
     public boolean disableStudent(int studentID) {
         if (isStudent(studentID, true)) {
@@ -195,13 +218,34 @@ public class Student extends Management {
             return false; // Student Unsuccessfully disabled
         }
     }
+
+    /**
+     * The deactivateAllStudents method deactivates every active student
+     * @return true if successful, else false
+     */
+    public boolean deactivateAllStudents() {
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Student SET Student.Status = False WHERE (((Student.Status)=True));"); // Create SQL Statement
+            preparedStatement.executeUpdate(); // execute statement
+            connection.close(); // Close DB connection
+
+            // Students sucessfully deactivated
+            return true;
+        } catch (SQLException ex) {
+            // IF cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // Students unsuccessfully deactivated
+        return false;
+    }
     
     /**
-     * The enableStudent method re-enables a student that is currently disabled
+     * The enableStudent method reactivates a student that is currently inactive
      *
-     * @param studentID the student ID to re-enable
+     * @param studentID the student ID to reactivate
      * 
-     * @return true if successfully re-enabled, else 
+     * @return true if successfully reactivated, else
      */
     public boolean enableStudent(int studentID) {
         // Ensure that the tool is disabled
@@ -212,7 +256,7 @@ public class Student extends Management {
                 preparedStatement.executeUpdate(); // execute statement
                 connection.close(); // Close DB connection
 
-                // Student Successfully re-enabled
+                // Student Successfully reactivated
                 return true;
             } catch (SQLException ex) {
                 // IF cannot connect to DB, print exception
@@ -220,7 +264,7 @@ public class Student extends Management {
             }
         }
         
-        // Student Unsuccessfully re-enabled
+        // Student Unsuccessfully reactivated
         return false;
     }
 
