@@ -4,8 +4,14 @@ import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 
+/**
+ * The StudentRoster class extends JTable and allows for instantiation of a table for the student roster with the following columns:
+ * Name, ID, Session
+ * Usually held by scroll
+ */
 public class StudentRoster extends JTable {
 
+    // Column Names
     private static final String[] columnNames = { "Name", "ID", "Session" };
     public StudentRoster(String[][] data) {
         super(data, columnNames);

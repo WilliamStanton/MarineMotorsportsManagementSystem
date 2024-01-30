@@ -4,8 +4,14 @@ import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 
+/**
+ * The BorrowedTools class extends JTable and allows for instantiation of a table for borrowed tools with the following columns:
+ * Name, In, Out, ID
+ * Usually held by scroll
+ */
 public class BorrowedTools extends JTable {
 
+    // Column Names
     private static final String[] columnNames = { "Name", "IN", "OUT", "ID"};
     public BorrowedTools(String[][] data) {
         super(data, columnNames);

@@ -3,6 +3,9 @@ package com.billy.marinemotorsportsmanagement.JComponents.JLabel;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * The Title class extends JLabel and allows for instantiation of a title
+ */
 public class Title extends JLabel {
     public Title() {
         super();

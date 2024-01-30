@@ -3,6 +3,9 @@ package com.billy.marinemotorsportsmanagement.JComponents.JLabel;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * The Description class extends JLabel and allows for instantiation of a description label
+ */
 public class Description extends JLabel {
     public Description() {
         super();

@@ -3,6 +3,9 @@ package com.billy.marinemotorsportsmanagement.JComponents.JTextArea;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * The Scroll class extends JScrollPane and allows for instantiation of a scrollbar that may hold a JTable or JTextArea
+ */
 public class Scroll extends JScrollPane {
     public Scroll(JTextArea textArea) {
         super(textArea);

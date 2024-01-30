@@ -11,6 +11,7 @@ import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolInventory;
 import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolLookup;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.Scroll;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.TextArea;
+import com.billy.marinemotorsportsmanagement.Services.Tool;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -21,13 +22,12 @@ import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
-import javax.swing.UIManager.*;
 
 /**
  * This Main Class operates the Marine Motorsports Management Program
  *
  * @author Billy Stanton
- * @version 1.0
+ * @version 2.0
  * @since 11/1/23
  */
 public class Main {
@@ -39,6 +39,10 @@ public class Main {
     public static int in = 0, out = 0, studentID = 0;
     public static boolean error = false;
 
+    /**
+     * The main method starts and configures the application
+     * @param args
+     */
     public static void main(String[] args) {
 
         // Ensure Database Connection before continuing
@@ -113,11 +117,11 @@ public class Main {
 
         // Login Selection Display
         JLabel title = new Title("Welcome to the Marine Motorsports Management System");
-        JLabel description = new Description("Who are you?", true);
+        JLabel dev = new Description("Developed by William Stanton | Version 2.0 - 1/29/24", true);
 
         Object[] loginSelectionTitle = {
             title,
-            description
+            dev,
         };
 
         int selection = JOptionPane.showOptionDialog(null, loginSelectionTitle, "Marine Motorsports Management System", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
@@ -422,7 +426,8 @@ public class Main {
                     scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
                     Window w = SwingUtilities.getWindowAncestor(returnBtn);
                     if (w != null) {
-                        w.dispose();
+                        w.dispose(); // dispose window
+                        tool.addNotify(); // focus on scanner textbox
                     }
                 }
             };
@@ -512,6 +517,8 @@ public class Main {
                     else {
                         JOptionPane.getRootFrame().dispose();
                     }
+
+                    tool.addNotify(); // focus on scanner textbox
                 }
             };
 
@@ -1297,6 +1304,9 @@ public class Main {
         }
     }
 
+    /**
+     * The toggleToolsAdmin method reactivates/deactivates tools
+     */
     public static void toggleToolsAdmin() {
         // Toggle Tools
         // Select Reactivate or Deactivate or Back
