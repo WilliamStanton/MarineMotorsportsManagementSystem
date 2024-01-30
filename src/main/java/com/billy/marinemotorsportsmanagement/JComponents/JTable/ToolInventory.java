@@ -4,8 +4,14 @@ import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 
+/**
+ * The ToolInventory class extends JTable and allows for instantiation of a table for tool inventory with the following columns:
+ * Tool Name, ID, Quantity
+ * Usually held by Scroll
+ */
 public class ToolInventory extends JTable {
 
+    // Column Names
     private static final String[] columnNames = { "Tool Name", "ID", "Quantity" };
     public ToolInventory(String[][] data) {
         super(data, columnNames);

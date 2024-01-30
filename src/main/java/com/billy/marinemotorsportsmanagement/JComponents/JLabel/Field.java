@@ -3,6 +3,9 @@ package com.billy.marinemotorsportsmanagement.JComponents.JLabel;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * The Field class extends JLabel and allows for instantiation of a field label
+ */
 public class Field extends JLabel {
     public Field() {
         super();

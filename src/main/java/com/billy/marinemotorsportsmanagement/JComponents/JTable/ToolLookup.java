@@ -4,8 +4,14 @@ import javax.swing.*;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 
+/**
+ * The ToolLookup class extends JTable and allows for instantiation of a table for tool lookup with the following columns:
+ * Tool Name, ID, Borrower
+ * Usually held by Scroll
+ */
 public class ToolLookup extends JTable {
 
+    // Column Names
     private static final String[] columnNames = { "Tool Name", "ID", "Borrower" };
     public ToolLookup(String[][] data) {
         super(data, columnNames);

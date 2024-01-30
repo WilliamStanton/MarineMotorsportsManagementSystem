@@ -3,6 +3,9 @@ package com.billy.marinemotorsportsmanagement.JComponents.JTextArea;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * The TextArea class extends JTextArea and allows for instantiation of a TextArea that is usually held by Scroll
+ */
 public class TextArea extends JTextArea {
 
     public TextArea() {
