@@ -255,7 +255,7 @@ public class Tool extends Student {
      * @return true if successfully borrowed, else false
      */
     public boolean borrowTool(int studentID, int toolID) {
-        if (studentStatus(studentID)) {
+        if (studentStatus(studentID) && toolAvailability(toolID) && toolStatus(toolID)) {
             // Attempt to connect to db
             try (Connection connection = DriverManager.getConnection(databaseURL)) {
                 PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Borrow ( [Student ID], [Tool ID] ) VALUES (\"" + studentID + "\",\"" + toolID + "\");"); // Create SQL Statement
