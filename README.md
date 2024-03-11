@@ -10,6 +10,12 @@ Additionally it provides the url for the database connection.
 Please ensure this url is accurately representing where the database is located.
 The application will automatically look for the .env file in the documents folder of the current user.
 The application will not start without the .env file
+### Example ENV ###
+```
+DB_URL=jdbc:ucanaccess://C:/Users/William/Desktop/MMMS2.accdb
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+```
 
 ## Executables ##
 MMMS.exe - Compiled by Launch4j with config file in the 'launch4j config' dir (you can import this config on Launch4j), only one instance may be ran at a time
