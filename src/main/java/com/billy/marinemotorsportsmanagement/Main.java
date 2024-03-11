@@ -4,6 +4,7 @@ import com.billy.marinemotorsportsmanagement.JComponents.JButton.Button;
 import com.billy.marinemotorsportsmanagement.JComponents.JButton.ButtonArray;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Description;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Field;
+import com.billy.marinemotorsportsmanagement.JComponents.JLabel.TextPrompt;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Title;
 import com.billy.marinemotorsportsmanagement.JComponents.JTable.BorrowedTools;
 import com.billy.marinemotorsportsmanagement.JComponents.JTable.StudentRoster;
@@ -14,12 +15,10 @@ import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.TextArea;
 import com.billy.marinemotorsportsmanagement.Services.Tool;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 
@@ -41,7 +40,6 @@ public class Main {
 
     /**
      * The main method starts and configures the application
-     * @param args
      */
     public static void main(String[] args) {
 
@@ -78,7 +76,7 @@ public class Main {
         UIManager.put("ComboBox.font", new Font("Segoe UI", Font.BOLD, 32));
 
         // JOptionPane Size
-        UIManager.put("OptionPane.border", new EmptyBorder(100, 100, 100, 100));
+        UIManager.put("OptionPane.border", new EmptyBorder(75, 100, 100, 100));
         UIManager.put("OptionPane.background", new Color(66, 66, 100));
         UIManager.put("Panel.background", new Color(66, 66, 100));
 
@@ -142,7 +140,7 @@ public class Main {
             default:
                 // Login Field
                 // JLabel exitMessage
-                JLabel exitMessage = new Title("Please enter admininistrator credentials to exit the application.");
+                JLabel exitMessage = new Title("Please enter administrator credentials to exit the application.");
 
                 // JTextField & JLabel Username (Username field for login)
                 JTextField username = new JTextField();
@@ -343,11 +341,18 @@ public class Main {
 
             // JTextArea Tools Scanned (display tools scanned in/out)
             JTextArea toolsScanned = new TextArea();
+            toolsScanned.setFocusable(false);
+            toolsScanned.getCaret().setVisible(false);
+
 
             // JScrollPane scroll (display JTextArea with scrollbar)
             JScrollPane scroll = new Scroll(toolsScanned);
 
-            // JTextField tool (Text box to read scanned tool)
+            // JLabel Title for borrowing tools section
+            JLabel borrowTitle = new Title("Borrow Tools");
+            borrowTitle.setForeground(new Color(97, 97, 114));
+
+            // JTextField search field (Text box to read input)
             JTextField searchField = new JTextField() {
                 // Set focus on TextField
                 public void addNotify() {
@@ -355,11 +360,38 @@ public class Main {
                     requestFocus();
                 }
             };
+            searchField.setPreferredSize(new Dimension(700, 40));
 
-            // JButton Finish (Finish scanning button)
+            // Text Prompt for searchField
+            TextPrompt searchFieldPrompt = new TextPrompt("Enter tool name or scan a tool", searchField);
+            searchFieldPrompt.changeAlpha(0.5f);
+
+            // JButton search button (to search/scan tool)
             JButton searchButton = new Button("Search Tool");
+
+            // Display searchField + searchButton next to each other
+            JPanel searchPanel = new JPanel(new BorderLayout(10, 10));
+            searchPanel.add(borrowTitle, BorderLayout.NORTH);
+            searchPanel.add(searchField, BorderLayout.WEST);
+            searchPanel.add(searchButton, BorderLayout.EAST);
+            searchPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+            searchPanel.setBackground(Color.LIGHT_GRAY);
+
+            // Return Tools Button
             JButton returnTools = new Button("Return Tools");
-            JButton finish = new Button("Finish Scan");
+
+            // Finish Button
+            JButton finish = new Button("Finish Scanning");
+
+            // Other options panel
+            JPanel otherPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+            otherPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+            JLabel otherPanelTitle = new Title("Other Options");
+            otherPanelTitle.setForeground(new Color(97, 97, 114));
+            otherPanel.setBackground(Color.LIGHT_GRAY);
+            otherPanel.add(otherPanelTitle);
+            otherPanel.add(returnTools);
+            otherPanel.add(finish);
 
             // Search if enter is pressed
             searchField.addKeyListener(new KeyAdapter() {
@@ -372,92 +404,143 @@ public class Main {
 
             // Enter Borrow Tools Panel by Button
             searchButton.addActionListener(ae -> {
-                // Title
-                JLabel borrowToolTitle = new Title("Please select the tool to borrow");
-                JLabel borrowToolDesc = new Description("Please select your tool");
-                JPanel borrowToolPanel = new JPanel(new GridLayout(-1, 2, 6, 6));
-                JScrollPane borrowTool = new Scroll(borrowToolPanel);
-                borrowTool.getVerticalScrollBar().setUnitIncrement(16); // fix scroll speed
-                ArrayList<Integer> foundTools = new ArrayList<>();
-                JButton returnBtn = new Button("Exit Search");
-
-                // Get all tools
-                ArrayList<Integer> toolIDList = api.toolIDList(true);
-                ArrayList<String> toolNameList = api.toolNameList(true);
-
-                // Search for tools
-                if (!searchField.getText().isEmpty()) {
-                    for (int i = 0; i < toolNameList.size(); i++) {
-                        // Get matches
-                        if (toolNameList.get(i).toLowerCase().contains(searchField.getText().toLowerCase()))
-                            if (api.toolAvailability(toolIDList.get(i))) {
-                                foundTools.add(toolIDList.get(i));
+                // Scanner Input
+                if (searchField.getText().toUpperCase().contains("MMS-")) {
+                    // Parse Tool ID (remove MMS-)
+                    String scannedTool = searchField.getText();
+                    scannedTool = scannedTool.replaceAll("[^0-9]+", "");
+                    try {
+                        int toolID = Integer.parseInt(scannedTool);
+                        // Ensure scanned tool is valid & active
+                        if (api.toolStatus(toolID)) {
+                            // If tool isn't available, return tool
+                            if (!api.toolAvailability(toolID)) {
+                                toolsScanned.append("Borrow Error, Tool Unavailable: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                error = true;
+                            } // Else if tool is available, borrow tool
+                            else {
+                                // Borrow success
+                                if (api.borrowTool(studentID, toolID)) {
+                                    toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                    out++;
+                                } // Borrow error
+                                else {
+                                    toolsScanned.append("Borrow Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                                    error = true;
+                                }
                             }
+                        } // Else, check if tool doesn't exist or is just inactive
+                        else {
+                            error = true;
+                            // Tool doesn't exist
+                            if (api.getToolName(toolID) == null) {
+                                toolsScanned.append("Unknown Tool Error, ID: " + toolID + "\n");
+                            } // Tool exists, but is inactive
+                            else if (!api.toolStatus(toolID)){
+                                toolsScanned.append("Inactive Tool Error: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                            } // Else unknown error
+                            else {
+                                toolsScanned.append("Unknown Scan Error\n");
+                                error = true;
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        searchField.setText("");
                     }
-                    if (!foundTools.isEmpty())
-                        borrowToolDesc.setText(foundTools.size() + " AVAILABLE tools found for: " + "\"" + searchField.getText() + "\"");
-                    else {
-                        borrowToolTitle.setText("No tools found");
-                        borrowToolDesc.setText("\"" + searchField.getText() + "\" could not be found");
-                    }
-                } else {
-                    borrowToolTitle.setText("No tools found");
-                    borrowToolDesc.setText("Search bar was left incomplete");
-                }
 
-                // Chosen Tool ActionListener
-                ActionListener chooseTool = (ActionEvent ae2) -> {
-                    // Get index
-                    JButton btn = (JButton) ae2.getSource();
-                    int toolID = (int) btn.getClientProperty("index");
-                    System.out.println(toolID);
-                    System.out.println(api.getToolName(toolID));
-                    boolean success = api.borrowTool(studentID, toolID);
-                    if (success) {
-                        toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                        out++;
-                        returnBtn.doClick();
-                    } else {
-                        toolsScanned.append("Error, tool not available: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
-                    }
-                };
-
-                // Add all tools as buttons
-                JButton[] buttonArray1 = new ButtonArray[foundTools.size()];
-                for (int i = 0; i < buttonArray1.length; i++) {
-                    buttonArray1[i] = new ButtonArray(api.getToolName(foundTools.get(i)));
-                    buttonArray1[i].putClientProperty("index", foundTools.get(i));
-                    buttonArray1[i].addActionListener(chooseTool);
-                    borrowToolPanel.add(buttonArray1[i]);
-                }
-
-                // Action Listener for exiting borrow tools
-                returnBtn.addActionListener(e -> {
+                    // Update Stats
                     scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
-                    Window w = SwingUtilities.getWindowAncestor(returnBtn);
-                    if (w != null) {
-                        w.dispose(); // dispose window
-                        searchField.addNotify(); // focus on search field
-                    }
-                });
 
-                // Clear field
-                searchField.setText("");
-
-                // Display Object
-                Object[] borrowToolsDisplay = {
-                        borrowToolTitle,
-                        borrowToolDesc,
-                        borrowTool,
-                        returnBtn
-                };
-
-                if (foundTools.isEmpty()) {
-                    borrowToolsDisplay = new Object[]{borrowToolTitle, borrowToolDesc, returnBtn};
+                    // Clear field
+                    searchField.setText("");
                 }
+                // Search Input
+                else {
+                    // Title
+                    JLabel borrowToolTitle = new Title("Please select the tool to borrow");
+                    JLabel borrowToolDesc = new Description("Please select your tool");
+                    JPanel borrowToolPanel = new JPanel(new GridLayout(-1, 2, 6, 6));
+                    JScrollPane borrowTool = new Scroll(borrowToolPanel);
+                    borrowTool.getVerticalScrollBar().setUnitIncrement(16); // fix scroll speed
+                    ArrayList<Integer> foundTools = new ArrayList<>();
+                    JButton returnBtn = new Button("Back to Scanning");
 
-                // Display Borrow Tools
-                JOptionPane.showOptionDialog(null, borrowToolsDisplay, "Borrow Tools", 0, -1, null, new Object[]{}, null);
+                    // Get all tools
+                    ArrayList<Integer> toolIDList = api.toolIDList(true);
+                    ArrayList<String> toolNameList = api.toolNameList(true);
+
+                    // Search for tools
+                    if (!searchField.getText().isEmpty()) {
+                        for (int i = 0; i < toolNameList.size(); i++) {
+                            // Get matches
+                            if (toolNameList.get(i).toLowerCase().contains(searchField.getText().toLowerCase()))
+                                if (api.toolAvailability(toolIDList.get(i))) {
+                                    foundTools.add(toolIDList.get(i));
+                                }
+                        }
+                        if (!foundTools.isEmpty())
+                            borrowToolDesc.setText(foundTools.size() + " AVAILABLE tools found for: " + "\"" + searchField.getText() + "\"");
+                        else {
+                            borrowToolTitle.setText("No tools found");
+                            borrowToolDesc.setText("\"" + searchField.getText() + "\" could not be found");
+                        }
+                    } else {
+                        borrowToolTitle.setText("No tools found");
+                        borrowToolDesc.setText("Search bar was left incomplete");
+                    }
+
+                    // Chosen Tool ActionListener
+                    ActionListener chooseTool = (ActionEvent ae2) -> {
+                        // Get index
+                        JButton btn = (JButton) ae2.getSource();
+                        int toolID = (int) btn.getClientProperty("index");
+                        boolean success = api.borrowTool(studentID, toolID);
+                        if (success) {
+                            toolsScanned.append("Borrowed: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                            out++;
+                            returnBtn.doClick();
+                        } else {
+                            toolsScanned.append("Error, tool not available: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
+                        }
+                    };
+
+                    // Add all tools as buttons
+                    JButton[] buttonArray1 = new ButtonArray[foundTools.size()];
+                    for (int i = 0; i < buttonArray1.length; i++) {
+                        buttonArray1[i] = new ButtonArray(api.getToolName(foundTools.get(i)));
+                        buttonArray1[i].putClientProperty("index", foundTools.get(i));
+                        buttonArray1[i].addActionListener(chooseTool);
+                        borrowToolPanel.add(buttonArray1[i]);
+                    }
+
+                    // Action Listener for exiting borrow tools
+                    returnBtn.addActionListener(e -> {
+                        scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
+                        Window w = SwingUtilities.getWindowAncestor(returnBtn);
+                        if (w != null) {
+                            w.dispose(); // dispose window
+                            searchField.addNotify(); // focus on search field
+                        }
+                    });
+
+                    // Clear field
+                    searchField.setText("");
+
+                    // Display Object
+                    Object[] borrowToolsDisplay = {
+                            borrowToolTitle,
+                            borrowToolDesc,
+                            borrowTool,
+                            returnBtn
+                    };
+
+                    if (foundTools.isEmpty()) {
+                        borrowToolsDisplay = new Object[]{borrowToolTitle, borrowToolDesc, returnBtn};
+                    }
+
+                    // Display Borrow Tools
+                    JOptionPane.showOptionDialog(null, borrowToolsDisplay, "Borrow Tools", 0, -1, null, new Object[]{}, null);
+                }
             });
 
             // Enter Return Tools Panel by Button
@@ -484,8 +567,6 @@ public class Main {
                     JButton btn = (JButton) ae2.getSource();
                     int toolID = (int) btn.getClientProperty("index");
                     boolean success = api.returnTool(toolID, studentID);
-                    System.out.println(toolID);
-                    System.out.println(api.getToolName(toolID));
                     if (success) {
                         toolsScanned.append("Returned: " + api.getToolName(toolID) + ", ID: " + toolID + "\n");
                         in++;
@@ -556,10 +637,8 @@ public class Main {
                 scanTitle, // Scan Title (display user tools being scanned for)
                 scanStats, // Scan Stats (borrow/return count)
                 scroll, // Tools Scanned (display tools scanned in/out)
-                searchField,
-                searchButton,
-                returnTools, // Return Tools (easily return tools for selected student)
-                finish // Finish (Finish scanning button)
+                searchPanel, // Search panel (field+btn)
+                otherPanel, // Return Tools (easily return tools for selected student) & Finish Scanning
             };
 
             // Start Student Scan Session
@@ -684,6 +763,87 @@ public class Main {
     }
 
     /**
+     * The Overloaded Tool Lookup method looks up the status of a tool by the given id (if
+     * borrowed, if so by who, otherwise it is available), and is used by methods independently
+     *
+     * @param session current session (AM/PM)
+     */
+    public static void toolLookup(int toolID) {
+        // JLabel Tool Lookup Title
+        JLabel toolLookupTitle = new Title();
+
+        // JLabel Tool Inventory Title
+        JLabel toolInventoryTitle = new Description();
+
+        // JTextArea Text Area (display specified tool data)
+        JTable toolBorrowers = new JTable();
+
+        // JScrollPane scroll (display JTextArea with scrollbar)
+        JScrollPane scroll = new Scroll(toolBorrowers, 500, 500);
+
+        // (Optional) error message
+        JLabel toolLookupError = new Title("");
+
+        // JOptionPane display array
+        Object[] display = {
+                toolLookupError
+        };
+
+        // Check if tool is enabled
+        if (api.toolStatus(toolID)) {
+            // Check if there is *any* of the tool out, if so, build list of names
+            var borrowerIds = api.getToolBorrowerIDS(toolID);
+            String[][] borrowerData = new String[borrowerIds.size()][3];
+            if (borrowerIds.size() > 0) {
+                for (int i = 0; i < borrowerIds.size(); i++) {
+                    borrowerData[i][0] = api.getToolName(toolID);
+                    borrowerData[i][1] = String.valueOf(toolID);
+                    borrowerData[i][2] = String.valueOf(api.getStudentName(borrowerIds.get(i)));
+                }
+                scroll = new Scroll(new ToolLookup(borrowerData, 500, 500));
+            }
+            if (api.toolAvailability(toolID) && borrowerIds.size() > 0) {
+                // Set display
+                toolLookupTitle.setText(api.getToolName(toolID) + " is currently available to borrow");
+                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+
+                display = new Object[]{
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                        scroll
+                };
+            } else if (api.toolAvailability(toolID) && borrowerIds.isEmpty()) {
+                toolLookupTitle.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow");
+                toolInventoryTitle.setText("Borrowers: 0 | Inventory: " + api.getToolQuantity(toolID));
+
+                display = new Object[]{
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                };
+            }
+            else {
+                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
+                display = new Object[] {
+                        toolLookupTitle,
+                        toolInventoryTitle,
+                        scroll
+                };
+                toolLookupTitle.setText(api.getToolName(toolID) + " is currently unavailable to borrow");
+            }
+        }
+        else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
+            // Set error
+            toolLookupError.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled");
+        } // Else tool does not exist
+        else {
+            // Set error
+            toolLookupError.setText("The tool by (ID: " + toolID + ") does not exist");
+        }
+
+        JOptionPane.showMessageDialog(null, display, "Tool Lookup", -1);
+    }
+
+    /**
      * The borrowedTools method provides the methods for viewing the various
      * unavailable tool reports
      *
@@ -704,20 +864,30 @@ public class Main {
         // Build list of AM Class borrowed tools
         for (int i = 0; i < allToolIDSUnavailable.size(); i++) {
             unavailableToolData[i][0] = api.getToolName(allToolIDSUnavailable.get(i));
-            unavailableToolData[i][1] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i) , true));
-            unavailableToolData[i][2] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i) , false));
+            unavailableToolData[i][1] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), true));
+            unavailableToolData[i][2] = String.valueOf(api.getToolAvailablityQuantity(allToolIDSUnavailable.get(i), false));
             unavailableToolData[i][3] = String.valueOf(allToolIDSUnavailable.get(i));
         }
 
         // JLabel Title
-        JLabel borrowedTitle = new Title("Borrowed Tools");
-        JLabel borrowedDescription = new Description(allToolIDSUnavailable.size() + " tools are currently being borrowed");
+        JLabel borrowedTitle = new Title("(" + allToolIDSUnavailable.size() + ") Borrowed Tools");
+        JLabel borrowedDescription = new Description( "Double click tool to view the current borrowers (or more info)");
 
         // JTable (display all borrowed tools)
         JTable borrowedTools = new BorrowedTools(unavailableToolData);
 
+        // Mouse listener for table row (tool lookup)
+        borrowedTools.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent mouseEvent) {
+                JTable table =(JTable) mouseEvent.getSource();
+                // Perform tool lookup
+                if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1)
+                    toolLookup(Integer.parseInt(borrowedTools.getValueAt(table.getSelectedRow(), 3).toString()));
+            }
+        });
+
         // JScrollPane scroll (display JTable with scrollbar)
-        JScrollPane scroll = new Scroll(borrowedTools, 800, 500);
+        JScrollPane scroll = new Scroll(borrowedTools, 1000, 500);
 
         // Unavailable Tools Display Array
         Object[] display = {

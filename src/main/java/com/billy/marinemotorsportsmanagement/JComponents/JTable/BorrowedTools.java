@@ -16,9 +16,9 @@ public class BorrowedTools extends JTable {
     public BorrowedTools(String[][] data) {
         super(data, columnNames);
         this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
-        this.setBounds(30, 40, 800, 500);
+        this.setBounds(30, 40, 1000, 500);
         this.setDefaultEditor(Object.class, null);
-        this.setRowHeight(32);
+        this.setRowHeight(45);
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
