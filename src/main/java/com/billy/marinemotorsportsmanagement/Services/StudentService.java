@@ -1,7 +1,5 @@
 package com.billy.marinemotorsportsmanagement.Services;
 
-import com.billy.marinemotorsportsmanagement.Services.Management;
-
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -13,7 +11,7 @@ import java.util.ArrayList;
  * @version 1.0
  * @since 11/1/23
  */
-public class Student extends Management {
+public class StudentService extends ManagementService {
 
     /**
      * The isStudent method checks if a student exists by ID

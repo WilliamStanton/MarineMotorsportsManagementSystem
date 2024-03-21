@@ -12,13 +12,12 @@ import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolInventory;
 import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolLookup;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.Scroll;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.TextArea;
-import com.billy.marinemotorsportsmanagement.Services.Tool;
+import com.billy.marinemotorsportsmanagement.Services.ToolService;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 
@@ -32,7 +31,7 @@ import javax.swing.plaf.ColorUIResource;
 public class Main {
 
     // Init api
-    private static final Tool api = new Tool();
+    private static final ToolService api = new ToolService();
 
     // Init vars for Tool Scan
     public static int in = 0, out = 0, studentID = 0;

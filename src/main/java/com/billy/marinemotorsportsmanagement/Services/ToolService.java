@@ -1,7 +1,5 @@
 package com.billy.marinemotorsportsmanagement.Services;
 
-import com.billy.marinemotorsportsmanagement.Services.Student;
-
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -13,7 +11,7 @@ import java.util.ArrayList;
  * @version 1.0
  * @since 11/1/23
  */
-public class Tool extends Student {
+public class ToolService extends StudentService {
 
     /**
      * The getToolName method returns the name of a tool by id
