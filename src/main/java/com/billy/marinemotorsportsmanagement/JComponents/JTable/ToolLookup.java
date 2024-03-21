@@ -24,7 +24,7 @@ public class ToolLookup extends JTable {
         TableColumnModel tcm = this.getColumnModel();
         tcm.getColumn(0).setPreferredWidth(600);
         tcm.getColumn(1).setPreferredWidth(10);
-        tcm.getColumn(2).setPreferredWidth(50);
+        tcm.getColumn(2).setPreferredWidth(100);
     }
 
     public ToolLookup(String[][] data, int width, int height) {

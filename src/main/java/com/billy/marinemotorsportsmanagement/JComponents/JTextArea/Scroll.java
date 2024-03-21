@@ -17,6 +17,11 @@ public class Scroll extends JScrollPane {
         this.setPreferredSize(new Dimension(800, 500));
     }
 
+    public Scroll(JPanel jPanel) {
+        super(jPanel);
+        this.setPreferredSize(new Dimension(1200, 500));
+    }
+
     public Scroll(JTextArea textArea, int width, int height) {
         super(textArea);
         this.setPreferredSize(new Dimension(width, height));
