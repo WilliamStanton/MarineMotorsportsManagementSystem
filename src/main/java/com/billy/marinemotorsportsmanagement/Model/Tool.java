@@ -61,4 +61,15 @@ public class Tool {
     public void setStatus(boolean status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "Tool{" +
+                "id=" + id +
+                ", categoryId=" + categoryId +
+                ", toolName='" + toolName + '\'' +
+                ", quantity=" + quantity +
+                ", status=" + status +
+                '}';
+    }
 }

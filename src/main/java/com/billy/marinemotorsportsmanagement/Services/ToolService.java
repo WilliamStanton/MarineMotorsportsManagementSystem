@@ -1,5 +1,7 @@
 package com.billy.marinemotorsportsmanagement.Services;
 
+import com.billy.marinemotorsportsmanagement.Model.Tool;
+
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -38,6 +40,26 @@ public class ToolService extends StudentService {
 
             // Return Tool Name
             return toolName;
+        } catch (SQLException ex) {
+            // If cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return tool not found
+        return null;
+    }
+
+    public Tool getTool(int toolID) {
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT * FROM Tool WHERE (((Tool.ID)=" + toolID + "));"); // Get results for SQL Statement
+            connection.close(); // Close DB connection
+
+            // Get Tool Name Result
+            if (result.next()) {
+                return new Tool(result.getInt("ID"), result.getInt("Category ID"), result.getString("Tool Name"), result.getInt("Quantity"), result.getBoolean("Status"));
+            }
         } catch (SQLException ex) {
             // If cannot connect to DB, print exception
             ex.printStackTrace();
@@ -223,7 +245,7 @@ public class ToolService extends StudentService {
             // Get quantity
             ResultSet result = statement.executeQuery("SELECT Borrow.[Tool ID], Borrow.Returned FROM Tool INNER JOIN Borrow ON Tool.ID = Borrow.[Tool ID] WHERE (((Borrow.[Tool ID])=" + toolID + ") AND ((Borrow.Returned)=No));"); // Get results for SQL Statement
             while (result.next()) {
-                    quantity++;
+                quantity++;
             }
 
             // if true, get the amount of available tools instead of unavailable tools

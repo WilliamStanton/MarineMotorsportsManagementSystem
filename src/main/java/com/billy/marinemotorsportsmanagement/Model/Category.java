@@ -53,4 +53,14 @@ public class Category {
     public void setTools(ArrayList<Tool> tools) {
         this.tools = tools;
     }
+
+    @Override
+    public String toString() {
+        return "Category{" +
+                "id=" + id +
+                ", categoryName='" + categoryName + '\'' +
+                ", status=" + status +
+                ", tools=" + tools +
+                '}';
+    }
 }
