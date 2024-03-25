@@ -20,6 +20,8 @@ import com.billy.marinemotorsportsmanagement.Services.ToolService;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
@@ -52,6 +54,16 @@ public class Main {
 
         // Configure UI (student)
         uiConfig(false);
+
+//        category code examples
+//        api.addCategory("Example Category 1");
+//        api.addCategory("Example Category 2");
+//        ArrayList<Tool> tools = new ArrayList<>();
+//        tools.add(api.getTool(4));
+//        tools.add(api.getTool(5));
+//        api.setCategory(new Category(1, api.getCategory(1).getCategoryName(), true, tools));
+        System.out.println(api.getCategory(1));
+        System.out.println(api.getCategory(2));
 
         // Load main menu
         mainMenu();
@@ -219,7 +231,6 @@ public class Main {
         int selection = JOptionPane.showOptionDialog(null, toolMasterSelection, "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             case 0 -> quickScan(session);
-//            case 1 -> toolLookup(session);
             case 1 -> borrowedTools(session);
             default -> mainMenu();
         }
@@ -1318,12 +1329,23 @@ public class Main {
                 JLabel toolQuantityTitle = new Field("Tool Quantity");
                 JTextField toolQuantity = new JTextField();
 
+                // Categories
+                ArrayList<Category> categories = api.getCategories();
+
+                JLabel categoryTitle = new Field("Category");
+                String[] categoryList = new String[categories.size()];
+                for (int i = 0; i < categoryList.length; i++) {
+                    categoryList[i] = categories.get(i).getCategoryName() + " (ID: " + categories.get(i).getId() + ")";
+                }
+                JComboBox categoryDropdown = new JComboBox(categoryList);
+
                 Object[] display = {
                         title,
                         toolNameTitle,
                         toolName,
                         toolQuantityTitle,
-                        toolQuantity
+                        toolQuantity,
+                        categoryDropdown
                 };
 
                 while (toolName.getText().isBlank() && toolQuantity.getText().isBlank()) {
@@ -1334,9 +1356,17 @@ public class Main {
                         if ((!toolName.getText().isBlank()) && (!toolQuantity.getText().isBlank())) {
                             // If tool added
                             if (Integer.parseInt(toolQuantity.getText()) > 0) {
-                                int toolID = api.createTool(toolName.getText(), Integer.parseInt(toolQuantity.getText()));
+                                // Get Category / Parse Category ID
+                                String effectedCategory = (String) categoryDropdown.getSelectedItem();
+                                Pattern pattern = Pattern.compile("\\(ID: (\\d+)\\)");
+                                Matcher matcher = pattern.matcher(effectedCategory);
+                                matcher.find();
+                                int categoryID = Integer.parseInt(matcher.group(1));
+
+                                // Create tool
+                                int toolID = api.createTool(toolName.getText(), Integer.parseInt(toolQuantity.getText()), categoryID);
                                 if (toolID != 0) {
-                                    String successAddMessage = "Tool added to inventory: " + toolName.getText() + ", ID: " + toolID;
+                                    String successAddMessage = "Tool added to inventory: \n" + toolName.getText() + " (ID: " + toolID + ")\nCategory: " + api.getCategory(api.getTool(toolID).getCategoryId()).getCategoryName();
                                     JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
                                 } // Else if tool not added,
                                 else {
@@ -1632,6 +1662,18 @@ public class Main {
 
                         // JTextArea Active Tools (display all enabled tools)
                         JTable toolsActiveTable = new ToolInventory(activeToolData);
+                        // Mouse listener for table row (edit tool)
+                        toolsActiveTable.addMouseListener(new MouseAdapter() {
+                            public void mousePressed(MouseEvent mouseEvent) {
+                                JTable table = (JTable) mouseEvent.getSource();
+                                // Perform tool lookup
+                                if (mouseEvent.getClickCount() == 2 && toolsActiveTable.getSelectedRow() != -1) {
+                                    System.out.println(api.getTool(Integer.parseInt((String) toolsActiveTable.getValueAt(table.getSelectedRow(), 1))));
+                                    editTool(api.getTool(Integer.parseInt((String) toolsActiveTable.getValueAt(table.getSelectedRow(), 1))));
+                                    System.out.println(api.getTool(Integer.parseInt((String) toolsActiveTable.getValueAt(table.getSelectedRow(), 1))));
+                                }
+                            }
+                        });
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new Scroll(toolsActiveTable, 800, 500);
@@ -1660,6 +1702,18 @@ public class Main {
 
                         // JTextArea Active Tools (display all enabled tools)
                         JTable toolsInactiveTable = new ToolInventory(inactiveToolData);
+                        // Mouse listener for table row (edit tool)
+                        toolsInactiveTable.addMouseListener(new MouseAdapter() {
+                            public void mousePressed(MouseEvent mouseEvent) {
+                                JTable table =(JTable) mouseEvent.getSource();
+                                // Perform tool lookup
+                                if (mouseEvent.getClickCount() == 2 && toolsInactiveTable.getSelectedRow() != -1) {
+                                    System.out.println(api.getTool(Integer.parseInt((String) toolsInactiveTable.getValueAt(table.getSelectedRow(), 1))));
+                                    editTool(api.getTool(Integer.parseInt((String) toolsInactiveTable.getValueAt(table.getSelectedRow(), 1))));
+                                    System.out.println(api.getTool(Integer.parseInt((String) toolsInactiveTable.getValueAt(table.getSelectedRow(), 1))));
+                                }
+                            }
+                        });
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
                         JScrollPane scroll = new Scroll(toolsInactiveTable, 800, 500);
@@ -1685,5 +1739,74 @@ public class Main {
         }
         // Return to view tools panel once completed
         toolInventoryAdmin();
+    }
+
+    public static void editTool(Tool tool) {
+        // Build UI
+        JLabel title = new Title("Editing Tool");
+        JLabel description = new Description(tool.getToolName());
+
+        // Tool Properties
+        JLabel toolName = new Field("Name");
+        JTextField toolNameInput = new JTextField(tool.getToolName());
+
+        JLabel toolCategory = new Field("Category");
+        // Build Category List (first = current category)
+        var categories = api.getCategories();
+        var firstCategory = categories.get(0);
+        for (int i = 0; i < categories.size(); i++) {
+            // When current category found, swap it with the first place category
+            if (categories.get(i).getId() == tool.getCategoryId()) {
+                categories.set(0, categories.get(i));
+                categories.set(i, firstCategory);
+            }
+        }
+        // Convert to Array & Format: Category Name (ID: xxx)
+        String[] categoriesArray = new String[categories.size()];
+        for (int i = 0; i < categories.size(); i++) {
+            categoriesArray[i] = categories.get(i).getCategoryName() + " (ID: " + categories.get(i).getId() + ")";
+        }
+        JComboBox toolCategoryInput = new JComboBox(categoriesArray);
+
+        JLabel toolQuantity = new Field("Quantity");
+        JTextField toolQuantityInput = new JTextField(String.valueOf(tool.getQuantity()));
+
+        // Build status
+        JLabel toolStatus = new Field("Status");
+        JComboBox toolStatusInput = new JComboBox();
+        if (tool.isStatus())
+            toolStatusInput = new JComboBox(new String[]{"Active", "Inactive"});
+        else
+            toolStatusInput = new JComboBox(new String[]{"Inactive", "Active"});
+
+        Object[] editToolDisplay = {
+            title,
+            description,
+            toolName,
+            toolNameInput,
+            toolCategory,
+            toolCategoryInput,
+            toolQuantity,
+            toolQuantityInput,
+            toolStatus,
+            toolStatusInput
+        };
+
+        JOptionPane.showOptionDialog(null, editToolDisplay, "Edit Tool", 0, -1, null, new Object[]{}, null);
+
+        // Get category id
+        String effectedCategory = (String) toolCategoryInput.getSelectedItem();
+        Pattern pattern = Pattern.compile("\\(ID: (\\d+)\\)");
+        Matcher matcher = pattern.matcher(effectedCategory);
+        matcher.find();
+        int categoryID = Integer.parseInt(matcher.group(1));
+
+        // Get status
+        boolean status = false;
+        if (String.valueOf(toolStatusInput.getSelectedItem()).equalsIgnoreCase("Active"))
+            status = true;
+
+        // Build Object
+        var updatedTool = new Tool(tool.getId(), categoryID, toolNameInput.getText(), Integer.parseInt(toolQuantityInput.getText()), status);
     }
 }

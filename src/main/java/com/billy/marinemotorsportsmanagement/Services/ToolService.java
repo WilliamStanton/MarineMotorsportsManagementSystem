@@ -69,6 +69,22 @@ public class ToolService extends StudentService {
         return null;
     }
 
+    public boolean setTool(Tool tool) {
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.[Category ID] =" + tool.getCategoryId() + ", Tool.Name =" + tool.getToolName() + ", Tool.Quantity = " + tool.getQuantity() + ", Tool.Status = " + tool.isStatus() + " WHERE (((Tool.ID)=" + tool.getId() + "));"); // Create SQL Statement
+            preparedStatement.executeUpdate(); // execute statement
+            connection.close(); // Close DB connection
+            return true;
+        } catch (SQLException ex) {
+            // If cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return tool not found
+        return false;
+    }
+
     /**
      * The getToolBorrowerID method returns the id of the person borrowing a
      * tool currently
@@ -361,11 +377,11 @@ public class ToolService extends StudentService {
      *
      * @return tool id if successfully added, else 0
      */
-    public int createTool(String toolName, int quantity) {
+    public int createTool(String toolName, int quantity, int categoryID) {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
-            // Add the tool
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name], Status, Quantity ) VALUES (\"" + toolName + "\",True," + quantity + ");"); // Create SQL Statement
+            // Add the tool to tool table
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name], Status, Quantity, [Category ID]) VALUES (\"" + toolName + "\",True," + quantity + ", " + categoryID + ");"); // Create SQL Statement
             preparedStatement.executeUpdate(); // execute statement
 
             // Get the ids of all tools
