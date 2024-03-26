@@ -81,6 +81,7 @@ public class CategoryService extends ToolService {
 
     /**
      * Sets an existing category to the updated information
+     * (also adds tools to specified category & removes the tools from category if category is disabled)
      * @param category new category
      * @return true/false
      */
@@ -94,6 +95,14 @@ public class CategoryService extends ToolService {
             // Add each tool to category that are now in category
             for (int i = 0; i < category.getTools().size(); i++) {
                 addToolToCategory(category, category.getTools().get(i).getId());
+            }
+
+            // Remove tools from category if category is now inactive
+            if (!category.isStatus()) {
+                var tools = category.getTools();
+                for (int i = 0; i < tools.size(); i++) {
+                    removeToolFromCategory(tools.get(i).getId());
+                }
             }
 
             // Remove old tools from the category
