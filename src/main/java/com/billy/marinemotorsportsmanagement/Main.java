@@ -6,19 +6,20 @@ import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Description;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Field;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.TextPrompt;
 import com.billy.marinemotorsportsmanagement.JComponents.JLabel.Title;
-import com.billy.marinemotorsportsmanagement.JComponents.JTable.BorrowedTools;
-import com.billy.marinemotorsportsmanagement.JComponents.JTable.StudentRoster;
-import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolInventory;
-import com.billy.marinemotorsportsmanagement.JComponents.JTable.ToolLookup;
+import com.billy.marinemotorsportsmanagement.JComponents.JTable.*;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.Scroll;
 import com.billy.marinemotorsportsmanagement.JComponents.JTextArea.TextArea;
-import com.billy.marinemotorsportsmanagement.Services.Tool;
+import com.billy.marinemotorsportsmanagement.Model.Category;
+import com.billy.marinemotorsportsmanagement.Model.Tool;
+import com.billy.marinemotorsportsmanagement.Services.CategoryService;
+import com.billy.marinemotorsportsmanagement.Services.ToolService;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.ColorUIResource;
 
@@ -30,9 +31,8 @@ import javax.swing.plaf.ColorUIResource;
  * @since 11/1/23
  */
 public class Main {
-
     // Init api
-    private static final Tool api = new Tool();
+    private static final CategoryService api = new CategoryService();
 
     // Init vars for Tool Scan
     public static int in = 0, out = 0, studentID = 0;
@@ -48,7 +48,7 @@ public class Main {
             JOptionPane.showMessageDialog(null, "Database Error\nNot Connected, please contact support");
             api.exit();
         }
-        
+
         // Configure UI (student)
         uiConfig(false);
 
@@ -108,7 +108,7 @@ public class Main {
      */
     public static void mainMenu() {
         // Configure UI (default, student)
-         uiConfig(false);
+        uiConfig(false);
 
         // Initialize menu options
         String[] options = {"Tool Master", "Teacher"};
@@ -118,8 +118,8 @@ public class Main {
         JLabel dev = new Description("Developed by William Stanton | Version 2.0 - 1/29/24", true);
 
         Object[] loginSelectionTitle = {
-            title,
-            dev,
+                title,
+                dev,
         };
 
         int selection = JOptionPane.showOptionDialog(null, loginSelectionTitle, "Marine Motorsports Management System", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
@@ -152,9 +152,9 @@ public class Main {
 
                 // Display Array
                 Object[] loginField = {
-                    exitMessage,
-                    usernameTitle, username,
-                    passwordTitle, password
+                        exitMessage,
+                        usernameTitle, username,
+                        passwordTitle, password
                 };
 
                 // Attempt login till session status is active
@@ -218,7 +218,6 @@ public class Main {
         int selection = JOptionPane.showOptionDialog(null, toolMasterSelection, "Tool Master Panel", 0, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
         switch (selection) {
             case 0 -> quickScan(session);
-//            case 1 -> toolLookup(session);
             case 1 -> borrowedTools(session);
             default -> mainMenu();
         }
@@ -316,9 +315,9 @@ public class Main {
 
             // Choose Student Display Array
             Object[] chooseStudentDisplay = {
-                studentPanelTitle,
-                studentPanelDesc,
-                studentPanel
+                    studentPanelTitle,
+                    studentPanelDesc,
+                    studentPanel
             };
 
             // Display Student Selection & Handle Exit
@@ -405,7 +404,7 @@ public class Main {
 
             // Enter Borrow Tools Panel by Button
             searchButton.addActionListener(ae -> {
-                // Scanner Input
+                // TOOL SCANNED (MMS-)
                 if (searchField.getText().toUpperCase().contains("MMS-")) {
                     // Parse Tool ID (remove MMS-)
                     String scannedTool = searchField.getText();
@@ -451,10 +450,8 @@ public class Main {
 
                     // Update Stats
                     scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
-
-                    // Clear field
-                    searchField.setText("");
                 }
+
                 // Search Input
                 else {
                     // Title
@@ -470,8 +467,8 @@ public class Main {
                     ArrayList<Integer> toolIDList = api.toolIDList(true);
                     ArrayList<String> toolNameList = api.toolNameList(true);
 
-                    // Search for tools
-                    if (!searchField.getText().isEmpty() && searchField.getText().length() < 45) {
+                    // Search for tools if searching
+                    if (!searchField.getText().isEmpty() && searchField.getText().length() < 45 && !searchField.getText().toUpperCase().contains("MMSC-")) {
                         // Split Words
                         var searchFieldKeywords = searchField.getText().toLowerCase().split(" ");
                         for (int i = 0; i < toolNameList.size(); i++) {
@@ -495,12 +492,57 @@ public class Main {
                             borrowToolTitle.setText("No tools found");
                             borrowToolDesc.setText("\"" + searchField.getText() + "\" could not be found");
                         }
-                    } else {
+                    } else if (!searchField.getText().toUpperCase().contains("MMSC-")){
                         borrowToolTitle.setText("No tools found");
                         if (searchField.getText().length() >= 45)
                             borrowToolDesc.setText("Too many characters entered, please shorten your search");
                         else
                             borrowToolDesc.setText("Search bar was left incomplete");
+                    }
+
+                    // Search for category if begins with MMSC-
+                    if (searchField.getText().toUpperCase().contains("MMSC-")) {
+                        // Parse Category ID (remove MMSC-)
+                        String scannedCategory = searchField.getText();
+                        try {
+                            scannedCategory = scannedCategory.replaceAll("[^0-9]+", "");
+                            int categoryID = Integer.parseInt(scannedCategory);
+                            var category = api.getCategory(categoryID);
+
+                            // if category exists
+                            if (category != null) {
+                                // Add all tools to found tools list
+                                for (int i = 0; i < category.getTools().size(); i++) {
+                                    var toolID = category.getTools().get(i).getId();
+                                    // Ensure tool is active before adding
+                                    if (api.toolStatus(toolID) && api.toolAvailability(toolID))
+                                        foundTools.add(toolID);
+                                }
+
+                                // If tools found
+                                if (!foundTools.isEmpty())
+                                    borrowToolDesc.setText(foundTools.size() + " AVAILABLE tools found in " + "\"" + category.getCategoryName() + "\"");
+                                // If category is inactive
+                                else if (!category.isStatus()) {
+                                    borrowToolTitle.setText("Category is inactive");
+                                    borrowToolDesc.setText("\"" + category.getCategoryName() + "\" is currently inactive and cannot be used");
+                                }
+                                // If no available tools within category
+                                else {
+                                    borrowToolTitle.setText("No tools found");
+                                    borrowToolDesc.setText("All tools in \"" + category.getCategoryName() + "\" are currently unavailable");
+                                }
+                            }
+                            // if category does not exist
+                            else {
+                                borrowToolTitle.setText("Category not found");
+                                borrowToolDesc.setText("Please try again or scan another category");
+                            }
+                        } catch (Exception e) {
+                            searchField.setText("");
+                        }
+                        // Update Stats
+                        scanStats.setText("Tools Borrowed: " + out + " | Tools Returned: " + in);
                     }
 
                     // Chosen Tool ActionListener
@@ -537,9 +579,6 @@ public class Main {
                         }
                     });
 
-                    // Clear field
-                    searchField.setText("");
-
                     // Display Object
                     Object[] borrowToolsDisplay = {
                             borrowToolTitle,
@@ -555,6 +594,9 @@ public class Main {
                     // Display Borrow Tools
                     JOptionPane.showOptionDialog(null, borrowToolsDisplay, "Borrow Tools", 0, -1, null, new Object[]{}, null);
                 }
+
+                // Clear field
+                searchField.setText("");
             });
 
             // Enter Return Tools Panel by Button
@@ -648,11 +690,11 @@ public class Main {
 
             // Tool Scan Display Array
             Object[] toolScanDisplay = {
-                scanTitle, // Scan Title (display user tools being scanned for)
-                scanStats, // Scan Stats (borrow/return count)
-                scroll, // Tools Scanned (display tools scanned in/out)
-                searchPanel, // Search panel (field+btn)
-                otherPanel, // Return Tools (easily return tools for selected student) & Finish Scanning
+                    scanTitle, // Scan Title (display user tools being scanned for)
+                    scanStats, // Scan Stats (borrow/return count)
+                    scroll, // Tools Scanned (display tools scanned in/out)
+                    searchPanel, // Search panel (field+btn)
+                    otherPanel, // Return Tools (easily return tools for selected student) & Finish Scanning
             };
 
             // Start Student Scan Session
@@ -660,124 +702,8 @@ public class Main {
         }
     }
 
-//    /**
-//     * The Tool Lookup method looks up the status of a tool by their id (if
-//     * borrowed, if so by who, otherwise it is available)
-//     *
-//     * @param session current session (AM/PM)
-//     */
-//    public static void toolLookup(String session) {
-//        // Init var
-//        String toolTemp = "";
-//        int toolID = 0;
-//
-//        // JLabel Tool Lookup Title
-//        JLabel toolLookupTitle = new Title();
-//
-//        // JLabel Tool Inventory Title
-//        JLabel toolInventoryTitle = new Description();
-//
-//        // JTextArea Text Area (display specified tool data)
-//        JTable toolBorrowers = new JTable();
-//
-//        // JScrollPane scroll (display JTextArea with scrollbar)
-//        JScrollPane scroll = new Scroll(toolBorrowers, 500, 500);
-//
-//        // (Optional) error message
-//        JLabel toolLookupError = new Title("");
-//
-//        // JOptionPane display array
-//        Object[] display = {
-//                toolLookupError
-//        };
-//
-//        // Get Tool ID
-//        while (toolTemp.isEmpty()) {
-//            // Tool Lookup Title
-//            JLabel toolLookupDescription = new Description("Scan tool or enter tool ID to check its availability");
-//            toolLookupTitle.setText("Tool Lookup");
-//            Object[] toolLookupDisplay = {
-//                toolLookupTitle,
-//                toolLookupDescription,
-//            };
-//
-//
-//            toolTemp = JOptionPane.showInputDialog(null, toolLookupDisplay, "Tool Lookup", -1);
-//            // Check if back
-//            if (toolTemp == null) {
-//                // Return to tool master
-//                toolMaster(session);
-//            }
-//        }
-//
-//        // Check if input contains tool id
-//        if (toolTemp.replaceAll("\\D", "").matches("\\d+")) {
-//            toolID = Integer.parseInt(toolTemp.replaceAll("\\D", ""));
-//        } // Else invalid input
-//        else {
-//            // Return to tool master
-//            toolMaster(session);
-//        }
-//
-//        // Check if tool is enabled
-//        if (api.toolStatus(toolID)) {
-//            // Check if there is *any* of the tool out, if so, build list of names
-//            var borrowerIds = api.getToolBorrowerIDS(toolID);
-//            String[][] borrowerData = new String[borrowerIds.size()][3];
-//            if (borrowerIds.size() > 0) {
-//                for (int i = 0; i < borrowerIds.size(); i++) {
-//                    borrowerData[i][0] = api.getToolName(toolID);
-//                    borrowerData[i][1] = String.valueOf(toolID);
-//                    borrowerData[i][2] = String.valueOf(api.getStudentName(borrowerIds.get(i)));
-//                }
-//                scroll = new Scroll(new ToolLookup(borrowerData, 800, 500));
-//            }
-//            if (api.toolAvailability(toolID) && borrowerIds.size() > 0) {
-//                // Set display
-//                toolLookupTitle.setText(api.getToolName(toolID) + " is currently available to borrow");
-//                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
-//
-//                display = new Object[]{
-//                        toolLookupTitle,
-//                        toolInventoryTitle,
-//                        scroll
-//                };
-//            } else if (api.toolAvailability(toolID) && borrowerIds.isEmpty()) {
-//                toolLookupTitle.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently available to borrow");
-//                toolInventoryTitle.setText("Borrowers: 0 | Inventory: " + api.getToolQuantity(toolID));
-//
-//                display = new Object[]{
-//                        toolLookupTitle,
-//                        toolInventoryTitle,
-//                };
-//            }
-//            else {
-//                toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
-//                    display = new Object[] {
-//                            toolLookupTitle,
-//                            toolInventoryTitle,
-//                            scroll
-//                    };
-//                toolLookupTitle.setText(api.getToolName(toolID) + " is currently unavailable to borrow");
-//            }
-//        }
-//        else if (!api.toolStatus(toolID) && api.getToolName(toolID) != null) {
-//            // Set error
-//            toolLookupError.setText(api.getToolName(toolID) + " (ID: " + toolID + ") is currently disabled");
-//        } // Else tool does not exist
-//        else {
-//            // Set error
-//            toolLookupError.setText("The tool by (ID: " + toolID + ") does not exist");
-//        }
-//
-//        JOptionPane.showMessageDialog(null, display, "Tool Lookup", -1);
-//
-//        // Return to tool master
-//        toolMaster(session);
-//    }
-
     /**
-     * The Overloaded Tool Lookup method looks up the status of a tool by the given id (if
+     * The Tool Lookup method looks up the status of a tool by the given id (if
      * borrowed, if so by who, otherwise it is available), and is used by methods independently
      */
     public static void toolLookup(int toolID) {
@@ -812,7 +738,7 @@ public class Main {
                     borrowerData[i][1] = String.valueOf(toolID);
                     borrowerData[i][2] = String.valueOf(api.getStudentName(borrowerIds.get(i)));
                 }
-                scroll = new Scroll(new ToolLookup(borrowerData, 500, 500));
+                scroll = new Scroll(new ToolLookup(borrowerData));
             }
             if (api.toolAvailability(toolID) && borrowerIds.size() > 0) {
                 // Set display
@@ -935,10 +861,10 @@ public class Main {
 
         // Login Field Display Array
         Object[] loginField = {
-            loginTitle, // Login Title (self-explanatory)
-            loginDesc, // loginDesc,
-            usernameTitle, username, // Username (Username field for login)
-            passwordTitle, password // Password (Password field for login)
+                loginTitle, // Login Title (self-explanatory)
+                loginDesc, // loginDesc,
+                usernameTitle, username, // Username (Username field for login)
+                passwordTitle, password // Password (Password field for login)
         };
 
         // Attempt login till session status is active
@@ -947,8 +873,8 @@ public class Main {
         JLabel authDesc = new Description();
 
         Object[] display = {
-          authTitle,
-          authDesc
+                authTitle,
+                authDesc
         };
 
         while (!api.sessionStatus()) {
@@ -985,10 +911,10 @@ public class Main {
         switch (selection) {
             // Manage Students
             case 0 ->
-                studentManagementAdmin();
+                    studentManagementAdmin();
             // Manage Tools
             case 1 ->
-                toolManagementAdmin();
+                    toolManagementAdmin();
             // Return to main menu and logout
             case 2 -> {
                 api.logout();
@@ -1031,9 +957,9 @@ public class Main {
 
                 // Add Student Field Display Array
                 Object[] addStudentField = {
-                    addStudentTitle,
-                    fullNameTitle, fullName, // Full Name (Text box to enter Full Student Name)
-                    studentSessionTitle, studentSession // Student Session (Text box to enter Student Session)
+                        addStudentTitle,
+                        fullNameTitle, fullName, // Full Name (Text box to enter Full Student Name)
+                        studentSessionTitle, studentSession // Student Session (Text box to enter Student Session)
                 };
 
                 // Display Add Student Field
@@ -1078,7 +1004,7 @@ public class Main {
             }
 
             case 2 ->
-                studentRosterAdmin();
+                    studentRosterAdmin();
 
             // Return back to Teacher Panel
             default -> admin();
@@ -1211,8 +1137,8 @@ public class Main {
                     JLabel confirmDescription = new Description("If used in mistake, you will have to manually reactivate each student.");
 
                     Object[] confirmationDisplay = {
-                      confirmationTitle,
-                      confirmDescription
+                            confirmationTitle,
+                            confirmDescription
                     };
 
                     // Get choice
@@ -1376,14 +1302,14 @@ public class Main {
      */
     public static void toolManagementAdmin() {
         // Select Add or Remove or Back
-        String[] toolOptions = {"Add Tool", "Update Quantity", "Toggle Tools", "Tool Inventory", "Back"};
+        String[] toolOptions = {"Add Tool", "Add Tool Category", "Tool Inventory", "Tool Categories", "Back"};
 
         // Tool Management Display
         JLabel toolManagementTitle = new Title("Tool Management");
         JLabel toolManagementDescription = new Description("Please select an action");
         Object[] toolManagementDisplay = {
-            toolManagementTitle,
-            toolManagementDescription
+                toolManagementTitle,
+                toolManagementDescription
         };
 
         int toolSelection = JOptionPane.showOptionDialog(null, toolManagementDisplay, "Teacher Panel - Tool Management", 0, JOptionPane.PLAIN_MESSAGE, null, toolOptions, toolOptions[0]);
@@ -1396,12 +1322,32 @@ public class Main {
                 JLabel toolQuantityTitle = new Field("Tool Quantity");
                 JTextField toolQuantity = new JTextField();
 
+                // Get Categories
+                ArrayList<Category> categories = api.getCategories();
+
+                // Remove all inactive categories
+                for (int i = 0; i < categories.size(); i++) {
+                    if (!categories.get(i).isStatus()) {
+                        categories.remove(i);
+                        i--;
+                    }
+                }
+
+                JLabel categoryTitle = new Field("Category");
+                String[] categoryList = new String[categories.size()];
+                for (int i = 0; i < categoryList.length; i++) {
+                    categoryList[i] = categories.get(i).getCategoryName() + " (ID: " + categories.get(i).getId() + ")";
+                }
+                JComboBox categoryDropdown = new JComboBox(categoryList);
+
                 Object[] display = {
-                    title,
-                    toolNameTitle,
-                    toolName,
-                    toolQuantityTitle,
-                    toolQuantity
+                        title,
+                        toolNameTitle,
+                        toolName,
+                        toolQuantityTitle,
+                        toolQuantity,
+                        categoryTitle,
+                        categoryDropdown
                 };
 
                 while (toolName.getText().isBlank() && toolQuantity.getText().isBlank()) {
@@ -1412,9 +1358,17 @@ public class Main {
                         if ((!toolName.getText().isBlank()) && (!toolQuantity.getText().isBlank())) {
                             // If tool added
                             if (Integer.parseInt(toolQuantity.getText()) > 0) {
-                                int toolID = api.createTool(toolName.getText(), Integer.parseInt(toolQuantity.getText()));
+                                // Get Category / Parse Category ID
+                                String effectedCategory = (String) categoryDropdown.getSelectedItem();
+                                Pattern pattern = Pattern.compile("\\(ID: (\\d+)\\)");
+                                Matcher matcher = pattern.matcher(effectedCategory);
+                                matcher.find();
+                                int categoryID = Integer.parseInt(matcher.group(1));
+
+                                // Create tool
+                                int toolID = api.createTool(toolName.getText(), Integer.parseInt(toolQuantity.getText()), categoryID);
                                 if (toolID != 0) {
-                                    String successAddMessage = "Tool added to inventory: " + toolName.getText() + ", ID: " + toolID;
+                                    String successAddMessage = "Tool added to inventory: \n" + toolName.getText() + " (ID: " + toolID + ")\nCategory: " + api.getCategory(api.getTool(toolID).getCategoryId()).getCategoryName();
                                     JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Add Tool", JOptionPane.PLAIN_MESSAGE);
                                 } // Else if tool not added,
                                 else {
@@ -1440,200 +1394,51 @@ public class Main {
                 toolManagementAdmin();
             }
 
-            // Update Quantity
-            case 1 ->  {
-                // Update Quantity Display
-                JLabel updateQuantityTitle = new Title("Update Quantity");
-                JLabel updateQuantityToolField = new Field("Tool ID");
-                JTextField toolID = new JTextField();
-                JLabel updateQuantityField = new Field("New Quantity");
-                JTextField quantity = new JTextField();
-
+            // Add Tool Category
+            case 1 -> {
+                // Add a tool
+                JLabel title = new Title("Add Tool Category");
+                JLabel categoryNameTitle = new Field("Category Name");
+                JTextField categoryName = new JTextField();
                 Object[] display = {
-                  updateQuantityTitle,
-                  updateQuantityToolField,
-                  toolID,
-                  updateQuantityField,
-                  quantity
+                        title,
+                        categoryNameTitle,
+                        categoryName
                 };
-
-                while (toolID.getText().isBlank() && quantity.getText().isBlank()) {
-                    int btn = JOptionPane.showOptionDialog(null, display, "Teacher Panel - Update Quantity", 0, -1, null, new String[]{"Update Quantity", "Back"}, 0);
-
+                while (categoryName.getText().isBlank()) {
+                    int btn = JOptionPane.showOptionDialog(null, display, "Teacher Panel - Add Tool", 0, -1, null, new String[]{"Add Category", "Back"}, 0);
                     if (btn == 0) {
-                        // If yes, change quantity
-
-                        // Parse Tool ID (remove MMS-)
-                        String effectedTool = toolID.getText();
-                        effectedTool = effectedTool.replaceAll("[^0-9]+", "");
-                        int realToolID = Integer.parseInt(effectedTool);
-                        if ((!toolID.getText().isBlank()) && (!quantity.getText().isBlank()) && (api.getToolName(realToolID) != null)) {
-                            // If quantity changed
-                            if (Integer.parseInt(quantity.getText()) > 0) {
-                                boolean result = api.updateToolQuantity(realToolID, Integer.parseInt(quantity.getText()));
-                                if (result) {
-                                    String successAddMessage = "Tool quantity updated: " + api.getToolName(realToolID) + " (ID: " + realToolID + "), Quantity: " + api.getToolQuantity(realToolID);
-                                    JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
-                                } // Else if tool not added,
-                                else {
-                                    JOptionPane.showMessageDialog(null, "Error updating tool quantity.", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
-                                }
-                            } // Quantity less than 1 or tool id doesn't exist
-                            else {
-                                if (api.getToolName(realToolID) == null) {
-                                    JOptionPane.showMessageDialog(null, "Tool ID doesn't exist", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
-                                } else {
-                                    JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, quantity must be greater than 0", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
-                                }
-                            }
-
-                            // If no, return to Teacher Panel
+                        // If yes, add
+                        if ((!categoryName.getText().isBlank())) {
+                            // Create Category
+                            if (api.addCategory(categoryName.getText())) {
+                                String successAddMessage = "Category added: " + categoryName.getText();
+                                JOptionPane.showMessageDialog(null, successAddMessage, "Teacher Panel - Add Category", JOptionPane.PLAIN_MESSAGE);
+                            } // Else if tool not added,
+                            else
+                                JOptionPane.showMessageDialog(null, "Error adding tool to inventory.", "Teacher Panel - Add Category", JOptionPane.PLAIN_MESSAGE);
+                          // If no, return to Teacher Panel
                         } else {
-                            JOptionPane.showMessageDialog(null, "Tool quantity has not been updated, one or more fields were not completed.", "Teacher Panel - Update Quantity", JOptionPane.PLAIN_MESSAGE);
+                            JOptionPane.showMessageDialog(null, "Tool has not been added, one or more fields were not completed.", "Teacher Panel - Add Category", JOptionPane.PLAIN_MESSAGE);
                             toolManagementAdmin();
                         }
                     }
                     else {
-                        toolManagementAdmin();
+                        break;
                     }
-
-                    // Return back to tool management
-                    toolManagementAdmin();
                 }
+                // Return to tool management once completed
+                toolManagementAdmin();
             }
 
-            // Toggle tools
-            case 2 -> toggleToolsAdmin();
-
             // Tool Inventory
-            case 3 -> toolInventoryAdmin();
+            case 2 -> toolInventoryAdmin();
+
+            // Tool Categories
+            case 3 -> toolCategoryAdmin();
 
             // Back to Teacher Panel
             default -> admin();
-        }
-    }
-
-    /**
-     * The toggleToolsAdmin method reactivates/deactivates tools
-     */
-    public static void toggleToolsAdmin() {
-        // Toggle Tools
-        // Select Reactivate or Deactivate or Back
-        String[] toggleOptions = {"Reactivate Tool", "Deactivate Tool", "Back"};
-
-        // Tool Management Display
-        JLabel toggleToolsTitle = new Title("Toggle Tools");
-        JLabel toggleToolsDescription = new Description("Please select an action");
-
-        Object[] toggleToolsDisplay = {
-                toggleToolsTitle,
-                toggleToolsDescription
-        };
-
-        int toggleToolsSelection = JOptionPane.showOptionDialog(null, toggleToolsDisplay, "Teacher Panel - Toggle Tools", 0, JOptionPane.PLAIN_MESSAGE, null, toggleOptions, toggleOptions[0]);
-
-        switch(toggleToolsSelection) {
-            case 0 -> {
-                // Reactivate tools
-                // Get deactivated tool list
-                if (!api.toolNameList(false).isEmpty()) {
-                    ArrayList<String> toolNameList = api.toolNameList(false);
-                    ArrayList<Integer> toolIDList = api.toolIDList(false);
-
-                    // Combine names with ids
-                    ArrayList<String> tempArray = new ArrayList<>();
-                    for (int i = 0; i < toolNameList.size(); i++) {
-                        tempArray.add(toolNameList.get(i) + ", ID: " + toolIDList.get(i));
-                    }
-
-                    // Arraylist -> Array
-                    String[] toolList = new String[tempArray.size()];
-                    toolList = tempArray.toArray(toolList);
-
-                    // Select and reactivate tool
-                    String toolToReactivate = (String) JOptionPane.showInputDialog(null, "Reactivate Tool", "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null, toolList, toolList[0]);
-                    // If yes
-                    if (toolToReactivate != null) {
-                        // Strip String to only ID
-                        String toolID = toolToReactivate.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
-                        if (api.enableTool(Integer.parseInt(toolID))) {
-                            String successRemoveMessage = "Tool successfully reactivated: " + toolToReactivate;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Error, tool has not been reactivated.", "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
-                        }
-
-                        // Return to tool management once completed
-                        toggleToolsAdmin();
-                        break;
-                    } // If no, return to tool management
-                    else {
-                        toggleToolsAdmin();
-                    }
-                } // If no enabled tools
-                else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to reactivate.", "Teacher Panel - Reactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
-                }
-
-                // Return to tool management panel once completed
-                toggleToolsAdmin();
-            }
-
-            case 1 -> {
-                // Deactivate a tool
-                // Get activated tool list
-                if (!api.toolNameList(true).isEmpty()) {
-                    ArrayList<String> toolNameList = api.toolNameList(true);
-                    ArrayList<Integer> toolIDList = api.toolIDList(true);
-
-                    // Combine names with ids
-                    ArrayList<String> tempArray = new ArrayList<>();
-                    for (int i = 0; i < toolNameList.size(); i++) {
-                        tempArray.add(toolNameList.get(i) + ", ID: " + toolIDList.get(i));
-                    }
-
-                    // Arraylist -> Array
-                    String[] toolList = new String[tempArray.size()];
-                    toolList = tempArray.toArray(toolList);
-
-                    // Select and Deactivate tool
-                    String toolToDeactivate = (String) JOptionPane.showInputDialog(null, "Deactivate Tool", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null, toolList, toolList[0]);
-                    // If yes
-                    if (toolToDeactivate != null) {
-                        // Strip String to only ID
-                        String toolID = toolToDeactivate.replaceAll("^[^:\\r\\n]+:[ \\t]*", "");
-
-                        // Deactivate tool
-                        if (api.disableTool(Integer.parseInt(toolID))) {
-                            // Return all the tools if they are being borrowed
-                            if (api.getToolBorrowerIDS(Integer.parseInt(toolID)).size() > 0) {
-                                api.forceReturnTools((Integer.parseInt(toolID)));
-                            }
-
-                            String successRemoveMessage = "Tool successfully deactivated: " + toolToDeactivate;
-                            JOptionPane.showMessageDialog(null, successRemoveMessage, "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Error, tool has not been deactivated", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
-                        }
-
-                        // Return to toggle tools once completed
-                        toggleToolsAdmin();
-                        break;
-                    } // If No, return to toggle tools panel
-                    else {
-                        toggleToolsAdmin();
-                    }
-                } // if no activated tools
-                else {
-                    JOptionPane.showMessageDialog(null, "There are no tools to deactivate.", "Teacher Panel - Deactivate Tool", JOptionPane.PLAIN_MESSAGE, null);
-                }
-
-                // Return to toggle tools once completed
-                toggleToolsAdmin();
-            }
-
-            // Return to tool management panel
-            default -> toolManagementAdmin();
         }
     }
 
@@ -1655,11 +1460,11 @@ public class Main {
 
             // Inactive Tools
             ArrayList<Integer> inactiveToolIDList = api.toolIDList(false);
-            String[][] inactiveToolData = new String[inactiveToolIDList.size()][3];
+            String[][] inactiveToolData = new String[inactiveToolIDList.size()][4];
 
             // Active Tools
             ArrayList<Integer> activeToolIDList = api.toolIDList(true);
-            String[][] activeToolData = new String[activeToolIDList.size()][3];
+            String[][] activeToolData = new String[activeToolIDList.size()][4];
 
             // Check Inactive Tools
             if (!inactiveToolIDList.isEmpty()) {
@@ -1668,9 +1473,17 @@ public class Main {
 
                 // Build data
                 for (int i = 0; i < inactiveToolData.length; i++) {
-                    inactiveToolData[i][0] = api.getToolName(inactiveToolIDList.get(i));
-                    inactiveToolData[i][1] = String.valueOf(inactiveToolIDList.get(i));
-                    inactiveToolData[i][2] = String.valueOf(api.getToolQuantity(inactiveToolIDList.get(i)));
+                    var tool = api.getTool(inactiveToolIDList.get(i));
+                    inactiveToolData[i][0] = tool.getToolName(); // tool name
+
+                    // Get category if assigned
+                    if (tool.getCategoryId() != 0)
+                        inactiveToolData[i][1] = api.getCategory(tool.getCategoryId()).getCategoryName(); // category name
+                    else // else assign no category
+                        inactiveToolData[i][1] = "None";
+
+                    inactiveToolData[i][2] = String.valueOf(tool.getId()); // tool id
+                    inactiveToolData[i][3] = String.valueOf(tool.getQuantity()); // tool quantity
                 }
             }
 
@@ -1681,9 +1494,17 @@ public class Main {
 
                 // Build data
                 for (int i = 0; i < activeToolData.length; i++) {
-                    activeToolData[i][0] = api.getToolName(activeToolIDList.get(i));
-                    activeToolData[i][1] = String.valueOf(activeToolIDList.get(i));
-                    activeToolData[i][2] = String.valueOf(api.getToolQuantity(activeToolIDList.get(i)));
+                    var tool = api.getTool(activeToolIDList.get(i));
+                    activeToolData[i][0] = tool.getToolName(); // tool name
+
+                    // Get category if assigned
+                    if (tool.getCategoryId() != 0)
+                        activeToolData[i][1] = api.getCategory(tool.getCategoryId()).getCategoryName(); // category name
+                    else // else assign no category
+                        activeToolData[i][1] = "None";
+
+                    activeToolData[i][2] = String.valueOf(tool.getId()); // tool id
+                    activeToolData[i][3] = String.valueOf(tool.getQuantity()); // tool quantity
                 }
             }
 
@@ -1692,7 +1513,7 @@ public class Main {
 
             // Tool Inventory Display
             JLabel toolInventoryTitle = new Title("Tool Inventory");
-            JLabel toolInventoryDescription = new Description("Please select an option");
+            JLabel toolInventoryDescription = new Description("Please select a filter");
             Object[] toolInventoryDisplay = {
                     toolInventoryTitle,
                     toolInventoryDescription
@@ -1705,20 +1526,29 @@ public class Main {
                     // Check if active tools found
                     if (activeTools) {
                         // JLabel Active Tools
-                        JLabel toolsActiveTitle = new Title("Tool Inventory");
-                        JLabel toolsActiveDescription = new Description(api.toolNameList(true).size() + " Active Tools");
+                        JLabel toolsActiveTitle = new Title("Tool Inventory (" + api.toolNameList(true).size() + " Active Tools)");
+                        JLabel toolsActiveDescription = new Description("Double click a tool to edit its details");
 
                         // JTextArea Active Tools (display all enabled tools)
                         JTable toolsActiveTable = new ToolInventory(activeToolData);
+                        // Mouse listener for table row (edit tool)
+                        toolsActiveTable.addMouseListener(new MouseAdapter() {
+                            public void mousePressed(MouseEvent mouseEvent) {
+                                JTable table = (JTable) mouseEvent.getSource();
+                                // Perform tool lookup
+                                if (mouseEvent.getClickCount() == 2 && toolsActiveTable.getSelectedRow() != -1)
+                                    editTool(api.getTool(Integer.parseInt((String) toolsActiveTable.getValueAt(table.getSelectedRow(), 2))));
+                            }
+                        });
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(toolsActiveTable, 800, 500);
+                        JScrollPane scroll = new Scroll(toolsActiveTable, 1000, 500);
 
                         // Active Tools Display
                         Object[] enabledToolsDisplay = {
-                          toolsActiveTitle,
-                          toolsActiveDescription,
-                          scroll
+                                toolsActiveTitle,
+                                toolsActiveDescription,
+                                scroll
                         };
 
                         // Display Active Tools
@@ -1733,14 +1563,23 @@ public class Main {
                     // Check if Inactive Tools found
                     if (inactiveTools) {
                         // JLabel Inactive Tools
-                        JLabel toolsInactiveTitle = new Title("Tool Inventory");
-                        JLabel toolsInactiveDescription = new Description(api.toolNameList(false).size() + " Inactive Tools");
+                        JLabel toolsInactiveTitle = new Title("Tool Inventory (" + api.toolNameList(false).size() + " Inactive Tools)");
+                        JLabel toolsInactiveDescription = new Description("Double click a tool to edit its details");
 
                         // JTextArea Active Tools (display all enabled tools)
                         JTable toolsInactiveTable = new ToolInventory(inactiveToolData);
+                        // Mouse listener for table row (edit tool)
+                        toolsInactiveTable.addMouseListener(new MouseAdapter() {
+                            public void mousePressed(MouseEvent mouseEvent) {
+                                JTable table =(JTable) mouseEvent.getSource();
+                                // Perform tool lookup
+                                if (mouseEvent.getClickCount() == 2 && toolsInactiveTable.getSelectedRow() != -1)
+                                    editTool(api.getTool(Integer.parseInt((String) toolsInactiveTable.getValueAt(table.getSelectedRow(), 2))));
+                            }
+                        });
 
                         // JScrollPane scroll (display JTextArea with scrollbar)
-                        JScrollPane scroll = new Scroll(toolsInactiveTable, 800, 500);
+                        JScrollPane scroll = new Scroll(toolsInactiveTable, 1000, 500);
 
                         // Inactive Tools Display
                         Object[] inactiveToolsDisplay = {
@@ -1763,5 +1602,325 @@ public class Main {
         }
         // Return to view tools panel once completed
         toolInventoryAdmin();
+    }
+
+    /**
+     * Used for editing a specific tool (name, category, quantity, status etc)
+     * @param tool the tool
+     */
+    public static void editTool(Tool tool) {
+        // Build UI
+        JLabel title = new Title("Editing Tool");
+        JLabel description = new Description(tool.getToolName());
+
+        // Tool Properties
+        JLabel toolName = new Field("Name");
+        JTextField toolNameInput = new JTextField(tool.getToolName());
+
+        JLabel toolCategory = new Field("Category");
+        // Build Category List (first = current category)
+        var categories = api.getCategories();
+
+        // Remove all inactive categories
+        for (int i = 0; i < categories.size(); i++) {
+            if (!categories.get(i).isStatus()) {
+                categories.remove(i);
+                i--;
+            }
+        }
+
+        var firstCategory = categories.get(0);
+        for (int i = 0; i < categories.size(); i++) {
+            // When current category found, swap it with the first place category
+            if (categories.get(i).getId() == tool.getCategoryId()) {
+                categories.set(0, categories.get(i));
+                categories.set(i, firstCategory);
+            }
+        }
+        // Convert to Array & Format: Category Name (ID: xxx)
+        String[] categoriesArray = new String[categories.size()];
+        for (int i = 0; i < categories.size(); i++) {
+            categoriesArray[i] = categories.get(i).getCategoryName() + " (ID: " + categories.get(i).getId() + ")";
+        }
+        JComboBox toolCategoryInput = new JComboBox(categoriesArray);
+
+        JLabel toolQuantity = new Field("Quantity");
+        JTextField toolQuantityInput = new JTextField(String.valueOf(tool.getQuantity()));
+
+        // Build status
+        JLabel toolStatus = new Field("Status");
+        JComboBox toolStatusInput;
+        if (tool.isStatus())
+            toolStatusInput = new JComboBox(new String[]{"Active", "Inactive"});
+        else
+            toolStatusInput = new JComboBox(new String[]{"Inactive", "Active"});
+
+        // Buttons
+        JButton updateBtn = new Button("Update Tool");
+        JButton cancelBtn = new Button("Cancel");
+
+        Object[] editToolDisplay = {
+            title,
+            description,
+            toolName,
+            toolNameInput,
+            toolCategory,
+            toolCategoryInput,
+            toolQuantity,
+            toolQuantityInput,
+            toolStatus,
+            toolStatusInput,
+            updateBtn,
+            cancelBtn
+        };
+
+        // Action Listener for updating tool
+        updateBtn.addActionListener(e -> {
+            Window w = SwingUtilities.getWindowAncestor(updateBtn);
+            if (w != null) {
+                // Get Category
+                String effectedCategory = (String) toolCategoryInput.getSelectedItem();
+                Pattern pattern = Pattern.compile("\\(ID: (\\d+)\\)");
+                Matcher matcher = pattern.matcher(effectedCategory);
+                matcher.find();
+                int categoryID = Integer.parseInt(matcher.group(1));
+
+                // Set tool based off of status
+                if (((String) toolStatusInput.getSelectedItem()).equalsIgnoreCase("Active"))
+                    api.setTool(new Tool(tool.getId(), categoryID, toolNameInput.getText(), Integer.parseInt(toolQuantityInput.getText()), true));
+                else
+                    api.setTool(new Tool(tool.getId(), categoryID, toolNameInput.getText(), Integer.parseInt(toolQuantityInput.getText()), false));
+                w.dispose(); // dispose window
+            }
+        });
+
+        // Action Listener for cancelling edit
+        cancelBtn.addActionListener(e -> {
+            Window w = SwingUtilities.getWindowAncestor(updateBtn);
+            if (w != null) {
+                w.dispose(); // dispose window
+            }
+        });
+
+        // Display menu
+        JOptionPane.showOptionDialog(null, editToolDisplay, "Edit Tool", 0, -1, null, new Object[]{}, null);
+    }
+
+    /**
+     * Displays all inactive & active categories and allows for them to be edited
+     */
+    public static void toolCategoryAdmin() {
+        // Check if any categories exist
+        if (api.getCategories().isEmpty()) {
+            // Back to tool master if no categories found
+            JOptionPane.showMessageDialog(null, "No categories exist", "Teacher Panel - View Categories", JOptionPane.PLAIN_MESSAGE, null);
+            toolManagementAdmin();
+        } // Else continue
+        else {
+            // Initialize flags & arrays
+            boolean inactiveCategory = false;
+            boolean activeCategory = false;
+
+            // Build category data
+            var categories = api.getCategories();
+
+            ArrayList<Category> inactiveCategoriesData = new ArrayList<>();
+            ArrayList<Category> activeCategoriesData = new ArrayList<>();
+            for (int i = 0; i < categories.size(); i++) {
+                // Add active categories
+                if (categories.get(i).isStatus())
+                    activeCategoriesData.add(categories.get(i));
+                // Add inactive categories
+                else
+                    inactiveCategoriesData.add(categories.get(i));
+            }
+
+            // Init categories
+            String[][] inactiveCategories = new String[inactiveCategoriesData.size()][3];
+            String[][] activeCategories = new String[activeCategoriesData.size()][3];
+
+            // Check/Build Inactive Categories
+            if (!inactiveCategoriesData.isEmpty()) {
+                // Update flag
+                inactiveCategory = true;
+
+                // Build data
+                for (int i = 0; i < inactiveCategoriesData.size(); i++) {
+                    var category = inactiveCategoriesData.get(i);
+                    inactiveCategories[i][0] = category.getCategoryName(); // category name
+                    inactiveCategories[i][1] = String.valueOf(category.getTools().size()); // tools amount
+                    inactiveCategories[i][2] = String.valueOf(category.getId()); // category id
+                }
+            }
+
+            // Check/Build Active Categories
+            if (!activeCategoriesData.isEmpty()) {
+                // Update flag
+                activeCategory = true;
+
+                // Build data
+                for (int i = 0; i < activeCategoriesData.size(); i++) {
+                    var category = activeCategoriesData.get(i);
+                    activeCategories[i][0] = category.getCategoryName(); // category name
+                    activeCategories[i][1] = String.valueOf(category.getTools().size()); // tools amount
+                    activeCategories[i][2] = String.valueOf(category.getId()); // category id
+                }
+            }
+
+            // Initialize Options
+            String[] categoryInventoryOptions = {"Active Categories", "Inactive Categories", "Back"};
+
+            // Tool Inventory Display
+            JLabel categoryTitle = new Title("Tool Categories");
+            JLabel categoryDescription = new Description("Please select a filter");
+            Object[] toolCategoryDisplay = {
+                    categoryTitle,
+                    categoryDescription
+            };
+
+            int toolCategorySelection = (int) JOptionPane.showOptionDialog(null, toolCategoryDisplay, "Teacher Panel - Tool Categories", 0, JOptionPane.PLAIN_MESSAGE, null, categoryInventoryOptions, categoryInventoryOptions[0]);
+            switch (toolCategorySelection) {
+                // View Active Categories
+                case 0 -> {
+                    // Check if active categories found
+                    if (activeCategory) {
+                        // JLabel Active Categories
+                        JLabel categoriesActiveTitle = new Title("Categories (" + activeCategories.length + " Active Categories)");
+                        JLabel categoriesActiveDescription = new Description("Double click a category to edit its details");
+
+                        // JTextArea Active Categories (display all active categories)
+                        JTable categoriesActiveTable = new Categories(activeCategories);
+                        // Mouse listener for table row (edit category)
+                        categoriesActiveTable.addMouseListener(new MouseAdapter() {
+                            public void mousePressed(MouseEvent mouseEvent) {
+                                JTable table = (JTable) mouseEvent.getSource();
+                                // Perform category lookup
+                                if (mouseEvent.getClickCount() == 2 && categoriesActiveTable.getSelectedRow() != -1)
+                                    editCategory(api.getCategory(Integer.parseInt((String) categoriesActiveTable.getValueAt(table.getSelectedRow(), 2))));
+                            }
+                        });
+
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new Scroll(categoriesActiveTable, 1000, 500);
+
+                        // Active Categories Display
+                        Object[] enabledToolsDisplay = {
+                                categoriesActiveTitle,
+                                categoriesActiveDescription,
+                                scroll
+                        };
+
+                        // Display active categories
+                        JOptionPane.showMessageDialog(null, enabledToolsDisplay, "Teacher Panel - View Active Tool Categories", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no active categories found
+                    else {
+                        JOptionPane.showMessageDialog(null, "No Active Tool Categories exist", "Teacher Panel - View Active Tool Categories", JOptionPane.PLAIN_MESSAGE, null);
+                    }
+                }
+                // View Inactive Categories
+                case 1 -> {
+                    // Check if inactive categories found
+                    if (inactiveCategory) {
+                        // JLabel Inctive Categories
+                        JLabel categoriesInactiveTitle = new Title("Categories (" + inactiveCategories.length + " Inactive Categories)");
+                        JLabel categoriesInactiveDescription = new Description("Double click a category to edit its details");
+
+                        // JTextArea Inactive Categories (display all inactive categories)
+                        JTable categoriesInactiveTable = new Categories(inactiveCategories);
+                        // Mouse listener for table row (edit category)
+                        categoriesInactiveTable.addMouseListener(new MouseAdapter() {
+                            public void mousePressed(MouseEvent mouseEvent) {
+                                JTable table = (JTable) mouseEvent.getSource();
+                                // Perform category lookup
+                                if (mouseEvent.getClickCount() == 2 && categoriesInactiveTable.getSelectedRow() != -1)
+                                    editCategory(api.getCategory(Integer.parseInt((String) categoriesInactiveTable.getValueAt(table.getSelectedRow(), 2))));
+                            }
+                        });
+
+                        // JScrollPane scroll (display JTextArea with scrollbar)
+                        JScrollPane scroll = new Scroll(categoriesInactiveTable, 1000, 500);
+
+                        // Inactive Categories Display
+                        Object[] enabledToolsDisplay = {
+                                categoriesInactiveTitle,
+                                categoriesInactiveDescription,
+                                scroll
+                        };
+
+                        // Display active categories
+                        JOptionPane.showMessageDialog(null, enabledToolsDisplay, "Teacher Panel - View Inactive Tool Categories", JOptionPane.PLAIN_MESSAGE, null);
+                    } // Else no active categories found
+                    else {
+                        JOptionPane.showMessageDialog(null, "No Inactive Tool Categories exist", "Teacher Panel - View Inactive Tool Categories", JOptionPane.PLAIN_MESSAGE, null);
+                    }
+                }
+
+                // Return back to tool management
+                default -> toolManagementAdmin();
+            }
+        }
+        // Return to tool categories panel once completed
+        toolCategoryAdmin();
+    }
+
+    /**
+     * Used for editing a specific category (name, status, etc)
+     * @param category the category
+     */
+    public static void editCategory(Category category) {
+        // Build UI
+        JLabel title = new Title("Editing Category");
+        JLabel description = new Description(category.getCategoryName());
+
+        // Category Properties
+        JLabel categoryName = new Field("Name");
+        JTextField categoryNameInput = new JTextField(category.getCategoryName());
+
+        // Build status
+        JLabel categoryStatus = new Field("Status");
+        JComboBox categoryStatusInput;
+        if (category.isStatus())
+            categoryStatusInput = new JComboBox(new String[]{"Active", "Inactive"});
+        else
+            categoryStatusInput = new JComboBox(new String[]{"Inactive", "Active"});
+
+        // Buttons
+        JButton updateBtn = new Button("Update Category");
+        JButton cancelBtn = new Button("Cancel");
+
+        Object[] editCategoryDisplay = {
+                title,
+                description,
+                categoryName,
+                categoryNameInput,
+                categoryStatus,
+                categoryStatusInput,
+                updateBtn,
+                cancelBtn
+        };
+
+        // Action Listener for updating tool
+        updateBtn.addActionListener(e -> {
+            Window w = SwingUtilities.getWindowAncestor(updateBtn);
+            if (w != null) {
+                // Set tool based off of status
+                if (((String) categoryStatusInput.getSelectedItem()).equalsIgnoreCase("Active"))
+                    api.setCategory(new Category(category.getId(), categoryNameInput.getText(), true, category.getTools()));
+                else
+                    api.setCategory(new Category(category.getId(), categoryNameInput.getText(), false, category.getTools()));
+                w.dispose(); // dispose window
+            }
+        });
+
+        // Action Listener for cancelling edit
+        cancelBtn.addActionListener(e -> {
+            Window w = SwingUtilities.getWindowAncestor(updateBtn);
+            if (w != null) {
+                w.dispose(); // dispose window
+            }
+        });
+
+        // Display menu
+        JOptionPane.showOptionDialog(null, editCategoryDisplay, "Edit Tool", 0, -1, null, new Object[]{}, null);
     }
 }

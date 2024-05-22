@@ -16,14 +16,14 @@ public class ToolLookup extends JTable {
     public ToolLookup(String[][] data) {
         super(data, columnNames);
         this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
-        this.setBounds(30, 40, 500, 500);
+        this.setBounds(30, 40, 715, 715);
         this.setDefaultEditor(Object.class, null);
-        this.setRowHeight(32);
+        this.setRowHeight(50);
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();
         tcm.getColumn(0).setPreferredWidth(600);
-        tcm.getColumn(1).setPreferredWidth(10);
+        tcm.getColumn(1).setPreferredWidth(15);
         tcm.getColumn(2).setPreferredWidth(100);
     }
 
@@ -32,7 +32,7 @@ public class ToolLookup extends JTable {
         this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
         this.setBounds(30, 40, width, height);
         this.setDefaultEditor(Object.class, null);
-        this.setRowHeight(32);
+        this.setRowHeight(50);
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
 
         TableColumnModel tcm = this.getColumnModel();

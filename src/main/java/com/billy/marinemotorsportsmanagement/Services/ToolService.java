@@ -1,6 +1,6 @@
 package com.billy.marinemotorsportsmanagement.Services;
 
-import com.billy.marinemotorsportsmanagement.Services.Student;
+import com.billy.marinemotorsportsmanagement.Model.Tool;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * @version 1.0
  * @since 11/1/23
  */
-public class Tool extends Student {
+public class ToolService extends StudentService {
 
     /**
      * The getToolName method returns the name of a tool by id
@@ -47,6 +47,42 @@ public class Tool extends Student {
 
         // return tool not found
         return null;
+    }
+
+    public Tool getTool(int toolID) {
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            Statement statement = connection.createStatement(); // Create SQL Statement
+            ResultSet result = statement.executeQuery("SELECT * FROM Tool WHERE (((Tool.ID)=" + toolID + "));"); // Get results for SQL Statement
+            connection.close(); // Close DB connection
+
+            // Get Tool Name Result
+            if (result.next()) {
+                return new Tool(result.getInt("ID"), result.getInt("Category ID"), result.getString("Tool Name"), result.getInt("Quantity"), result.getBoolean("Status"));
+            }
+        } catch (SQLException ex) {
+            // If cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return tool not found
+        return null;
+    }
+
+    public boolean setTool(Tool tool) {
+        // Attempt to connect to db
+        try (Connection connection = DriverManager.getConnection(databaseURL)) {
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.[Category ID] = " + tool.getCategoryId() + ", Tool.[Tool Name] = \"" + tool.getToolName() + "\", Tool.Quantity = " + tool.getQuantity() + ", Tool.Status = " + tool.isStatus() + " WHERE (((Tool.ID)=" + tool.getId() + "));"); // Create SQL Statement
+            preparedStatement.executeUpdate(); // execute statement
+            connection.close(); // Close DB connection
+            return true;
+        } catch (SQLException ex) {
+            // If cannot connect to DB, print exception
+            ex.printStackTrace();
+        }
+
+        // return tool not found
+        return false;
     }
 
     /**
@@ -225,7 +261,7 @@ public class Tool extends Student {
             // Get quantity
             ResultSet result = statement.executeQuery("SELECT Borrow.[Tool ID], Borrow.Returned FROM Tool INNER JOIN Borrow ON Tool.ID = Borrow.[Tool ID] WHERE (((Borrow.[Tool ID])=" + toolID + ") AND ((Borrow.Returned)=No));"); // Get results for SQL Statement
             while (result.next()) {
-                    quantity++;
+                quantity++;
             }
 
             // if true, get the amount of available tools instead of unavailable tools
@@ -341,11 +377,11 @@ public class Tool extends Student {
      *
      * @return tool id if successfully added, else 0
      */
-    public int createTool(String toolName, int quantity) {
+    public int createTool(String toolName, int quantity, int categoryID) {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
-            // Add the tool
-            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name], Status, Quantity ) VALUES (\"" + toolName + "\",True," + quantity + ");"); // Create SQL Statement
+            // Add the tool to tool table
+            PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Tool ( [Tool Name], Status, Quantity, [Category ID]) VALUES (\"" + toolName + "\",True," + quantity + ", " + categoryID + ");"); // Create SQL Statement
             preparedStatement.executeUpdate(); // execute statement
 
             // Get the ids of all tools

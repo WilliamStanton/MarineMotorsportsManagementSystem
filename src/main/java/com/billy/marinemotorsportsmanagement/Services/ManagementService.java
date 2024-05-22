@@ -11,7 +11,7 @@ import java.sql.*;
  * @version 1.0
  * @since 11/1/23
  */
-public class Management {
+public class ManagementService {
     // Load .env from documents folder of current user
     Dotenv dotenv = Dotenv.configure().directory("C:\\Users\\" + System.getProperty("user.name") + "\\Documents").load();
     
@@ -26,7 +26,7 @@ public class Management {
     private final String password;
 
     // No-arg Constructor
-    public Management() {
+    public ManagementService() {
         activeSession = false;
         // default admin login
         username = dotenv.get("ADMIN_USERNAME");
