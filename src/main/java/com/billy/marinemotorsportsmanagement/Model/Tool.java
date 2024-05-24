@@ -1,5 +1,9 @@
 package com.billy.marinemotorsportsmanagement.Model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Tool POJO
  *
@@ -40,6 +44,18 @@ public class Tool {
 
     public String getToolName() {
         return toolName;
+    }
+
+    public String getToolNameSQL() {
+        String newName = "";
+        for (int i = 0; i < toolName.length(); i++) {
+            if (toolName.charAt(i) == '\"') {
+                newName += "\\\"";
+            } else {
+                newName += toolName.charAt(i);
+            }
+        }
+        return newName;
     }
 
     public void setToolName(String toolName) {

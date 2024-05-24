@@ -72,7 +72,19 @@ public class ToolService extends StudentService {
     public boolean setTool(Tool tool) {
         // Attempt to connect to db
         try (Connection connection = DriverManager.getConnection(databaseURL)) {
-            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE Tool SET Tool.[Category ID] = " + tool.getCategoryId() + ", Tool.[Tool Name] = \"" + tool.getToolName() + "\", Tool.Quantity = " + tool.getQuantity() + ", Tool.Status = " + tool.isStatus() + " WHERE (((Tool.ID)=" + tool.getId() + "));"); // Create SQL Statement
+            String sql = "UPDATE Tool " +
+                    "SET Tool.[Category ID] = ?, " +
+                    "Tool.[Tool Name] = ?, " +
+                    "Tool.Quantity = ?, " +
+                    "Tool.Status = ? " +
+                    "WHERE Tool.ID = ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql); // Create SQL Statement
+            preparedStatement.setInt(1, tool.getCategoryId());
+            preparedStatement.setString(2, tool.getToolName());
+            preparedStatement.setInt(3, tool.getQuantity());
+            preparedStatement.setBoolean(4, tool.isStatus());
+            preparedStatement.setInt(5, tool.getId());
+
             preparedStatement.executeUpdate(); // execute statement
             connection.close(); // Close DB connection
             return true;

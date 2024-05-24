@@ -1,6 +1,7 @@
 package com.billy.marinemotorsportsmanagement.JComponents.JTable;
 
 import javax.swing.*;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 
@@ -25,6 +26,22 @@ public class ToolLookup extends JTable {
         tcm.getColumn(0).setPreferredWidth(600);
         tcm.getColumn(1).setPreferredWidth(15);
         tcm.getColumn(2).setPreferredWidth(100);
+    }
+
+    public ToolLookup(String[][] data, String colName) {
+        super(data, new String[]{ "Tool Name", "ID", "Borrower", colName});
+        this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
+        this.setBounds(30, 40, 715, 715);
+        this.setDefaultEditor(Object.class, null);
+        this.setRowHeight(50);
+        this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
+
+        TableColumnModel tcm = this.getColumnModel();
+        tcm.getColumn(0).setPreferredWidth(600);
+        tcm.getColumn(1).setPreferredWidth(15);
+        tcm.getColumn(2).setPreferredWidth(100);
+        tcm.removeColumn(tcm.getColumn(3));
+        tcm.removeColumn(tcm.getColumn(1));
     }
 
     public ToolLookup(String[][] data, int width, int height) {

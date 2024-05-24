@@ -1,6 +1,7 @@
 package com.billy.marinemotorsportsmanagement.JComponents.JTable;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
 
@@ -15,6 +16,7 @@ public class BorrowedTools extends JTable {
     private static final String[] columnNames = { "Name", "IN", "OUT", "ID"};
     public BorrowedTools(String[][] data) {
         super(data, columnNames);
+        this.setModel(new DefaultTableModel(data, columnNames));
         this.setFont(new Font("Segoe UI", Font.PLAIN, 22));
         this.setBounds(30, 40, 1000, 500);
         this.setDefaultEditor(Object.class, null);
