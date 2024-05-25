@@ -22,6 +22,7 @@ public class BorrowedTools extends JTable {
         this.setDefaultEditor(Object.class, null);
         this.setRowHeight(50);
         this.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 22));
+        this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         TableColumnModel tcm = this.getColumnModel();
         tcm.getColumn(0).setPreferredWidth(600);

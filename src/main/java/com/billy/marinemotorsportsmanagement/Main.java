@@ -787,14 +787,19 @@ public class Main {
                         // Return tool if double click
                         if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
                             // return tool and go back to main table
-                            if (api.returnTool(Integer.parseInt((String) tools.getModel().getValueAt(table.getSelectedRow(), 1)), Integer.parseInt((String) tools.getModel().getValueAt(table.getSelectedRow(), 3))) && SwingUtilities.getWindowAncestor(table) != null) {
+                            int toolID = Integer.parseInt((String) tools.getModel().getValueAt(table.getSelectedRow(), 1)); // tool id
+                            int borrowerID = Integer.parseInt((String) tools.getModel().getValueAt(table.getSelectedRow(), 3)); // borrower id
+                            if (api.returnTool(toolID, borrowerID) && SwingUtilities.getWindowAncestor(table) != null) {
                                 SwingUtilities.getWindowAncestor(table).dispose(); // dispose window
-                                // Update row quantities
-                                allBorrowedTools.setValueAt(String.valueOf(Integer.parseInt((String) allBorrowedTools.getValueAt(allBorrowedTools.getSelectedRow(), 2))-1), allBorrowedTools.getSelectedRow(), 2);
-                                allBorrowedTools.setValueAt(String.valueOf(Integer.parseInt((String) allBorrowedTools.getValueAt(allBorrowedTools.getSelectedRow(), 1))+1), allBorrowedTools.getSelectedRow(), 1);
-                                if (Integer.parseInt((String) allBorrowedTools.getValueAt(allBorrowedTools.getSelectedRow(), 2)) == 0) {
-                                    ((DefaultTableModel) allBorrowedTools.getModel()).removeRow(allBorrowedTools.getSelectedRow());
+                                // If tool is completely returned, delete row
+                                if (api.getToolBorrowerIDS(toolID).isEmpty())
+                                    ((DefaultTableModel) allBorrowedTools.getModel()).removeRow(allBorrowedTools.getSelectedRow()); // remove row
+                                // Else update row quantities
+                                else {
+                                    allBorrowedTools.setValueAt(String.valueOf(Integer.parseInt((String) allBorrowedTools.getValueAt(allBorrowedTools.getSelectedRow(), 2))-1), allBorrowedTools.getSelectedRow(), 2);
+                                    allBorrowedTools.setValueAt(String.valueOf(Integer.parseInt((String) allBorrowedTools.getValueAt(allBorrowedTools.getSelectedRow(), 1))+1), allBorrowedTools.getSelectedRow(), 1);
                                 }
+
                                 allBorrowedTools.repaint(); // reload all borrowed tools
                             }
                         }
@@ -822,8 +827,12 @@ public class Main {
             }
             else {
                 toolInventoryTitle.setText("Borrowed: " + api.getToolAvailablityQuantity(toolID, false) + " | Inventory: " + api.getToolAvailablityQuantity(toolID, true));
-                display = new Object[] {
+                var returnToolTitle = new Description("Double click tool to return");
+                returnToolTitle.setFont(new Font("Segoe UI", Font.PLAIN, 32));
+
+                        display = new Object[] {
                         toolLookupTitle,
+                        returnToolTitle,
                         toolInventoryTitle,
                         scroll
                 };
@@ -870,7 +879,7 @@ public class Main {
 
         // JLabel Title
         JLabel borrowedTitle = new Title("(" + allToolIDSUnavailable.size() + ") Borrowed Tools");
-        JLabel borrowedDescription = new Description( "Double click a tool to view the current borrowers (or more info)");
+        JLabel borrowedDescription = new Description( "Double click a tool to view the current borrowers");
 
         // JTable (display all borrowed tools)
         JTable borrowedTools = new BorrowedTools(unavailableToolData);
@@ -886,13 +895,10 @@ public class Main {
             }
         });
 
-        // Remove borrowed tools that are no longer being borrowed + update stats
+        // Update stats
         borrowedTools.getModel().addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
-                // If the updated tool is completely available
-                if (borrowedTools.getRowCount() > 0 && Integer.parseInt((String)borrowedTools.getValueAt(e.getFirstRow(), 2)) == 0) {
-                    borrowedTitle.setText("(" + api.toolIDList(true, false).size() + ") Borrowed Tools"); // update title
-                }
+                borrowedTitle.setText("(" + api.toolIDList(true, false).size() + ") Borrowed Tools"); // update title
             }
         });
 
